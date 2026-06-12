@@ -1,0 +1,31 @@
+# Exclude Git files
+.git
+.gitignore
+.gitattributes
+
+# Exclude build and ignore config
+.distignore
+
+# Exclude local editor configurations
+.vscode
+.idea
+*.suo
+*.user
+*.usr
+.DS_Store
+Thumbs.db
+
+# Exclude composer and npm packages (not used, but good safety practice)
+composer.json
+composer.lock
+package.json
+package-lock.json
+node_modules
+vendor
+
+# Exclude testing environments and custom scripts
+tests
+phpunit.xml
+phpunit.xml.dist
+scratch
+*.log
