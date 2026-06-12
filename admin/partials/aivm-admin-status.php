@@ -14,7 +14,7 @@ defined( 'ABSPATH' ) || exit;
 
 global $wpdb;
 
-$sys_info = array(
+$aivm_sys_info = array(
 	'wp_version'      => get_bloginfo( 'version' ),
 	'php_version'     => PHP_VERSION,
 	'mysql_version'   => $wpdb->db_version(),
@@ -46,35 +46,35 @@ $sys_info = array(
 		<tbody>
 			<tr>
 				<td><strong><?php esc_html_e( 'AI Visibility Manager Version', 'ai-visibility-manager' ); ?></strong></td>
-				<td><code><?php echo esc_html( $sys_info['plugin_version'] ); ?></code></td>
+				<td><code><?php echo esc_html( $aivm_sys_info['plugin_version'] ); ?></code></td>
 			</tr>
 			<tr>
 				<td><strong><?php esc_html_e( 'WordPress Version', 'ai-visibility-manager' ); ?></strong></td>
-				<td><code><?php echo esc_html( $sys_info['wp_version'] ); ?></code></td>
+				<td><code><?php echo esc_html( $aivm_sys_info['wp_version'] ); ?></code></td>
 			</tr>
 			<tr>
 				<td><strong><?php esc_html_e( 'PHP Version', 'ai-visibility-manager' ); ?></strong></td>
-				<td><code><?php echo esc_html( $sys_info['php_version'] ); ?></code></td>
+				<td><code><?php echo esc_html( $aivm_sys_info['php_version'] ); ?></code></td>
 			</tr>
 			<tr>
 				<td><strong><?php esc_html_e( 'MySQL/MariaDB Version', 'ai-visibility-manager' ); ?></strong></td>
-				<td><code><?php echo esc_html( $sys_info['mysql_version'] ); ?></code></td>
+				<td><code><?php echo esc_html( $aivm_sys_info['mysql_version'] ); ?></code></td>
 			</tr>
 			<tr>
 				<td><strong><?php esc_html_e( 'PHP Memory Limit', 'ai-visibility-manager' ); ?></strong></td>
-				<td><code><?php echo esc_html( $sys_info['memory_limit'] ); ?></code></td>
+				<td><code><?php echo esc_html( $aivm_sys_info['memory_limit'] ); ?></code></td>
 			</tr>
 			<tr>
 				<td><strong><?php esc_html_e( 'Max Execution Time', 'ai-visibility-manager' ); ?></strong></td>
-				<td><code><?php echo esc_html( $sys_info['execution_time'] ); ?></code></td>
+				<td><code><?php echo esc_html( $aivm_sys_info['execution_time'] ); ?></code></td>
 			</tr>
 			<tr>
 				<td><strong><?php esc_html_e( 'WordPress Multisite', 'ai-visibility-manager' ); ?></strong></td>
-				<td><?php echo esc_html( $sys_info['multisite'] ); ?></td>
+				<td><?php echo esc_html( $aivm_sys_info['multisite'] ); ?></td>
 			</tr>
 			<tr>
 				<td><strong><?php esc_html_e( 'Permalink Structure', 'ai-visibility-manager' ); ?></strong></td>
-				<td><code><?php echo esc_html( $sys_info['permalink_style'] ); ?></code></td>
+				<td><code><?php echo esc_html( $aivm_sys_info['permalink_style'] ); ?></code></td>
 			</tr>
 		</tbody>
 	</table>

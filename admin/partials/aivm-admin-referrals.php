@@ -13,9 +13,9 @@
 defined( 'ABSPATH' ) || exit;
 
 // Fetch DB queries
-$top_sources = AIVM_DB::get_top_referral_sources( 5 );
-$top_pages   = AIVM_DB::get_top_target_pages( 5 );
-$recent_logs = AIVM_DB::get_recent_referrals( 20 );
+$aivm_top_sources = AIVM_DB::get_top_referral_sources( 5 );
+$aivm_top_pages   = AIVM_DB::get_top_target_pages( 5 );
+$aivm_recent_logs = AIVM_DB::get_recent_referrals( 20 );
 ?>
 
 <div class="aivm-card">
@@ -28,7 +28,7 @@ $recent_logs = AIVM_DB::get_recent_referrals( 20 );
 		<?php esc_html_e( 'Monitor how AI search engines like ChatGPT, Claude, and Perplexity refer visitors to your site when answering conversational search queries.', 'ai-visibility-manager' ); ?>
 	</p>
 
-	<?php if ( empty( $recent_logs ) ) : ?>
+	<?php if ( empty( $aivm_recent_logs ) ) : ?>
 		<div style="text-align: center; padding: 40px 20px; border: 1px dashed var(--aivm-border); border-radius: 8px; background: var(--aivm-bg);">
 			<span class="dashicons dashicons-chart-line" style="font-size: 48px; width: 48px; height: 48px; color: var(--aivm-text-muted); margin-bottom: 15px;"></span>
 			<h4 style="margin: 0 0 6px 0; font-size: 16px; font-weight: 600;"><?php esc_html_e( 'No AI referral traffic logged yet', 'ai-visibility-manager' ); ?></h4>
@@ -53,10 +53,10 @@ $recent_logs = AIVM_DB::get_recent_referrals( 20 );
 						</tr>
 					</thead>
 					<tbody>
-						<?php foreach ( $top_sources as $source ) : ?>
+						<?php foreach ( $aivm_top_sources as $aivm_source ) : ?>
 							<tr>
-								<td><strong><?php echo esc_html( $source->referrer ); ?></strong></td>
-								<td style="text-align: right; font-weight: 500;"><?php echo number_format_i18n( $source->count ); ?></td>
+								<td><strong><?php echo esc_html( $aivm_source->referrer ); ?></strong></td>
+								<td style="text-align: right; font-weight: 500;"><?php echo esc_html( number_format_i18n( $aivm_source->count ) ); ?></td>
 							</tr>
 						<?php endforeach; ?>
 					</tbody>
@@ -77,17 +77,17 @@ $recent_logs = AIVM_DB::get_recent_referrals( 20 );
 						</tr>
 					</thead>
 					<tbody>
-						<?php foreach ( $top_pages as $page ) : ?>
+						<?php foreach ( $aivm_top_pages as $aivm_page ) : ?>
 							<tr>
 								<td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-									<a href="<?php echo esc_url( $page->target_url ); ?>" target="_blank" rel="noopener noreferrer">
+									<a href="<?php echo esc_url( $aivm_page->target_url ); ?>" target="_blank" rel="noopener noreferrer">
 										<?php 
-										$path = wp_parse_url( $page->target_url, PHP_URL_PATH );
-										echo esc_html( empty( $path ) || $path === '/' ? '/' : $path );
+										$aivm_path = wp_parse_url( $aivm_page->target_url, PHP_URL_PATH );
+										echo esc_html( empty( $aivm_path ) || $aivm_path === '/' ? '/' : $aivm_path );
 										?>
 									</a>
 								</td>
-								<td style="text-align: right; font-weight: 500;"><?php echo number_format_i18n( $page->count ); ?></td>
+								<td style="text-align: right; font-weight: 500;"><?php echo esc_html( number_format_i18n( $aivm_page->count ) ); ?></td>
 							</tr>
 						<?php endforeach; ?>
 					</tbody>
@@ -110,17 +110,17 @@ $recent_logs = AIVM_DB::get_recent_referrals( 20 );
 					</tr>
 				</thead>
 				<tbody>
-					<?php foreach ( $recent_logs as $log ) : ?>
+					<?php foreach ( $aivm_recent_logs as $aivm_log ) : ?>
 						<tr>
 							<td style="color: var(--aivm-text-muted);">
-								<?php echo esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), mysql2date( 'G', $log->timestamp ) ) ); ?>
+								<?php echo esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), mysql2date( 'G', $aivm_log->timestamp ) ) ); ?>
 							</td>
 							<td>
-								<span class="aivm-status-tag status-green" style="font-weight: 500;"><?php echo esc_html( $log->referrer ); ?></span>
+								<span class="aivm-status-tag status-green" style="font-weight: 500;"><?php echo esc_html( $aivm_log->referrer ); ?></span>
 							</td>
 							<td style="max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-								<a href="<?php echo esc_url( $log->target_url ); ?>" target="_blank" rel="noopener noreferrer" title="<?php echo esc_url( $log->target_url ); ?>">
-									<?php echo esc_html( $log->target_url ); ?>
+								<a href="<?php echo esc_url( $aivm_log->target_url ); ?>" target="_blank" rel="noopener noreferrer" title="<?php echo esc_url( $aivm_log->target_url ); ?>">
+									<?php echo esc_html( $aivm_log->target_url ); ?>
 								</a>
 							</td>
 						</tr>

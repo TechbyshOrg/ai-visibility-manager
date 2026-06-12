@@ -240,6 +240,7 @@ class AIVM_Admin {
 			) );
 		}
 
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 		fclose( $output );
 		exit;
 	}
@@ -256,7 +257,8 @@ class AIVM_Admin {
 			return;
 		}
 
-		$msg = isset( $_GET['aivm_msg'] ) ? sanitize_key( $_GET['aivm_msg'] ) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$msg = isset( $_GET['aivm_msg'] ) ? sanitize_key( wp_unslash( $_GET['aivm_msg'] ) ) : '';
 		if ( empty( $msg ) ) {
 			return;
 		}

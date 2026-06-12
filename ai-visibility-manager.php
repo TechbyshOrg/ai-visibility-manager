@@ -12,7 +12,7 @@
  * @package           Aivm
  *
  * @wordpress-plugin
- * Plugin Name:       AI Visibility Manager
+ * Plugin Name:       AI Visibility Manager – Dynamic llms.txt & robots.txt Crawler Control
  * Plugin URI:        https://techbysh.com/plugins/ai-visibility-manager/
  * Description:       Manage search crawler visibility, block AI bots, generate llms.txt, and log AI search referral traffic.
  * Version:           1.0.0
@@ -20,10 +20,9 @@
  * Author URI:        https://techbysh.com
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Requires at least: 6.0
+ * Requires at least: 6.2
  * Requires PHP:      7.4
  * Text Domain:       ai-visibility-manager
- * Domain Path:       /languages
  */
 
 // If this file is called directly, abort.
@@ -35,7 +34,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * The code that runs during plugin activation.
  * This action is documented in includes/class-aivm-activator.php
  */
-function activate_aivm() {
+function aivm_activate() {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-aivm-activator.php';
 	AIVM_Activator::activate();
 }
@@ -44,13 +43,13 @@ function activate_aivm() {
  * The code that runs during plugin deactivation.
  * This action is documented in includes/class-aivm-deactivator.php
  */
-function deactivate_aivm() {
+function aivm_deactivate() {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-aivm-deactivator.php';
 	AIVM_Deactivator::deactivate();
 }
 
-register_activation_hook( __FILE__, 'activate_aivm' );
-register_deactivation_hook( __FILE__, 'deactivate_aivm' );
+register_activation_hook( __FILE__, 'aivm_activate' );
+register_deactivation_hook( __FILE__, 'aivm_deactivate' );
 
 /**
  * Core class to start the plugin.
@@ -65,8 +64,8 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-aivm.php';
  *
  * @since    1.0.0
  */
-function run_aivm() {
+function aivm_run() {
 	$plugin = AIVM::get_instance();
 	$plugin->run();
 }
-run_aivm();
+aivm_run();

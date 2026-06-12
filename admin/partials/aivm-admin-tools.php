@@ -75,12 +75,12 @@ defined( 'ABSPATH' ) || exit;
 	<form method="post" action="options.php">
 		<?php
 		settings_fields( 'aivm_settings_group' );
-		$delete_on_uninstall = get_option( 'aivm_delete_on_uninstall', 0 );
+		$aivm_delete_on_uninstall = get_option( 'aivm_delete_on_uninstall', 0 );
 		?>
 		
 		<div style="background: var(--aivm-bg); padding: 16px; border-radius: 8px; border: 1px solid var(--aivm-border);">
 			<label style="display: flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer;">
-				<input type="checkbox" name="aivm_delete_on_uninstall" id="aivm_delete_on_uninstall" value="1" <?php checked( $delete_on_uninstall, 1 ); ?>>
+				<input type="checkbox" name="aivm_delete_on_uninstall" id="aivm_delete_on_uninstall" value="1" <?php checked( $aivm_delete_on_uninstall, 1 ); ?>>
 				<?php esc_html_e( 'Completely Remove Data on Deletion', 'ai-visibility-manager' ); ?>
 			</label>
 			<div style="font-size: 13px; color: var(--aivm-text-muted); margin-top: 6px; padding-left: 24px; line-height: 1.4;">

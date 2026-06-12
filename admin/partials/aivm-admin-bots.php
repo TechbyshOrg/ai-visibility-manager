@@ -13,10 +13,10 @@
 defined( 'ABSPATH' ) || exit;
 
 // Fetch currently blocked bots option
-$blocked_bots = get_option( 'aivm_blocked_bots', array() );
+$aivm_blocked_bots = get_option( 'aivm_blocked_bots', array() );
 
 // Define bots list and details
-$bots_definition = array(
+$aivm_bots_definition = array(
 	'gptbot'            => array(
 		'name' => 'GPTBot',
 		'desc' => __( 'OpenAI\'s official web crawler used to index web pages for ChatGPT training and features.', 'ai-visibility-manager' ),
@@ -64,18 +64,18 @@ $bots_definition = array(
 		?>
 		
 		<div class="aivm-bot-list">
-			<?php foreach ( $bots_definition as $slug => $bot ) : ?>
+			<?php foreach ( $aivm_bots_definition as $aivm_slug => $aivm_bot ) : ?>
 				<div class="aivm-bot-row">
 					<div class="aivm-bot-info">
 						<div>
-							<div class="aivm-bot-name"><?php echo esc_html( $bot['name'] ); ?></div>
-							<div class="aivm-bot-desc"><?php echo esc_html( $bot['desc'] ); ?></div>
+							<div class="aivm-bot-name"><?php echo esc_html( $aivm_bot['name'] ); ?></div>
+							<div class="aivm-bot-desc"><?php echo esc_html( $aivm_bot['desc'] ); ?></div>
 						</div>
 					</div>
 					<div class="aivm-bot-toggle">
 						<!-- Store option value. Use hidden field to handle unchecked states cleanly -->
-						<input type="hidden" name="aivm_blocked_bots[<?php echo esc_attr( $slug ); ?>]" value="0">
-						<input type="checkbox" name="aivm_blocked_bots[<?php echo esc_attr( $slug ); ?>]" id="aivm_bot_<?php echo esc_attr( $slug ); ?>" value="1" <?php checked( isset( $blocked_bots[ $slug ] ) ? $blocked_bots[ $slug ] : 0, 1 ); ?>>
+						<input type="hidden" name="aivm_blocked_bots[<?php echo esc_attr( $aivm_slug ); ?>]" value="0">
+						<input type="checkbox" name="aivm_blocked_bots[<?php echo esc_attr( $aivm_slug ); ?>]" id="aivm_bot_<?php echo esc_attr( $aivm_slug ); ?>" value="1" <?php checked( isset( $aivm_blocked_bots[ $aivm_slug ] ) ? $aivm_blocked_bots[ $aivm_slug ] : 0, 1 ); ?>>
 					</div>
 				</div>
 			<?php endforeach; ?>

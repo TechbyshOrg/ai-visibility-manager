@@ -82,7 +82,7 @@ class AIVM {
 	 * Define the core functionality of the plugin.
 	 *
 	 * Set the plugin name and the plugin version that can be used throughout the plugin.
-	 * Load the dependencies, define the locale, and set the hooks for the admin area and
+	 * Load the dependencies, and set the hooks for the admin area and
 	 * the public-facing side of the site.
 	 *
 	 * @since    1.0.0
@@ -92,7 +92,6 @@ class AIVM {
 		$this->version     = '1.0.0';
 
 		$this->load_dependencies();
-		$this->set_locale();
 		$this->define_admin_hooks();
 		$this->define_public_hooks();
 	}
@@ -102,7 +101,6 @@ class AIVM {
 	 *
 	 * Include the following files that make up the plugin:
 	 *
-	 * - AIVM_i18n. Defines internationalization functionality.
 	 * - AIVM_DB. Database query and management class.
 	 * - AIVM_LLMS_Txt. Handles generating /llms.txt.
 	 * - AIVM_Bot_Manager. Manages robots.txt rules for AI bots.
@@ -112,7 +110,6 @@ class AIVM {
 	 * @since    1.0.0
 	 */
 	private function load_dependencies() {
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-aivm-i18n.php';
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-aivm-db.php';
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-aivm-llms-txt.php';
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-aivm-bot-manager.php';
@@ -124,18 +121,6 @@ class AIVM {
 		$this->bot_manager     = new AIVM_Bot_Manager();
 		$this->referral_logger = new AIVM_Referral_Logger();
 		$this->admin           = new AIVM_Admin( $this->get_plugin_name(), $this->get_version() );
-	}
-
-	/**
-	 * Define the locale for this plugin for internationalization.
-	 *
-	 * Uses the AIVM_i18n class in order to load the plugin text domain.
-	 *
-	 * @since    1.0.0
-	 */
-	private function set_locale() {
-		$plugin_i18n = new AIVM_i18n();
-		add_action( 'plugins_loaded', array( $plugin_i18n, 'load_plugin_textdomain' ) );
 	}
 
 	/**

@@ -13,30 +13,30 @@
 defined( 'ABSPATH' ) || exit;
 
 // Fetch DB stats
-$total_referrals = AIVM_DB::get_total_referrals();
-$last_referral   = AIVM_DB::get_last_referral();
+$aivm_total_referrals = AIVM_DB::get_total_referrals();
+$aivm_last_referral   = AIVM_DB::get_last_referral();
 
 // Fetch Health Checks and Discoverability
-$health_status        = $this->get_health_status();
-$discoverability_stats = $this->get_discoverability_stats();
+$aivm_health_status        = $this->get_health_status();
+$aivm_discoverability_stats = $this->get_discoverability_stats();
 
 // Determine Overall Discoverability Status (Green, Yellow, Red)
-$overall_status = 'green';
-$fail_count = 0;
-$warn_count = 0;
+$aivm_overall_status = 'green';
+$aivm_fail_count     = 0;
+$aivm_warn_count     = 0;
 
-foreach ( $health_status as $check ) {
-	if ( $check['status'] === 'fail' ) {
-		$fail_count++;
-	} elseif ( $check['status'] === 'warning' ) {
-		$warn_count++;
+foreach ( $aivm_health_status as $aivm_check ) {
+	if ( $aivm_check['status'] === 'fail' ) {
+		$aivm_fail_count++;
+	} elseif ( $aivm_check['status'] === 'warning' ) {
+		$aivm_warn_count++;
 	}
 }
 
-if ( $fail_count > 0 ) {
-	$overall_status = 'red';
-} elseif ( $warn_count > 0 || empty( $discoverability_stats['posts_count'] ) ) {
-	$overall_status = 'yellow';
+if ( $aivm_fail_count > 0 ) {
+	$aivm_overall_status = 'red';
+} elseif ( $aivm_warn_count > 0 || empty( $aivm_discoverability_stats['posts_count'] ) ) {
+	$aivm_overall_status = 'yellow';
 }
 ?>
 
@@ -44,7 +44,7 @@ if ( $fail_count > 0 ) {
 <div class="aivm-overview-stats">
 	<!-- Total Referrals -->
 	<div class="aivm-stat-widget">
-		<div class="aivm-stat-val"><?php echo number_format_i18n( $total_referrals ); ?></div>
+		<div class="aivm-stat-val"><?php echo esc_html( number_format_i18n( $aivm_total_referrals ) ); ?></div>
 		<div class="aivm-stat-label"><?php esc_html_e( 'Total AI Referrals', 'ai-visibility-manager' ); ?></div>
 	</div>
 
@@ -52,8 +52,8 @@ if ( $fail_count > 0 ) {
 	<div class="aivm-stat-widget">
 		<div class="aivm-stat-val" style="font-size: 18px; padding: 7px 0;">
 			<?php 
-			if ( $last_referral ) {
-				echo esc_html( $last_referral->referrer ) . '<br><span style="font-size: 11px; font-weight: normal; color: var(--aivm-text-muted);">' . esc_html( human_time_diff( mysql2date( 'U', $last_referral->timestamp ), current_time( 'timestamp' ) ) ) . ' ' . esc_html__( 'ago', 'ai-visibility-manager' ) . '</span>';
+			if ( $aivm_last_referral ) {
+				echo esc_html( $aivm_last_referral->referrer ) . '<br><span style="font-size: 11px; font-weight: normal; color: var(--aivm-text-muted);">' . esc_html( human_time_diff( mysql2date( 'U', $aivm_last_referral->timestamp ), current_time( 'timestamp' ) ) ) . ' ' . esc_html__( 'ago', 'ai-visibility-manager' ) . '</span>';
 			} else {
 				esc_html_e( 'No visits yet', 'ai-visibility-manager' );
 			}
@@ -65,7 +65,7 @@ if ( $fail_count > 0 ) {
 	<!-- llms.txt Reachability -->
 	<div class="aivm-stat-widget">
 		<div class="aivm-stat-val" style="font-size: 18px; padding: 7px 0;">
-			<?php if ( isset( $health_status['llmstxt']['status'] ) && $health_status['llmstxt']['status'] === 'pass' ) : ?>
+			<?php if ( isset( $aivm_health_status['llmstxt']['status'] ) && $aivm_health_status['llmstxt']['status'] === 'pass' ) : ?>
 				<span class="aivm-status-tag status-green"><span class="aivm-pulse"></span> <?php esc_html_e( 'Active', 'ai-visibility-manager' ); ?></span>
 			<?php else : ?>
 				<span class="aivm-status-tag status-red"><?php esc_html_e( 'Inactive', 'ai-visibility-manager' ); ?></span>
@@ -77,7 +77,7 @@ if ( $fail_count > 0 ) {
 	<!-- robots.txt Status -->
 	<div class="aivm-stat-widget">
 		<div class="aivm-stat-val" style="font-size: 18px; padding: 7px 0;">
-			<?php if ( isset( $health_status['robots']['status'] ) && $health_status['robots']['status'] === 'pass' ) : ?>
+			<?php if ( isset( $aivm_health_status['robots']['status'] ) && $aivm_health_status['robots']['status'] === 'pass' ) : ?>
 				<span class="aivm-status-tag status-green"><span class="aivm-pulse"></span> <?php esc_html_e( 'Active', 'ai-visibility-manager' ); ?></span>
 			<?php else : ?>
 				<span class="aivm-status-tag status-yellow"><?php esc_html_e( 'Check Rules', 'ai-visibility-manager' ); ?></span>
@@ -97,13 +97,13 @@ if ( $fail_count > 0 ) {
 		</h3>
 		
 		<div class="aivm-health-list">
-			<?php foreach ( $health_status as $key => $check ) : ?>
-				<div class="aivm-health-item health-<?php echo esc_attr( $check['status'] ); ?>">
+			<?php foreach ( $aivm_health_status as $aivm_key => $aivm_check ) : ?>
+				<div class="aivm-health-item health-<?php echo esc_attr( $aivm_check['status'] ); ?>">
 					<span class="aivm-health-icon">
 						<?php 
-						if ( $check['status'] === 'pass' ) {
+						if ( $aivm_check['status'] === 'pass' ) {
 							echo '✓';
-						} elseif ( $check['status'] === 'warning' ) {
+						} elseif ( $aivm_check['status'] === 'warning' ) {
 							echo '⚠';
 						} else {
 							echo '✗';
@@ -111,11 +111,11 @@ if ( $fail_count > 0 ) {
 						?>
 					</span>
 					<div>
-						<div class="aivm-health-title"><?php echo esc_html( $check['title'] ); ?></div>
+						<div class="aivm-health-title"><?php echo esc_html( $aivm_check['title'] ); ?></div>
 						<div class="aivm-health-desc">
-							<?php echo esc_html( $check['desc'] ); ?>
-							<?php if ( ! empty( $check['recommendation'] ) ) : ?>
-								<br><strong style="color: var(--aivm-text-dark);"><?php esc_html_e( 'Recommendation:', 'ai-visibility-manager' ); ?></strong> <?php echo esc_html( $check['recommendation'] ); ?>
+							<?php echo esc_html( $aivm_check['desc'] ); ?>
+							<?php if ( ! empty( $aivm_check['recommendation'] ) ) : ?>
+								<br><strong style="color: var(--aivm-text-dark);"><?php esc_html_e( 'Recommendation:', 'ai-visibility-manager' ); ?></strong> <?php echo esc_html( $aivm_check['recommendation'] ); ?>
 							<?php endif; ?>
 						</div>
 					</div>
@@ -131,9 +131,9 @@ if ( $fail_count > 0 ) {
 			<?php esc_html_e( 'Content Discoverability Report', 'ai-visibility-manager' ); ?>
 			
 			<span style="margin-left: auto;">
-				<?php if ( $overall_status === 'green' ) : ?>
+				<?php if ( $aivm_overall_status === 'green' ) : ?>
 					<span class="aivm-status-tag status-green"><span class="aivm-pulse"></span> <?php esc_html_e( 'Excellent', 'ai-visibility-manager' ); ?></span>
-				<?php elseif ( $overall_status === 'yellow' ) : ?>
+				<?php elseif ( $aivm_overall_status === 'yellow' ) : ?>
 					<span class="aivm-status-tag status-yellow"><?php esc_html_e( 'Needs Review', 'ai-visibility-manager' ); ?></span>
 				<?php else : ?>
 					<span class="aivm-status-tag status-red"><?php esc_html_e( 'Action Required', 'ai-visibility-manager' ); ?></span>
@@ -145,22 +145,22 @@ if ( $fail_count > 0 ) {
 			<tbody>
 				<tr>
 					<td><strong><?php esc_html_e( 'Posts indexed for llms.txt', 'ai-visibility-manager' ); ?></strong></td>
-					<td style="text-align: right; font-weight: 500;"><?php echo intval( $discoverability_stats['posts_count'] ); ?></td>
+					<td style="text-align: right; font-weight: 500;"><?php echo intval( $aivm_discoverability_stats['posts_count'] ); ?></td>
 				</tr>
 				<tr>
 					<td><strong><?php esc_html_e( 'Pages indexed for llms.txt', 'ai-visibility-manager' ); ?></strong></td>
-					<td style="text-align: right; font-weight: 500;"><?php echo intval( $discoverability_stats['pages_count'] ); ?></td>
+					<td style="text-align: right; font-weight: 500;"><?php echo intval( $aivm_discoverability_stats['pages_count'] ); ?></td>
 				</tr>
 				<tr>
 					<td><strong><?php esc_html_e( 'Excluded Content (Non-Public)', 'ai-visibility-manager' ); ?></strong></td>
-					<td style="text-align: right; font-weight: 500; color: var(--aivm-text-muted);"><?php echo intval( $discoverability_stats['excluded_count'] ); ?></td>
+					<td style="text-align: right; font-weight: 500; color: var(--aivm-text-muted);"><?php echo intval( $aivm_discoverability_stats['excluded_count'] ); ?></td>
 				</tr>
 				<tr>
 					<td><strong><?php esc_html_e( 'Last Cache Rebuild', 'ai-visibility-manager' ); ?></strong></td>
 					<td style="text-align: right; font-weight: 500;">
 						<?php 
-						if ( $discoverability_stats['last_rebuild'] ) {
-							echo esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $discoverability_stats['last_rebuild'] ) );
+						if ( $aivm_discoverability_stats['last_rebuild'] ) {
+							echo esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $aivm_discoverability_stats['last_rebuild'] ) );
 						} else {
 							esc_html_e( 'Never rebuilt', 'ai-visibility-manager' );
 						}

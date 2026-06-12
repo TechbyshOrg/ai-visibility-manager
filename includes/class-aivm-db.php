@@ -53,6 +53,7 @@ class AIVM_DB {
 		$table_name = self::get_table_name();
 
 		// Insert into the database safely
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 		return $wpdb->insert(
 			$table_name,
 			array(
@@ -80,11 +81,13 @@ class AIVM_DB {
 		$table_name = self::get_table_name();
 		
 		// Check table existence first to avoid errors before DB table is created
-		if ( $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $table_name ) ) !== $table_name ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) !== $table_name ) {
 			return 0;
 		}
 
-		$count = $wpdb->get_var( "SELECT COUNT(id) FROM $table_name" );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$count = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(id) FROM %i', $table_name ) );
 
 		return intval( $count );
 	}
@@ -100,11 +103,13 @@ class AIVM_DB {
 
 		$table_name = self::get_table_name();
 		
-		if ( $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $table_name ) ) !== $table_name ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) !== $table_name ) {
 			return null;
 		}
 
-		return $wpdb->get_row( "SELECT timestamp, referrer FROM $table_name ORDER BY id DESC LIMIT 1" );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		return $wpdb->get_row( $wpdb->prepare( 'SELECT timestamp, referrer FROM %i ORDER BY id DESC LIMIT 1', $table_name ) );
 	}
 
 	/**
@@ -119,15 +124,18 @@ class AIVM_DB {
 
 		$table_name = self::get_table_name();
 		
-		if ( $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $table_name ) ) !== $table_name ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) !== $table_name ) {
 			return array();
 		}
 
 		$limit = intval( $limit );
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		return $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT referrer, COUNT(id) as count FROM $table_name GROUP BY referrer ORDER BY count DESC LIMIT %d",
+				'SELECT referrer, COUNT(id) as count FROM %i GROUP BY referrer ORDER BY count DESC LIMIT %d',
+				$table_name,
 				$limit
 			)
 		);
@@ -145,15 +153,18 @@ class AIVM_DB {
 
 		$table_name = self::get_table_name();
 		
-		if ( $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $table_name ) ) !== $table_name ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) !== $table_name ) {
 			return array();
 		}
 
 		$limit = intval( $limit );
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		return $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT target_url, COUNT(id) as count FROM $table_name GROUP BY target_url ORDER BY count DESC LIMIT %d",
+				'SELECT target_url, COUNT(id) as count FROM %i GROUP BY target_url ORDER BY count DESC LIMIT %d',
+				$table_name,
 				$limit
 			)
 		);
@@ -171,15 +182,18 @@ class AIVM_DB {
 
 		$table_name = self::get_table_name();
 		
-		if ( $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $table_name ) ) !== $table_name ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) !== $table_name ) {
 			return array();
 		}
 
 		$limit = intval( $limit );
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		return $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT timestamp, referrer, target_url FROM $table_name ORDER BY id DESC LIMIT %d",
+				'SELECT timestamp, referrer, target_url FROM %i ORDER BY id DESC LIMIT %d',
+				$table_name,
 				$limit
 			)
 		);
@@ -196,11 +210,13 @@ class AIVM_DB {
 
 		$table_name = self::get_table_name();
 		
-		if ( $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $table_name ) ) !== $table_name ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) !== $table_name ) {
 			return false;
 		}
 
-		return $wpdb->query( "TRUNCATE TABLE $table_name" );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		return $wpdb->query( $wpdb->prepare( 'TRUNCATE TABLE %i', $table_name ) );
 	}
 
 	/**
@@ -214,10 +230,12 @@ class AIVM_DB {
 
 		$table_name = self::get_table_name();
 		
-		if ( $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $table_name ) ) !== $table_name ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) !== $table_name ) {
 			return array();
 		}
 
-		return $wpdb->get_results( "SELECT timestamp, referrer, target_url FROM $table_name ORDER BY id DESC" );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		return $wpdb->get_results( $wpdb->prepare( 'SELECT timestamp, referrer, target_url FROM %i ORDER BY id DESC', $table_name ) );
 	}
 }

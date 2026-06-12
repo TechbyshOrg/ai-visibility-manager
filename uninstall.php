@@ -14,8 +14,8 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 }
 
 // Check if user opted-in to delete data on uninstall
-$delete_data = get_option( 'aivm_delete_on_uninstall', 0 );
-if ( ! $delete_data ) {
+$aivm_delete_data = get_option( 'aivm_delete_on_uninstall', 0 );
+if ( ! $aivm_delete_data ) {
 	return;
 }
 
@@ -31,5 +31,6 @@ delete_transient( 'aivm_health_robots' );
 
 // Drop database table
 global $wpdb;
-$table_name = $wpdb->prefix . 'aivm_referrals';
-$wpdb->query( "DROP TABLE IF EXISTS $table_name" );
+$aivm_table_name = $wpdb->prefix . 'aivm_referrals';
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery
+$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $aivm_table_name ) );

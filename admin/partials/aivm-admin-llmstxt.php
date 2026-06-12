@@ -12,26 +12,26 @@
 // Prevent direct access
 defined( 'ABSPATH' ) || exit;
 
-$llms_txt_url = home_url( '/llms.txt' );
+$aivm_llms_txt_url = home_url( '/llms.txt' );
 
 // Check if cached
-$cache_val = get_transient( 'aivm_llms_txt_cache' );
-$is_cached = ( false !== $cache_val );
+$aivm_cache_val = get_transient( 'aivm_llms_txt_cache' );
+$aivm_is_cached = ( false !== $aivm_cache_val );
 
 // If not cached, generate live preview
-if ( ! $is_cached ) {
-	$llms_txt_class = new AIVM_LLMS_Txt();
+if ( ! $aivm_is_cached ) {
+	$aivm_llms_txt_class = new AIVM_LLMS_Txt();
 	// We will call the public generator method
-	$preview_content = $llms_txt_class->generate_llms_txt();
-	$status_label    = __( 'Not Cached (Will cache on next visit)', 'ai-visibility-manager' );
-	$status_class    = 'status-yellow';
+	$aivm_preview_content = $aivm_llms_txt_class->generate_llms_txt();
+	$aivm_status_label    = __( 'Not Cached (Will cache on next visit)', 'ai-visibility-manager' );
+	$aivm_status_class    = 'status-yellow';
 } else {
-	$preview_content = $cache_val;
-	$status_label    = __( 'Cached (Active)', 'ai-visibility-manager' );
-	$status_class    = 'status-green';
+	$aivm_preview_content = $aivm_cache_val;
+	$aivm_status_label    = __( 'Cached (Active)', 'ai-visibility-manager' );
+	$aivm_status_class    = 'status-green';
 }
 
-$file_size = strlen( $preview_content );
+$aivm_file_size = strlen( $aivm_preview_content );
 ?>
 
 <div class="aivm-card">
@@ -55,8 +55,8 @@ $file_size = strlen( $preview_content );
 			<tr>
 				<td style="width: 30%;"><strong><?php esc_html_e( 'Endpoint URL', 'ai-visibility-manager' ); ?></strong></td>
 				<td>
-					<a href="<?php echo esc_url( $llms_txt_url ); ?>" target="_blank" rel="noopener noreferrer" style="font-family: monospace; font-size: 13px;">
-						<?php echo esc_url( $llms_txt_url ); ?> 
+					<a href="<?php echo esc_url( $aivm_llms_txt_url ); ?>" target="_blank" rel="noopener noreferrer" style="font-family: monospace; font-size: 13px;">
+						<?php echo esc_url( $aivm_llms_txt_url ); ?> 
 						<span class="dashicons dashicons-external" style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle;"></span>
 					</a>
 				</td>
@@ -64,15 +64,15 @@ $file_size = strlen( $preview_content );
 			<tr>
 				<td><strong><?php esc_html_e( 'Cache Status', 'ai-visibility-manager' ); ?></strong></td>
 				<td>
-					<span class="aivm-status-tag <?php echo esc_attr( $status_class ); ?>">
-						<?php echo esc_html( $status_label ); ?>
+					<span class="aivm-status-tag <?php echo esc_attr( $aivm_status_class ); ?>">
+						<?php echo esc_html( $aivm_status_label ); ?>
 					</span>
 				</td>
 			</tr>
 			<tr>
 				<td><strong><?php esc_html_e( 'File Size', 'ai-visibility-manager' ); ?></strong></td>
 				<td>
-					<?php echo size_format( $file_size ); ?> (<?php echo number_format_i18n( $file_size ); ?> <?php esc_html_e( 'bytes', 'ai-visibility-manager' ); ?>)
+					<?php echo esc_html( size_format( $aivm_file_size ) ); ?> (<?php echo esc_html( number_format_i18n( $aivm_file_size ) ); ?> <?php esc_html_e( 'bytes', 'ai-visibility-manager' ); ?>)
 				</td>
 			</tr>
 		</tbody>
@@ -86,7 +86,7 @@ $file_size = strlen( $preview_content );
 		</span>
 	</h4>
 	
-	<div class="aivm-preview-box"><?php echo esc_html( $preview_content ); ?></div>
+	<div class="aivm-preview-box"><?php echo esc_html( $aivm_preview_content ); ?></div>
 	
 	<div style="margin-top: 20px; display: flex; gap: 10px;">
 		<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=aivm_tool_action&tool=rebuild_cache' ), 'aivm_tool_nonce' ) ); ?>" class="button button-secondary">

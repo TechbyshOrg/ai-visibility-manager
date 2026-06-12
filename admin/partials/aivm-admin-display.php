@@ -14,8 +14,8 @@
 // Prevent direct access
 defined( 'ABSPATH' ) || exit;
 
-// Retrieve tab parameter if set
-$active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'overview';
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+$aivm_active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'overview';
 ?>
 <div class="wrap aivm-wrap">
 	<!-- Plugin Header -->
