@@ -109,9 +109,9 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'overview';
 					<li><span class="dashicons dashicons-yes-alt"></span> <?php esc_html_e( 'Advanced entity graph generation', 'ai-visibility-manager' ); ?></li>
 				</ul>
 				
-				<a href="https://techbysh.com/plugins/ai-visibility-manager-pro/" class="aivm-pro-btn" target="_blank" rel="noopener noreferrer">
-					<?php esc_html_e( 'Explore Premium Features', 'ai-visibility-manager' ); ?>
-				</a>
+				<div class="aivm-pro-btn" style="background: rgba(255, 255, 255, 0.15); color: #ffffff !important; cursor: default; border: 1px dashed rgba(255, 255, 255, 0.3);">
+					<?php esc_html_e( 'Coming Soon', 'ai-visibility-manager' ); ?>
+				</div>
 			</div>
 
 			<!-- Helpful Links Card -->
@@ -124,7 +124,7 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'overview';
 					<?php esc_html_e( 'Need help configuring or want to learn more about how AI bots scan your site?', 'ai-visibility-manager' ); ?>
 				</p>
 				<p style="margin: 0; font-size: 13px;">
-					<a href="https://techbysh.com/docs/ai-visibility-manager/" target="_blank" rel="noopener noreferrer" style="text-decoration: none; font-weight: 500;">
+					<a href="https://www.techbysh.com/docs/ai-visibility-manager.html" target="_blank" rel="noopener noreferrer" style="text-decoration: none; font-weight: 500;">
 						<?php esc_html_e( 'Read Documentation', 'ai-visibility-manager' ); ?> &rarr;
 					</a>
 				</p>
