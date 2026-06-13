@@ -12,7 +12,7 @@
  * @package           Tavc
  *
  * @wordpress-plugin
- * Plugin Name:       TBSH AI Visibility Control
+ * Plugin Name:       AI Visibility Control – Dynamic llms.txt & robots.txt Crawler Control
  * Description:       Manage search crawler visibility, block AI bots, generate llms.txt, and log AI search referral traffic.
  * Version:           1.0.0
  * Author:            Techbysh

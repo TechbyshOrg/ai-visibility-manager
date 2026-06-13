@@ -1,4 +1,4 @@
-=== TBSH AI Visibility Control – Dynamic llms.txt & robots.txt Crawler Control ===
+=== AI Visibility Control – Dynamic llms.txt & robots.txt Crawler Control ===
 Contributors: techbysh
 Tags: block ai bots, llms.txt, robots.txt editor, block gptbot, ai crawler blocker
 Requires at least: 6.2
@@ -12,15 +12,15 @@ Manage AI crawler access. Block GPTBot, Claude & AI bots in robots.txt, generate
 
 == Description ==
 
-Is your website ready for the AI search revolution? TBSH AI Visibility Control is the ultimate tool for webmasters to control how Large Language Models (LLMs), AI bots, and conversational search platforms index their content. 
+Is your website ready for the AI search revolution? AI Visibility Control is the ultimate tool for webmasters to control how Large Language Models (LLMs), AI bots, and conversational search platforms index their content. 
 
 This lightweight, highly optimized plugin allows you to block data-scraping AI crawlers while optimizing your content for friendly AI search engines, and tracking the exact traffic they refer back to your site.
 
 ### Why Users Need This Plugin
-As AI search engines like ChatGPT, Claude, and Perplexity become mainstream, they crawl your website to train models and answer user queries. Traditional robots.txt files do not make it easy to manage these new crawlers. TBSH AI Visibility Control solves this by giving you a central control panel to configure crawler rules, output search-optimized summaries, and monitor referred traffic.
+As AI search engines like ChatGPT, Claude, and Perplexity become mainstream, they crawl your website to train models and answer user queries. Traditional robots.txt files do not make it easy to manage these new crawlers. AI Visibility Control solves this by giving you a central control panel to configure crawler rules, output search-optimized summaries, and monitor referred traffic.
 
 ### What Makes This Plugin Different
-Unlike standard robots.txt editors or massive security suites, TBSH AI Visibility Control is built specifically for the AI era. It is 100% self-contained, requires no external API keys, does not track your admin activity, and runs locally. It features:
+Unlike standard robots.txt editors or massive security suites, AI Visibility Control is built specifically for the AI era. It is 100% self-contained, requires no external API keys, does not track your admin activity, and runs locally. It features:
 1. **AI crawler settings**: Toggle switches to block specific bots (like GPTBot, ClaudeBot, PerplexityBot, etc.) dynamically.
 2. **llms.txt standard**: Generates dynamic plain-text markdown cataloging your public pages to optimize AI ingestion.
 3. **Local AI traffic analytics**: Tracks incoming visits from AI platforms locally without bloating your database.
@@ -39,7 +39,7 @@ Unlike standard robots.txt editors or massive security suites, TBSH AI Visibilit
 
 1. Upload the `tbsh-ai-visibility-control` folder to the `/wp-content/plugins/` directory, or install directly through the WordPress admin panel.
 2. Activate the plugin through the 'Plugins' menu in WordPress.
-3. Navigate to **Settings > TBSH AI Visibility Control** to configure crawler access and view logs.
+3. Navigate to **Settings > AI Visibility Control** to configure crawler access and view logs.
 
 == Frequently Asked Questions ==
 

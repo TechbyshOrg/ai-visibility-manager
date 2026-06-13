@@ -45,7 +45,7 @@ $tavc_sys_info = array(
 		</thead>
 		<tbody>
 			<tr>
-				<td><strong><?php esc_html_e( 'TBSH AI Visibility Control Version', 'tbsh-ai-visibility-control' ); ?></strong></td>
+				<td><strong><?php esc_html_e( 'AI Visibility Control Version', 'tbsh-ai-visibility-control' ); ?></strong></td>
 				<td><code><?php echo esc_html( $tavc_sys_info['plugin_version'] ); ?></code></td>
 			</tr>
 			<tr>

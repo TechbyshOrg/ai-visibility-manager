@@ -151,9 +151,6 @@ class TAVC {
 	 * @since    1.0.0
 	 */
 	private function define_public_hooks() {
-		// Load plugin text domain for translation
-		add_action( 'init', array( $this, 'load_plugin_textdomain' ) );
-
 		// llms.txt rewrite rules and templates
 		add_action( 'init', array( $this->llms_txt, 'register_rewrite_rule' ) );
 		add_filter( 'query_vars', array( $this->llms_txt, 'add_query_vars' ) );
@@ -169,19 +166,6 @@ class TAVC {
 
 		// referral logger
 		add_action( 'template_redirect', array( $this->referral_logger, 'log_incoming_referral' ) );
-	}
-
-	/**
-	 * Load the plugin text domain for translation.
-	 *
-	 * @since    1.0.0
-	 */
-	public function load_plugin_textdomain() {
-		load_plugin_textdomain(
-			'tbsh-ai-visibility-control',
-			false,
-			dirname( dirname( plugin_basename( __FILE__ ) ) ) . '/languages/'
-		);
 	}
 
 	/**

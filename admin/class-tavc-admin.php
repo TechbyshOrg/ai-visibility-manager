@@ -70,14 +70,14 @@ class TAVC_Admin {
 	}
 
 	/**
-	 * Add administration menu for Settings > TBSH AI Visibility Control.
+	 * Add administration menu for Settings > AI Visibility Control.
 	 *
 	 * @since    1.0.0
 	 */
 	public function add_plugin_admin_menu() {
 		add_options_page(
-			__( 'TBSH AI Visibility Control Settings', 'tbsh-ai-visibility-control' ),
-			__( 'TBSH AI Visibility Control', 'tbsh-ai-visibility-control' ),
+			__( 'AI Visibility Control Settings', 'tbsh-ai-visibility-control' ),
+			__( 'AI Visibility Control', 'tbsh-ai-visibility-control' ),
 			'manage_options',
 			$this->plugin_name,
 			array( $this, 'display_plugin_admin_page' )

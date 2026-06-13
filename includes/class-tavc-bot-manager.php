@@ -66,7 +66,7 @@ class TAVC_Bot_Manager {
 		}
 
 		if ( ! empty( $rules ) ) {
-			$output .= "\n# " . __( 'TBSH AI Visibility Control Rules', 'tbsh-ai-visibility-control' ) . "\n" . $rules;
+			$output .= "\n# " . __( 'AI Visibility Control Rules', 'tbsh-ai-visibility-control' ) . "\n" . $rules;
 		}
 
 		return $output;

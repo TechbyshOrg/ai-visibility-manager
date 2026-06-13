@@ -20,7 +20,7 @@ defined( 'ABSPATH' ) || exit;
 		<div class="tavc-header-content">
 			<h1>
 				<span class="dashicons dashicons-visibility"></span> 
-				<?php esc_html_e( 'TBSH AI Visibility Control', 'tbsh-ai-visibility-control' ); ?>
+				<?php esc_html_e( 'AI Visibility Control', 'tbsh-ai-visibility-control' ); ?>
 				<span style="font-size: 14px; font-weight: normal; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px; margin-left: 10px;">
 					<?php esc_html_e( 'Free v1.0.0', 'tbsh-ai-visibility-control' ); ?>
 				</span>
