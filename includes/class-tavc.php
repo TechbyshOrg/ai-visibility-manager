@@ -8,8 +8,8 @@
  * @link       https://techbysh.com
  * @since      1.0.0
  *
- * @package    Aivm
- * @subpackage Aivm/includes
+ * @package    Tavc
+ * @subpackage Tavc/includes
  */
 
 // If this file is called directly, abort.
@@ -27,11 +27,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * version of the plugin.
  *
  * @since      1.0.0
- * @package    Aivm
- * @subpackage Aivm/includes
+ * @package    Tavc
+ * @subpackage Tavc/includes
  * @author     Techbysh
  */
-class AIVM {
+class TAVC {
 
 	/**
 	 * The unique identifier of this plugin.
@@ -53,7 +53,7 @@ class AIVM {
 	 * The single instance of the class.
 	 *
 	 * @since    1.0.0
-	 * @var      AIVM    $instance
+	 * @var      TAVC    $instance
 	 */
 	private static $instance = null;
 
@@ -69,7 +69,7 @@ class AIVM {
 	 * Returns the single instance of the class.
 	 *
 	 * @since    1.0.0
-	 * @return   AIVM    The single instance.
+	 * @return   TAVC    The single instance.
 	 */
 	public static function get_instance() {
 		if ( null === self::$instance ) {
@@ -88,7 +88,7 @@ class AIVM {
 	 * @since    1.0.0
 	 */
 	private function __construct() {
-		$this->plugin_name = 'ai-visibility-manager';
+		$this->plugin_name = 'tbsh-ai-visibility-control';
 		$this->version     = '1.0.0';
 
 		$this->load_dependencies();
@@ -101,26 +101,26 @@ class AIVM {
 	 *
 	 * Include the following files that make up the plugin:
 	 *
-	 * - AIVM_DB. Database query and management class.
-	 * - AIVM_LLMS_Txt. Handles generating /llms.txt.
-	 * - AIVM_Bot_Manager. Manages robots.txt rules for AI bots.
-	 * - AIVM_Referral_Logger. Logs referrals from AI tools.
-	 * - AIVM_Admin. Defines all hooks for the admin area.
+	 * - TAVC_DB. Database query and management class.
+	 * - TAVC_LLMS_Txt. Handles generating /llms.txt.
+	 * - TAVC_Bot_Manager. Manages robots.txt rules for AI bots.
+	 * - TAVC_Referral_Logger. Logs referrals from AI tools.
+	 * - TAVC_Admin. Defines all hooks for the admin area.
 	 *
 	 * @since    1.0.0
 	 */
 	private function load_dependencies() {
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-aivm-db.php';
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-aivm-llms-txt.php';
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-aivm-bot-manager.php';
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-aivm-referral-logger.php';
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-aivm-admin.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-tavc-db.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-tavc-llms-txt.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-tavc-bot-manager.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-tavc-referral-logger.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-tavc-admin.php';
 
 		// Instantiate helper and functionality classes
-		$this->llms_txt        = new AIVM_LLMS_Txt();
-		$this->bot_manager     = new AIVM_Bot_Manager();
-		$this->referral_logger = new AIVM_Referral_Logger();
-		$this->admin           = new AIVM_Admin( $this->get_plugin_name(), $this->get_version() );
+		$this->llms_txt        = new TAVC_LLMS_Txt();
+		$this->bot_manager     = new TAVC_Bot_Manager();
+		$this->referral_logger = new TAVC_Referral_Logger();
+		$this->admin           = new TAVC_Admin( $this->get_plugin_name(), $this->get_version() );
 	}
 
 	/**
@@ -133,14 +133,14 @@ class AIVM {
 		// Admin menus and settings setup
 		add_action( 'admin_menu', array( $this->admin, 'add_plugin_admin_menu' ) );
 		add_action( 'admin_init', array( $this->admin, 'register_plugin_settings' ) );
-		add_action( 'admin_enqueue_scripts', array( $this->admin, 'enqueue_styles' ) );
+		add_action( 'admin_enqueue_scripts', array( $this->admin, 'enqueue_assets' ) );
 
 		// Tools page actions (clear logs, reset settings, rebuild cache, export CSV)
-		add_action( 'admin_post_aivm_tool_action', array( $this->admin, 'handle_tool_actions' ) );
+		add_action( 'admin_post_tavc_tool_action', array( $this->admin, 'handle_tool_actions' ) );
 		add_action( 'admin_notices', array( $this->admin, 'display_admin_notices' ) );
 
 		// Plugin action links settings shortcut
-		$plugin_basename = plugin_basename( plugin_dir_path( dirname( __FILE__ ) ) . 'ai-visibility-manager.php' );
+		$plugin_basename = plugin_basename( plugin_dir_path( dirname( __FILE__ ) ) . 'tbsh-ai-visibility-control.php' );
 		add_filter( 'plugin_action_links_' . $plugin_basename, array( $this->admin, 'add_action_links' ) );
 	}
 
@@ -151,6 +151,9 @@ class AIVM {
 	 * @since    1.0.0
 	 */
 	private function define_public_hooks() {
+		// Load plugin text domain for translation
+		add_action( 'init', array( $this, 'load_plugin_textdomain' ) );
+
 		// llms.txt rewrite rules and templates
 		add_action( 'init', array( $this->llms_txt, 'register_rewrite_rule' ) );
 		add_filter( 'query_vars', array( $this->llms_txt, 'add_query_vars' ) );
@@ -166,6 +169,19 @@ class AIVM {
 
 		// referral logger
 		add_action( 'template_redirect', array( $this->referral_logger, 'log_incoming_referral' ) );
+	}
+
+	/**
+	 * Load the plugin text domain for translation.
+	 *
+	 * @since    1.0.0
+	 */
+	public function load_plugin_textdomain() {
+		load_plugin_textdomain(
+			'tbsh-ai-visibility-control',
+			false,
+			dirname( dirname( plugin_basename( __FILE__ ) ) ) . '/languages/'
+		);
 	}
 
 	/**

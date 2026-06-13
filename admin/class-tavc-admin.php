@@ -5,8 +5,8 @@
  * @link       https://techbysh.com
  * @since      1.0.0
  *
- * @package    Aivm
- * @subpackage Aivm/admin
+ * @package    Tavc
+ * @subpackage Tavc/admin
  */
 
 // If this file is called directly, abort.
@@ -20,11 +20,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Defines the plugin name, version, and registers hooks for backend settings,
  * menus, styles, diagnostics, and tools processing.
  *
- * @package    Aivm
- * @subpackage Aivm/admin
+ * @package    Tavc
+ * @subpackage Tavc/admin
  * @author     Techbysh
  */
-class AIVM_Admin {
+class TAVC_Admin {
 
 	/**
 	 * The ID of this plugin.
@@ -55,28 +55,29 @@ class AIVM_Admin {
 	}
 
 	/**
-	 * Register the stylesheets for the admin area.
+	 * Register the stylesheets and scripts for the admin area.
 	 *
 	 * @since    1.0.0
 	 * @param    string    $hook    The current page hook name.
 	 */
-	public function enqueue_styles( $hook ) {
-		if ( 'settings_page_ai-visibility-manager' !== $hook ) {
+	public function enqueue_assets( $hook ) {
+		if ( 'settings_page_tbsh-ai-visibility-control' !== $hook ) {
 			return;
 		}
 
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/aivm-admin.css', array(), $this->version, 'all' );
+		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/tavc-admin.css', array(), $this->version, 'all' );
+		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/tavc-admin.js', array(), $this->version, true );
 	}
 
 	/**
-	 * Add administration menu for Settings > AI Visibility Manager.
+	 * Add administration menu for Settings > TBSH AI Visibility Control.
 	 *
 	 * @since    1.0.0
 	 */
 	public function add_plugin_admin_menu() {
 		add_options_page(
-			__( 'AI Visibility Manager Settings', 'ai-visibility-manager' ),
-			__( 'AI Visibility Manager', 'ai-visibility-manager' ),
+			__( 'TBSH AI Visibility Control Settings', 'tbsh-ai-visibility-control' ),
+			__( 'TBSH AI Visibility Control', 'tbsh-ai-visibility-control' ),
 			'manage_options',
 			$this->plugin_name,
 			array( $this, 'display_plugin_admin_page' )
@@ -89,7 +90,7 @@ class AIVM_Admin {
 	 * @since    1.0.0
 	 */
 	public function display_plugin_admin_page() {
-		require_once plugin_dir_path( __FILE__ ) . 'partials/aivm-admin-display.php';
+		require_once plugin_dir_path( __FILE__ ) . 'partials/tavc-admin-display.php';
 	}
 
 	/**
@@ -99,14 +100,14 @@ class AIVM_Admin {
 	 */
 	public function register_plugin_settings() {
 		register_setting(
-			'aivm_settings_group',
-			'aivm_blocked_bots',
+			'tavc_settings_group',
+			'tavc_blocked_bots',
 			array( $this, 'sanitize_blocked_bots' )
 		);
 
 		register_setting(
-			'aivm_settings_group',
-			'aivm_delete_on_uninstall',
+			'tavc_settings_group',
+			'tavc_delete_on_uninstall',
 			'absint'
 		);
 	}
@@ -137,11 +138,11 @@ class AIVM_Admin {
 	 */
 	public function handle_tool_actions() {
 		// Nonce check
-		check_admin_referer( 'aivm_tool_nonce', '_wpnonce' );
+		check_admin_referer( 'tavc_tool_nonce', '_wpnonce' );
 
 		// Capability check
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'ai-visibility-manager' ) );
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'tbsh-ai-visibility-control' ) );
 		}
 
 		$tool   = isset( $_GET['tool'] ) ? sanitize_key( $_GET['tool'] ) : '';
@@ -150,24 +151,24 @@ class AIVM_Admin {
 
 		switch ( $tool ) {
 			case 'rebuild_cache':
-				$llms_txt = new AIVM_LLMS_Txt();
+				$llms_txt = new TAVC_LLMS_Txt();
 				$llms_txt->clear_llms_txt_cache();
 				
 				// Generate immediately to prime the cache
 				$content = $llms_txt->generate_llms_txt();
-				set_transient( 'aivm_llms_txt_cache', $content, WEEK_IN_SECONDS );
-				update_option( 'aivm_llms_txt_last_rebuild', current_time( 'timestamp' ), 'no' );
+				set_transient( 'tavc_llms_txt_cache', $content, WEEK_IN_SECONDS );
+				update_option( 'tavc_llms_txt_last_rebuild', current_time( 'timestamp' ), 'no' );
 
 				// Delete health checks transients so they rebuild
-				delete_transient( 'aivm_health_llms_txt' );
-				delete_transient( 'aivm_health_robots' );
+				delete_transient( 'tavc_health_llms_txt' );
+				delete_transient( 'tavc_health_robots' );
 				
 				$msg = 'cache_rebuilt';
 				$tab = 'llmstxt';
 				break;
 
 			case 'clear_logs':
-				AIVM_DB::clear_referral_logs();
+				TAVC_DB::clear_referral_logs();
 				$msg = 'logs_cleared';
 				$tab = 'referrals';
 				break;
@@ -182,7 +183,7 @@ class AIVM_Admin {
 					'amazonbot'         => 0,
 					'applebot-extended' => 0,
 				);
-				update_option( 'aivm_blocked_bots', $default_bots );
+				update_option( 'tavc_blocked_bots', $default_bots );
 				
 				$msg = 'settings_reset';
 				$tab = 'bots';
@@ -202,7 +203,7 @@ class AIVM_Admin {
 				array(
 					'page'     => $this->plugin_name,
 					'tab'      => $tab,
-					'aivm_msg' => $msg,
+					'tavc_msg' => $msg,
 				),
 				admin_url( 'options-general.php' )
 			)
@@ -217,7 +218,7 @@ class AIVM_Admin {
 	 */
 	private function export_referrals_csv() {
 		header( 'Content-Type: text/csv; charset=utf-8' );
-		header( 'Content-Disposition: attachment; filename="ai-referrals-log-' . current_time( 'Y-m-d' ) . '.csv"' );
+		header( 'Content-Disposition: attachment; filename="tbsh-ai-referrals-log-' . current_time( 'Y-m-d' ) . '.csv"' );
 		header( 'Pragma: no-cache' );
 		header( 'Expires: 0' );
 
@@ -225,13 +226,13 @@ class AIVM_Admin {
 		
 		// Header row
 		fputcsv( $output, array(
-			__( 'Timestamp', 'ai-visibility-manager' ),
-			__( 'Source AI Bot', 'ai-visibility-manager' ),
-			__( 'Destination Page URL', 'ai-visibility-manager' )
+			__( 'Timestamp', 'tbsh-ai-visibility-control' ),
+			__( 'Source AI Bot', 'tbsh-ai-visibility-control' ),
+			__( 'Destination Page URL', 'tbsh-ai-visibility-control' )
 		) );
 
 		// Data rows
-		$logs = AIVM_DB::get_all_referrals_for_csv();
+		$logs = TAVC_DB::get_all_referrals_for_csv();
 		foreach ( $logs as $log ) {
 			fputcsv( $output, array(
 				$log->timestamp,
@@ -253,12 +254,12 @@ class AIVM_Admin {
 	public function display_admin_notices() {
 		// Ensure we are only showing notifications on our settings page
 		$screen = get_current_screen();
-		if ( ! $screen || 'settings_page_ai-visibility-manager' !== $screen->id ) {
+		if ( ! $screen || 'settings_page_tbsh-ai-visibility-control' !== $screen->id ) {
 			return;
 		}
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$msg = isset( $_GET['aivm_msg'] ) ? sanitize_key( wp_unslash( $_GET['aivm_msg'] ) ) : '';
+		$msg = isset( $_GET['tavc_msg'] ) ? sanitize_key( wp_unslash( $_GET['tavc_msg'] ) ) : '';
 		if ( empty( $msg ) ) {
 			return;
 		}
@@ -268,13 +269,13 @@ class AIVM_Admin {
 
 		switch ( $msg ) {
 			case 'cache_rebuilt':
-				$message = __( 'The llms.txt cache file has been rebuilt successfully.', 'ai-visibility-manager' );
+				$message = __( 'The llms.txt cache file has been rebuilt successfully.', 'tbsh-ai-visibility-control' );
 				break;
 			case 'logs_cleared':
-				$message = __( 'AI Referral visitor logs have been deleted successfully.', 'ai-visibility-manager' );
+				$message = __( 'AI Referral visitor logs have been deleted successfully.', 'tbsh-ai-visibility-control' );
 				break;
 			case 'settings_reset':
-				$message = __( 'AI Bot Manager rules have been reset to defaults.', 'ai-visibility-manager' );
+				$message = __( 'AI Bot Manager rules have been reset to defaults.', 'tbsh-ai-visibility-control' );
 				break;
 			default:
 				return;
@@ -297,20 +298,20 @@ class AIVM_Admin {
 		if ( empty( $permalink_structure ) ) {
 			$status['permalinks'] = array(
 				'status'         => 'fail',
-				'title'          => __( 'Pretty Permalinks Disabled', 'ai-visibility-manager' ),
-				'desc'           => __( 'Dynamic virtual routing requires custom URL structure.', 'ai-visibility-manager' ),
-				'recommendation' => __( 'Navigate to Settings > Permalinks and change from Plain to Post Name.', 'ai-visibility-manager' ),
+				'title'          => __( 'Pretty Permalinks Disabled', 'tbsh-ai-visibility-control' ),
+				'desc'           => __( 'Dynamic virtual routing requires custom URL structure.', 'tbsh-ai-visibility-control' ),
+				'recommendation' => __( 'Navigate to Settings > Permalinks and change from Plain to Post Name.', 'tbsh-ai-visibility-control' ),
 			);
 		} else {
 			$status['permalinks'] = array(
 				'status' => 'pass',
-				'title'  => __( 'Pretty Permalinks Enabled', 'ai-visibility-manager' ),
-				'desc'   => __( 'URL structure supports custom rewrite mapping.', 'ai-visibility-manager' ),
+				'title'  => __( 'Pretty Permalinks Enabled', 'tbsh-ai-visibility-control' ),
+				'desc'   => __( 'URL structure supports custom rewrite mapping.', 'tbsh-ai-visibility-control' ),
 			);
 		}
 
 		// 2. llms.txt Reachability
-		$llms_check = get_transient( 'aivm_health_llms_txt' );
+		$llms_check = get_transient( 'tavc_health_llms_txt' );
 		if ( false === $llms_check ) {
 			$url      = home_url( '/llms.txt' );
 			$response = wp_safe_remote_get( $url, array( 'timeout' => 2, 'sslverify' => false ) );
@@ -320,26 +321,26 @@ class AIVM_Admin {
 			} else {
 				$llms_check = 'fail';
 			}
-			set_transient( 'aivm_health_llms_txt', $llms_check, HOUR_IN_SECONDS );
+			set_transient( 'tavc_health_llms_txt', $llms_check, HOUR_IN_SECONDS );
 		}
 
 		if ( $llms_check === 'pass' ) {
 			$status['llmstxt'] = array(
 				'status' => 'pass',
-				'title'  => __( 'llms.txt Endpoint Reachable', 'ai-visibility-manager' ),
-				'desc'   => __( 'The site responded with a valid output on /llms.txt request.', 'ai-visibility-manager' ),
+				'title'  => __( 'llms.txt Endpoint Reachable', 'tbsh-ai-visibility-control' ),
+				'desc'   => __( 'The site responded with a valid output on /llms.txt request.', 'tbsh-ai-visibility-control' ),
 			);
 		} else {
 			$status['llmstxt'] = array(
 				'status'         => 'fail',
-				'title'          => __( 'llms.txt Endpoint Unreachable', 'ai-visibility-manager' ),
-				'desc'           => __( 'Local request did not return a successful 200 response.', 'ai-visibility-manager' ),
-				'recommendation' => __( 'Flush rewrites using Rebuild Cache button under Tools tab.', 'ai-visibility-manager' ),
+				'title'          => __( 'llms.txt Endpoint Unreachable', 'tbsh-ai-visibility-control' ),
+				'desc'           => __( 'Local request did not return a successful 200 response.', 'tbsh-ai-visibility-control' ),
+				'recommendation' => __( 'Flush rewrites using Rebuild Cache button under Tools tab.', 'tbsh-ai-visibility-control' ),
 			);
 		}
 
 		// 3. robots.txt Reachability
-		$robots_check = get_transient( 'aivm_health_robots' );
+		$robots_check = get_transient( 'tavc_health_robots' );
 		if ( false === $robots_check ) {
 			$url      = home_url( '/robots.txt' );
 			$response = wp_safe_remote_get( $url, array( 'timeout' => 2, 'sslverify' => false ) );
@@ -349,21 +350,21 @@ class AIVM_Admin {
 			} else {
 				$robots_check = 'warning';
 			}
-			set_transient( 'aivm_health_robots', $robots_check, HOUR_IN_SECONDS );
+			set_transient( 'tavc_health_robots', $robots_check, HOUR_IN_SECONDS );
 		}
 
 		if ( $robots_check === 'pass' ) {
 			$status['robots'] = array(
 				'status' => 'pass',
-				'title'  => __( 'robots.txt Reachable', 'ai-visibility-manager' ),
-				'desc'   => __( 'The robots.txt file is loaded correctly by client crawlers.', 'ai-visibility-manager' ),
+				'title'  => __( 'robots.txt Reachable', 'tbsh-ai-visibility-control' ),
+				'desc'   => __( 'The robots.txt file is loaded correctly by client crawlers.', 'tbsh-ai-visibility-control' ),
 			);
 		} else {
 			$status['robots'] = array(
 				'status'         => 'warning',
-				'title'          => __( 'robots.txt Unreachable', 'ai-visibility-manager' ),
-				'desc'           => __( 'Dynamic file could not be fetched or standard physical robots.txt block is present.', 'ai-visibility-manager' ),
-				'recommendation' => __( 'Verify that no physical robots.txt file exists in root directory.', 'ai-visibility-manager' ),
+				'title'          => __( 'robots.txt Unreachable', 'tbsh-ai-visibility-control' ),
+				'desc'           => __( 'Dynamic file could not be fetched or standard physical robots.txt block is present.', 'tbsh-ai-visibility-control' ),
+				'recommendation' => __( 'Verify that no physical robots.txt file exists in root directory.', 'tbsh-ai-visibility-control' ),
 			);
 		}
 
@@ -372,15 +373,15 @@ class AIVM_Admin {
 		if ( intval( $blog_public ) === 0 ) {
 			$status['visibility'] = array(
 				'status'         => 'warning',
-				'title'          => __( 'Search Engines Discouraged', 'ai-visibility-manager' ),
-				'desc'           => __( 'Your website has search engine indexing visibility disabled.', 'ai-visibility-manager' ),
-				'recommendation' => __( 'Turn off "Discourage search engines from indexing this site" under Settings > Reading.', 'ai-visibility-manager' ),
+				'title'          => __( 'Search Engines Discouraged', 'tbsh-ai-visibility-control' ),
+				'desc'           => __( 'Your website has search engine indexing visibility disabled.', 'tbsh-ai-visibility-control' ),
+				'recommendation' => __( 'Turn off "Discourage search engines from indexing this site" under Settings > Reading.', 'tbsh-ai-visibility-control' ),
 			);
 		} else {
 			$status['visibility'] = array(
 				'status' => 'pass',
-				'title'  => __( 'Search Visibility Enabled', 'ai-visibility-manager' ),
-				'desc'   => __( 'Standard search crawlers are allowed to parse content.', 'ai-visibility-manager' ),
+				'title'  => __( 'Search Visibility Enabled', 'tbsh-ai-visibility-control' ),
+				'desc'   => __( 'Standard search crawlers are allowed to parse content.', 'tbsh-ai-visibility-control' ),
 			);
 		}
 
@@ -388,15 +389,15 @@ class AIVM_Admin {
 		if ( file_exists( ABSPATH . '.maintenance' ) ) {
 			$status['public'] = array(
 				'status'         => 'warning',
-				'title'          => __( 'Site Under Maintenance', 'ai-visibility-manager' ),
-				'desc'           => __( 'The site active state is blocked by maintenance flag.', 'ai-visibility-manager' ),
-				'recommendation' => __( 'Remove the .maintenance file from root once updates are completed.', 'ai-visibility-manager' ),
+				'title'          => __( 'Site Under Maintenance', 'tbsh-ai-visibility-control' ),
+				'desc'           => __( 'The site active state is blocked by maintenance flag.', 'tbsh-ai-visibility-control' ),
+				'recommendation' => __( 'Remove the .maintenance file from root once updates are completed.', 'tbsh-ai-visibility-control' ),
 			);
 		} else {
 			$status['public'] = array(
 				'status' => 'pass',
-				'title'  => __( 'Site State Public', 'ai-visibility-manager' ),
-				'desc'   => __( 'No active maintenance or offline triggers detected.', 'ai-visibility-manager' ),
+				'title'  => __( 'Site State Public', 'tbsh-ai-visibility-control' ),
+				'desc'   => __( 'No active maintenance or offline triggers detected.', 'tbsh-ai-visibility-control' ),
 			);
 		}
 
@@ -430,7 +431,7 @@ class AIVM_Admin {
 			}
 		}
 
-		$last_rebuild = get_option( 'aivm_llms_txt_last_rebuild', 0 );
+		$last_rebuild = get_option( 'tavc_llms_txt_last_rebuild', 0 );
 
 		return array(
 			'posts_count'    => $posts_count,
@@ -448,7 +449,7 @@ class AIVM_Admin {
 	 * @return   array              Modified links.
 	 */
 	public function add_action_links( $links ) {
-		$settings_link = '<a href="' . esc_url( admin_url( 'options-general.php?page=ai-visibility-manager' ) ) . '">' . esc_html__( 'Settings', 'ai-visibility-manager' ) . '</a>';
+		$settings_link = '<a href="' . esc_url( admin_url( 'options-general.php?page=tbsh-ai-visibility-control' ) ) . '">' . esc_html__( 'Settings', 'tbsh-ai-visibility-control' ) . '</a>';
 		array_unshift( $links, $settings_link );
 		return $links;
 	}

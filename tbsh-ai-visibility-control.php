@@ -9,11 +9,10 @@
  *
  * @link              https://techbysh.com
  * @since             1.0.0
- * @package           Aivm
+ * @package           Tavc
  *
  * @wordpress-plugin
- * Plugin Name:       AI Visibility Manager – Dynamic llms.txt & robots.txt Crawler Control
- * Plugin URI:        https://techbysh.com/plugins/ai-visibility-manager/
+ * Plugin Name:       TBSH AI Visibility Control
  * Description:       Manage search crawler visibility, block AI bots, generate llms.txt, and log AI search referral traffic.
  * Version:           1.0.0
  * Author:            Techbysh
@@ -22,7 +21,7 @@
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Requires at least: 6.2
  * Requires PHP:      7.4
- * Text Domain:       ai-visibility-manager
+ * Text Domain:       tbsh-ai-visibility-control
  */
 
 // If this file is called directly, abort.
@@ -32,40 +31,40 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * The code that runs during plugin activation.
- * This action is documented in includes/class-aivm-activator.php
+ * This action is documented in includes/class-tavc-activator.php
  */
-function aivm_activate() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-aivm-activator.php';
-	AIVM_Activator::activate();
+function tavc_activate() {
+	require_once plugin_dir_path( __FILE__ ) . 'includes/class-tavc-activator.php';
+	TAVC_Activator::activate();
 }
 
 /**
  * The code that runs during plugin deactivation.
- * This action is documented in includes/class-aivm-deactivator.php
+ * This action is documented in includes/class-tavc-deactivator.php
  */
-function aivm_deactivate() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-aivm-deactivator.php';
-	AIVM_Deactivator::deactivate();
+function tavc_deactivate() {
+	require_once plugin_dir_path( __FILE__ ) . 'includes/class-tavc-deactivator.php';
+	TAVC_Deactivator::deactivate();
 }
 
-register_activation_hook( __FILE__, 'aivm_activate' );
-register_deactivation_hook( __FILE__, 'aivm_deactivate' );
+register_activation_hook( __FILE__, 'tavc_activate' );
+register_deactivation_hook( __FILE__, 'tavc_deactivate' );
 
 /**
  * Core class to start the plugin.
  */
-require_once plugin_dir_path( __FILE__ ) . 'includes/class-aivm.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-tavc.php';
 
 /**
  * Begins execution of the plugin.
  *
  * Since everything within the plugin is registered via hooks, catching the
- * hook registry and executing the source path is handled by AIVM.
+ * hook registry and executing the source path is handled by TAVC.
  *
  * @since    1.0.0
  */
-function aivm_run() {
-	$plugin = AIVM::get_instance();
+function tavc_run() {
+	$plugin = TAVC::get_instance();
 	$plugin->run();
 }
-aivm_run();
+tavc_run();

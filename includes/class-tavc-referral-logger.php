@@ -5,8 +5,8 @@
  * @link       https://techbysh.com
  * @since      1.0.0
  *
- * @package    Aivm
- * @subpackage Aivm/includes
+ * @package    Tavc
+ * @subpackage Tavc/includes
  */
 
 // If this file is called directly, abort.
@@ -21,11 +21,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * debounces duplicate entries from the same IP/destination, and stores them.
  *
  * @since      1.0.0
- * @package    Aivm
- * @subpackage Aivm/includes
+ * @package    Tavc
+ * @subpackage Tavc/includes
  * @author     Techbysh
  */
-class AIVM_Referral_Logger {
+class TAVC_Referral_Logger {
 
 	/**
 	 * Run checks on template_redirect to inspect the referrer.
@@ -57,7 +57,7 @@ class AIVM_Referral_Logger {
 		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
 		
 		// Generate unique transient key for the combination of IP + Source + Target
-		$debounce_key = 'aivm_ref_' . md5( $ip . '|' . $matched_source . '|' . $target_url );
+		$debounce_key = 'tavc_ref_' . md5( $ip . '|' . $matched_source . '|' . $target_url );
 
 		// Check if we logged this specific visit in the last 5 minutes
 		if ( false === get_transient( $debounce_key ) ) {
@@ -65,8 +65,8 @@ class AIVM_Referral_Logger {
 			set_transient( $debounce_key, 1, 300 );
 
 			// Write to DB
-			require_once plugin_dir_path( __FILE__ ) . 'class-aivm-db.php';
-			AIVM_DB::insert_referral( $matched_source, $target_url );
+			require_once plugin_dir_path( __FILE__ ) . 'class-tavc-db.php';
+			TAVC_DB::insert_referral( $matched_source, $target_url );
 		}
 	}
 

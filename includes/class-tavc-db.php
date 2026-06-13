@@ -7,8 +7,8 @@
  * @link       https://techbysh.com
  * @since      1.0.0
  *
- * @package    Aivm
- * @subpackage Aivm/includes
+ * @package    Tavc
+ * @subpackage Tavc/includes
  */
 
 // If this file is called directly, abort.
@@ -22,11 +22,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Handles database operations for the custom table.
  *
  * @since      1.0.0
- * @package    Aivm
- * @subpackage Aivm/includes
+ * @package    Tavc
+ * @subpackage Tavc/includes
  * @author     Techbysh
  */
-class AIVM_DB {
+class TAVC_DB {
 
 	/**
 	 * Retrieve table name with proper prefix.
@@ -36,7 +36,7 @@ class AIVM_DB {
 	 */
 	public static function get_table_name() {
 		global $wpdb;
-		return $wpdb->prefix . 'aivm_referrals';
+		return $wpdb->prefix . 'tavc_referrals';
 	}
 
 	/**

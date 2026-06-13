@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Visibility Manager - Documentation & Support Guide</title>
+    <title>TBSH AI Visibility Control - Documentation & Support Guide</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -269,7 +269,7 @@
     <aside>
         <div class="logo">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-            AI Visibility Manager
+            TBSH AI Visibility Control
         </div>
         <ul class="menu-list">
             <li class="menu-item"><a href="#introduction" class="menu-link active">Introduction</a></li>
@@ -287,14 +287,14 @@
     <!-- Main Content Panel -->
     <main>
         <header>
-            <h1>AI Visibility Manager Documentation</h1>
+            <h1>TBSH AI Visibility Control Documentation</h1>
             <p class="subtitle">Complete technical reference and installation guide for controlling search crawlers and Large Language Models (LLMs).</p>
         </header>
 
         <!-- Introduction Section -->
         <section id="introduction">
             <h2>1. Introduction</h2>
-            <p>AI Visibility Manager is a WordPress plugin designed to help webmasters manage how Artificial Intelligence bots, search LLMs, and conversational engines index their sites. In the modern web environment, new crawlers scan sites to feed training datasets and compile references for conversational search boxes (like ChatGPT Search or Perplexity).</p>
+            <p>TBSH AI Visibility Control is a WordPress plugin designed to help webmasters manage how Artificial Intelligence bots, search LLMs, and conversational engines index their sites. In the modern web environment, new crawlers scan sites to feed training datasets and compile references for conversational search boxes (like ChatGPT Search or Perplexity).</p>
             
             <div class="alert alert-info">
                 <strong>Why this matters:</strong> Standard robots.txt rules do not provide granular control over the latest AI bots, nor do they track referred conversational traffic. This plugin bridges that gap in a lightweight, self-contained way.
@@ -317,7 +317,7 @@
                 <li>In your WordPress dashboard, navigate to <strong>Plugins > Add New</strong> and click <strong>Upload Plugin</strong>.</li>
                 <li>Choose the downloaded file and click <strong>Install Now</strong>.</li>
                 <li>Once installed, click <strong>Activate Plugin</strong>.</li>
-                <li>Go to <strong>Settings > AI Visibility Manager</strong> in your admin menu to adjust configurations.</li>
+                <li>Go to <strong>Settings > TBSH AI Visibility Control</strong> in your admin menu to adjust configurations.</li>
             </ol>
 
             <div class="alert alert-warning">
@@ -445,7 +445,7 @@ Site description details.
             <div class="card">
                 <h3>Problem 1: llms.txt returns a 404 Page Not Found error</h3>
                 <p><strong>Reason:</strong> Your permalink structure is set to "Plain", or WordPress rewrite rules have not flushed correctly.</p>
-                <p><strong>Solution:</strong> Navigate to <em>Settings > Permalinks</em>, change the setting to <em>Post Name</em>, and save. Then go to <em>Settings > AI Visibility Manager > Tools</em> and click <strong>Rebuild Cache</strong> to flush rules.</p>
+                <p><strong>Solution:</strong> Navigate to <em>Settings > Permalinks</em>, change the setting to <em>Post Name</em>, and save. Then go to <em>Settings > TBSH AI Visibility Control > Tools</em> and click <strong>Rebuild Cache</strong> to flush rules.</p>
             </div>
 
             <div class="card">
@@ -473,7 +473,7 @@ Site description details.
             
             <h3>A. Customize llms.txt output</h3>
             <p>If you want to alter the Dynamic Markdown content before it is output or cached:</p>
-            <pre><code>add_filter( 'aivm_llms_txt_output', 'custom_llms_txt_content' );
+            <pre><code>add_filter( 'tavc_llms_txt_output', 'custom_llms_txt_content' );
 function custom_llms_txt_content( $output ) {
     // Append custom legal or about info at the bottom
     $output .= "\n## Custom Index\n- [Terms](https://yoursite.com/terms/)\n";
@@ -482,7 +482,7 @@ function custom_llms_txt_content( $output ) {
 
             <h3>B. Add custom AI bots to block in robots.txt</h3>
             <p>To block additional crawlers not listed by default in the free control panel:</p>
-            <pre><code>add_filter( 'aivm_custom_robots_rules', 'add_custom_bots' );
+            <pre><code>add_filter( 'tavc_custom_robots_rules', 'add_custom_bots' );
 function add_custom_bots( $rules ) {
     $rules .= "\nUser-agent: SpecializedBot\nDisallow: /\n";
     return $rules;
@@ -490,7 +490,7 @@ function add_custom_bots( $rules ) {
         </section>
 
         <footer>
-            <p>&copy; 2026 Techbysh. AI Visibility Manager is open-source software licensed under GPLv2 or later.</p>
+            <p>&copy; 2026 Techbysh. TBSH AI Visibility Control is open-source software licensed under GPLv2 or later.</p>
         </footer>
     </main>
 </div>

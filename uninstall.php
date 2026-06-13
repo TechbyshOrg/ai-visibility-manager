@@ -5,7 +5,7 @@
  * @link       https://techbysh.com
  * @since      1.0.0
  *
- * @package    Aivm
+ * @package    Tavc
  */
 
 // If uninstall not called from WordPress, exit.
@@ -14,23 +14,23 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 }
 
 // Check if user opted-in to delete data on uninstall
-$aivm_delete_data = get_option( 'aivm_delete_on_uninstall', 0 );
-if ( ! $aivm_delete_data ) {
+$tavc_delete_data = get_option( 'tavc_delete_on_uninstall', 0 );
+if ( ! $tavc_delete_data ) {
 	return;
 }
 
 // Clear options
-delete_option( 'aivm_blocked_bots' );
-delete_option( 'aivm_delete_on_uninstall' );
-delete_option( 'aivm_llms_txt_last_rebuild' );
+delete_option( 'tavc_blocked_bots' );
+delete_option( 'tavc_delete_on_uninstall' );
+delete_option( 'tavc_llms_txt_last_rebuild' );
 
 // Delete transients
-delete_transient( 'aivm_llms_txt_cache' );
-delete_transient( 'aivm_health_llms_txt' );
-delete_transient( 'aivm_health_robots' );
+delete_transient( 'tavc_llms_txt_cache' );
+delete_transient( 'tavc_health_llms_txt' );
+delete_transient( 'tavc_health_robots' );
 
 // Drop database table
 global $wpdb;
-$aivm_table_name = $wpdb->prefix . 'aivm_referrals';
+$tavc_table_name = $wpdb->prefix . 'tavc_referrals';
 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery
-$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $aivm_table_name ) );
+$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $tavc_table_name ) );

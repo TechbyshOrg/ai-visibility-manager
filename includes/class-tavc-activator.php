@@ -5,8 +5,8 @@
  * @link       https://techbysh.com
  * @since      1.0.0
  *
- * @package    Aivm
- * @subpackage Aivm/includes
+ * @package    Tavc
+ * @subpackage Tavc/includes
  */
 
 // If this file is called directly, abort.
@@ -20,11 +20,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * This class defines all code necessary to run during the plugin's activation.
  *
  * @since      1.0.0
- * @package    Aivm
- * @subpackage Aivm/includes
+ * @package    Tavc
+ * @subpackage Tavc/includes
  * @author     Techbysh
  */
-class AIVM_Activator {
+class TAVC_Activator {
 
 	/**
 	 * Short description.
@@ -40,8 +40,8 @@ class AIVM_Activator {
 		self::set_default_options();
 
 		// Register the rewrite rule for llms.txt dynamically and flush
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-aivm-llms-txt.php';
-		$llms_txt = new AIVM_LLMS_Txt();
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-tavc-llms-txt.php';
+		$llms_txt = new TAVC_LLMS_Txt();
 		$llms_txt->register_rewrite_rule();
 
 		flush_rewrite_rules();
@@ -55,7 +55,7 @@ class AIVM_Activator {
 	private static function create_database_table() {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'aivm_referrals';
+		$table_name = $wpdb->prefix . 'tavc_referrals';
 		$charset_collate = $wpdb->get_charset_collate();
 
 		$sql = "CREATE TABLE $table_name (
@@ -88,8 +88,8 @@ class AIVM_Activator {
 			'applebot-extended'  => 0,
 		);
 
-		if ( false === get_option( 'aivm_blocked_bots' ) ) {
-			update_option( 'aivm_blocked_bots', $default_bots );
+		if ( false === get_option( 'tavc_blocked_bots' ) ) {
+			update_option( 'tavc_blocked_bots', $default_bots );
 		}
 	}
 }

@@ -5,8 +5,8 @@
  * @link       https://techbysh.com
  * @since      1.0.0
  *
- * @package    Aivm
- * @subpackage Aivm/includes
+ * @package    Tavc
+ * @subpackage Tavc/includes
  */
 
 // If this file is called directly, abort.
@@ -20,11 +20,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * This class defines all code necessary to run during the plugin's deactivation.
  *
  * @since      1.0.0
- * @package    Aivm
- * @subpackage Aivm/includes
+ * @package    Tavc
+ * @subpackage Tavc/includes
  * @author     Techbysh
  */
-class AIVM_Deactivator {
+class TAVC_Deactivator {
 
 	/**
 	 * Short description.
@@ -37,6 +37,6 @@ class AIVM_Deactivator {
 		flush_rewrite_rules();
 
 		// Clear transients
-		delete_transient( 'aivm_llms_txt_cache' );
+		delete_transient( 'tavc_llms_txt_cache' );
 	}
 }

@@ -5,8 +5,8 @@
  * @link       https://techbysh.com
  * @since      1.0.0
  *
- * @package    Aivm
- * @subpackage Aivm/includes
+ * @package    Tavc
+ * @subpackage Tavc/includes
  */
 
 // If this file is called directly, abort.
@@ -21,11 +21,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * handles transient caching, and hooks into save/delete actions to clear cache.
  *
  * @since      1.0.0
- * @package    Aivm
- * @subpackage Aivm/includes
+ * @package    Tavc
+ * @subpackage Tavc/includes
  * @author     Techbysh
  */
-class AIVM_LLMS_Txt {
+class TAVC_LLMS_Txt {
 
 	/**
 	 * Register rewrite rule for /llms.txt
@@ -33,7 +33,7 @@ class AIVM_LLMS_Txt {
 	 * @since    1.0.0
 	 */
 	public function register_rewrite_rule() {
-		add_rewrite_rule( '^llms\.txt$', 'index.php?aivm_llms_txt=1', 'top' );
+		add_rewrite_rule( '^llms\.txt$', 'index.php?tavc_llms_txt=1', 'top' );
 	}
 
 	/**
@@ -44,7 +44,7 @@ class AIVM_LLMS_Txt {
 	 * @return   array             Modified query variables.
 	 */
 	public function add_query_vars( $vars ) {
-		$vars[] = 'aivm_llms_txt';
+		$vars[] = 'tavc_llms_txt';
 		return $vars;
 	}
 
@@ -54,17 +54,17 @@ class AIVM_LLMS_Txt {
 	 * @since    1.0.0
 	 */
 	public function render_llms_txt() {
-		if ( get_query_var( 'aivm_llms_txt' ) != 1 ) {
+		if ( get_query_var( 'tavc_llms_txt' ) != 1 ) {
 			return;
 		}
 
 		// Check cache first
-		$output = get_transient( 'aivm_llms_txt_cache' );
+		$output = get_transient( 'tavc_llms_txt_cache' );
 
 		if ( false === $output ) {
 			$output = $this->generate_llms_txt();
-			set_transient( 'aivm_llms_txt_cache', $output, WEEK_IN_SECONDS );
-			update_option( 'aivm_llms_txt_last_rebuild', current_time( 'timestamp' ), 'no' );
+			set_transient( 'tavc_llms_txt_cache', $output, WEEK_IN_SECONDS );
+			update_option( 'tavc_llms_txt_last_rebuild', current_time( 'timestamp' ), 'no' );
 		}
 
 		// Disable caching in browsers/proxies for live fetching if needed, but output as plain text
@@ -90,16 +90,16 @@ class AIVM_LLMS_Txt {
 		if ( ! empty( $site_description ) ) {
 			$output .= $site_description . "\n\n";
 		} else {
-			$output .= __( 'No description provided.', 'ai-visibility-manager' ) . "\n\n";
+			$output .= __( 'No description provided.', 'tbsh-ai-visibility-control' ) . "\n\n";
 		}
 
 		$output .= "## Recent Content\n\n";
 
-		// Query latest 100 public posts and pages
+		// Query all public posts and pages (Removed artificial 100 limit)
 		$args = array(
 			'post_type'      => array( 'post', 'page' ),
 			'post_status'    => 'publish',
-			'posts_per_page' => 100,
+			'posts_per_page' => -1,
 			'orderby'        => 'date',
 			'order'          => 'DESC',
 			'no_found_rows'  => true, // Performance optimization
@@ -118,7 +118,7 @@ class AIVM_LLMS_Txt {
 			}
 			wp_reset_postdata();
 		} else {
-			$output .= __( 'No content found.', 'ai-visibility-manager' ) . "\n";
+			$output .= __( 'No content found.', 'tbsh-ai-visibility-control' ) . "\n";
 		}
 
 		return $output;
@@ -135,6 +135,6 @@ class AIVM_LLMS_Txt {
 		if ( $post_id && ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) ) {
 			return;
 		}
-		delete_transient( 'aivm_llms_txt_cache' );
+		delete_transient( 'tavc_llms_txt_cache' );
 	}
 }
