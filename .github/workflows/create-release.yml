@@ -18,9 +18,9 @@ jobs:
 
       - name: Prepare release folder
         run: |
-          mkdir -p ai-visibility-manager
-          rsync -av ./ ai-visibility-manager/ \
-            --exclude='ai-visibility-manager' \
+          mkdir -p tbsh-ai-visibility-control
+          rsync -av ./ tbsh-ai-visibility-control/ \
+            --exclude='tbsh-ai-visibility-control' \
             --exclude='.git' \
             --exclude='.gitignore' \
             --exclude='.gitattributes' \
@@ -34,13 +34,13 @@ jobs:
             --exclude='package-lock.json' \
             --exclude='node_modules' \
             --exclude='vendor' \
-            --exclude='ai-visibility-manager_*.zip'
+            --exclude='tbsh-ai-visibility-control_*.zip'
 
       - name: Create zip file
         run: |
           TAG_NAME=${GITHUB_REF##*/}
-          ZIP_NAME="ai-visibility-manager_${TAG_NAME}.zip"
-          zip -r "$ZIP_NAME" ai-visibility-manager
+          ZIP_NAME="tbsh-ai-visibility-control_${TAG_NAME}.zip"
+          zip -r "$ZIP_NAME" tbsh-ai-visibility-control
           echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
 
       - name: Upload release
