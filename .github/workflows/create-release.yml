@@ -26,6 +26,12 @@ jobs:
             --exclude='.gitattributes' \
             --exclude='.github' \
             --exclude='.distignore' \
+            --exclude='.wordpress-org' \
+            --exclude='.vscode' \
+            --exclude='.idea' \
+            --exclude='tests' \
+            --exclude='phpunit.xml' \
+            --exclude='phpunit.xml.dist' \
             --exclude='scratch' \
             --exclude='docs' \
             --exclude='composer.json' \
@@ -34,6 +40,12 @@ jobs:
             --exclude='package-lock.json' \
             --exclude='node_modules' \
             --exclude='vendor' \
+            --exclude='*.log' \
+            --exclude='*.suo' \
+            --exclude='*.user' \
+            --exclude='*.usr' \
+            --exclude='.DS_Store' \
+            --exclude='Thumbs.db' \
             --exclude='tbsh-ai-visibility-control_*.zip'
 
       - name: Create zip file

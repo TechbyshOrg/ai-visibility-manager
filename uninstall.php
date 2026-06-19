@@ -28,6 +28,7 @@ delete_option( 'tavc_llms_txt_last_rebuild' );
 delete_transient( 'tavc_llms_txt_cache' );
 delete_transient( 'tavc_health_llms_txt' );
 delete_transient( 'tavc_health_robots' );
+delete_transient( 'tavc_recent_referrals' );
 
 // Drop database table
 global $wpdb;

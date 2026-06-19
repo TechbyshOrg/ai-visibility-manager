@@ -38,5 +38,6 @@ class TAVC_Deactivator {
 
 		// Clear transients
 		delete_transient( 'tavc_llms_txt_cache' );
+		delete_transient( 'tavc_recent_referrals' );
 	}
 }

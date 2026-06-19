@@ -56,13 +56,35 @@ class TAVC_Referral_Logger {
 		// Get visitor IP for debouncing (hashed to respect privacy / GDPR)
 		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
 		
-		// Generate unique transient key for the combination of IP + Source + Target
-		$debounce_key = 'tavc_ref_' . md5( $ip . '|' . $matched_source . '|' . $target_url );
+		// Generate unique visit hash for the combination of IP + Source + Target
+		$visit_hash = md5( $ip . '|' . $matched_source . '|' . $target_url );
 
-		// Check if we logged this specific visit in the last 5 minutes
-		if ( false === get_transient( $debounce_key ) ) {
-			// Set transient block for 5 minutes (300 seconds)
-			set_transient( $debounce_key, 1, 300 );
+		// Retrieve recent referrals from a single fixed transient key to prevent database/cache bloat from unauthenticated spoofed requests
+		$recent_referrals = get_transient( 'tavc_recent_referrals' );
+		if ( ! is_array( $recent_referrals ) ) {
+			$recent_referrals = array();
+		}
+
+		$now = time();
+
+		// Clean up entries older than 5 minutes (300 seconds)
+		foreach ( $recent_referrals as $hash => $timestamp ) {
+			if ( ( $now - $timestamp ) > 300 ) {
+				unset( $recent_referrals[ $hash ] );
+			}
+		}
+
+		// Check if this specific visit was already logged recently
+		if ( ! isset( $recent_referrals[ $visit_hash ] ) ) {
+			// Bound the array size to prevent memory/option bloat under heavy traffic (max 100 entries)
+			if ( count( $recent_referrals ) >= 100 ) {
+				asort( $recent_referrals );
+				array_shift( $recent_referrals );
+			}
+
+			// Save the visit timestamp
+			$recent_referrals[ $visit_hash ] = $now;
+			set_transient( 'tavc_recent_referrals', $recent_referrals, 300 );
 
 			// Write to DB
 			require_once plugin_dir_path( __FILE__ ) . 'class-tavc-db.php';
