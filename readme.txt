@@ -90,10 +90,13 @@ This is the free version. It contains all the core tools to block bots and log t
 
 == Screenshots ==
 
-1. **Dashboard Overview**: Health diagnostics panel, discoverability report, and referral stats.
-2. **AI Crawler Settings**: Clean toggles to select and block specific crawler bots.
-3. **llms.txt Preview**: View the dynamic markdown file before search engines load it.
-4. **Referral Logs**: Detailed analytics on Top Referrals and last 20 logged conversational visits.
+1. **Overview Dashboard** – The main control panel showing the AI Visibility Health Check, Content Discoverability Report (posts and pages indexed for llms.txt), total AI referral count, and quick-glance status badges for llms.txt and robots.txt.
+2. **AI Bots Control Panel** – Toggle switches to individually allow or block popular AI crawlers including GPTBot (OpenAI), ClaudeBot (Anthropic), PerplexityBot, Google-Extended, CCBot, Amazonbot, and Applebot-Extended directly from your WordPress dashboard.
+3. **llms.txt Generator & Settings** – The llms.txt configuration tab displaying the endpoint URL, live cache status, file size, and a live markdown preview of the generated file that AI search engines will consume.
+4. **AI Search Referrals Analytics** – The referral tracking screen that logs and displays incoming visits from AI platforms such as ChatGPT, Claude, Perplexity, Gemini, Copilot, and Bard when they refer users to your site.
+5. **Plugin Maintenance Tools (top)** – The Tools tab showing maintenance actions: Rebuild llms.txt Cache, Export Referrals as CSV, Clear Referrals Logs, and Reset Plugin Settings back to defaults.
+6. **Plugin Maintenance Tools (bottom) & Uninstall Preferences** – The lower portion of the Tools tab revealing the Uninstall Preferences section with a "Completely Remove Data on Deletion" option to wipe all logs and settings when the plugin is removed.
+7. **System Status & Diagnostics** – A full environment report listing AI Visibility Control version, WordPress version, PHP version, MySQL/MariaDB version, memory limit, max execution time, multisite status, and permalink structure for quick troubleshooting.
 
 == Changelog ==
 
