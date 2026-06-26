@@ -15,7 +15,7 @@
  * Plugin Name:       AI Visibility Control – Dynamic llms.txt & robots.txt Crawler Control
  * Description:       Manage search crawler visibility, block AI bots, generate llms.txt, and log AI search referral traffic.
  * Version:           1.0.0
- * Author:            Techbysh
+ * Author:            techbysh
  * Author URI:        https://techbysh.com
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
