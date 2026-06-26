@@ -1,6 +1,6 @@
 === AI Visibility Control – Dynamic llms.txt & robots.txt Crawler Control ===
 Contributors: techbysh
-Tags: block ai bots, llms.txt, robots.txt editor, block gptbot, ai crawler blocker
+Tags: crawler, llms.txt, robots.txt, privacy, seo
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 7.4
