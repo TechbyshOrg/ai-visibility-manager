@@ -4,7 +4,7 @@ Tags: crawler, llms.txt, robots.txt, privacy, seo
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -99,6 +99,9 @@ This is the free version. It contains all the core tools to block bots and log t
 7. **System Status & Diagnostics** – A full environment report listing AI Visibility Control version, WordPress version, PHP version, MySQL/MariaDB version, memory limit, max execution time, multisite status, and permalink structure for quick troubleshooting.
 
 == Changelog ==
+
+= 1.0.2 =
+* Updated plugin tags in readme.txt for better discoverability on WordPress.org.
 
 = 1.0.1 =
 * Updated readme.txt with accurate screenshot descriptions for all seven plugin screens.
