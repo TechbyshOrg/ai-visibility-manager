@@ -2,9 +2,11 @@
 .git
 .gitignore
 .gitattributes
+.github
 
-# Exclude build and ignore config
+# Exclude build, assets, and ignore config
 .distignore
+.wordpress-org
 
 # Exclude local editor configurations
 .vscode
