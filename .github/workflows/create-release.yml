@@ -27,6 +27,7 @@ jobs:
             --exclude='.github' \
             --exclude='.distignore' \
             --exclude='.wordpress-org' \
+            --exclude='src' \
             --exclude='.vscode' \
             --exclude='.idea' \
             --exclude='tests' \

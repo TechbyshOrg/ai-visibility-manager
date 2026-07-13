@@ -7,6 +7,7 @@
 # Exclude build, assets, and ignore config
 .distignore
 .wordpress-org
+src
 
 # Exclude local editor configurations
 .vscode

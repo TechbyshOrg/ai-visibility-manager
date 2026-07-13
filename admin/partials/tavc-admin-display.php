@@ -22,7 +22,7 @@ defined( 'ABSPATH' ) || exit;
 				<span class="dashicons dashicons-visibility"></span> 
 				<?php esc_html_e( 'AI Visibility Control', 'tbsh-ai-visibility-control' ); ?>
 				<span style="font-size: 14px; font-weight: normal; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px; margin-left: 10px;">
-					<?php esc_html_e( 'Free v1.0.0', 'tbsh-ai-visibility-control' ); ?>
+					<?php printf( esc_html__( 'Free v%s', 'tbsh-ai-visibility-control' ), esc_html( $this->version ) ); ?>
 				</span>
 			</h1>
 			<p><?php esc_html_e( 'Control what AI bots crawl, publish an automated llms.txt file, and monitor incoming traffic referrals from AI search engines.', 'tbsh-ai-visibility-control' ); ?></p>
@@ -106,9 +106,13 @@ defined( 'ABSPATH' ) || exit;
 					<li><span class="dashicons dashicons-yes-alt"></span> <?php esc_html_e( 'Advanced entity graph generation', 'tbsh-ai-visibility-control' ); ?></li>
 				</ul>
 				
-				<div class="tavc-pro-btn" style="background: rgba(255, 255, 255, 0.15); color: #ffffff !important; cursor: default; border: 1px dashed rgba(255, 255, 255, 0.3);">
-					<?php esc_html_e( 'Coming Soon', 'tbsh-ai-visibility-control' ); ?>
-				</div>
+				<p style="font-size: 12px; color: rgba(255, 255, 255, 0.85); margin: 15px 0 10px 0; line-height: 1.4;">
+					<?php esc_html_e( 'We are currently running a Pro Beta program. Join early by sending us an email at', 'tbsh-ai-visibility-control' ); ?> <strong>support@techbysh.com</strong>
+				</p>
+				
+				<a href="mailto:support@techbysh.com?subject=AI%20Visibility%20Control%20Pro%20Beta%20Request" class="tavc-pro-btn">
+					<?php esc_html_e( 'Join Pro Beta', 'tbsh-ai-visibility-control' ); ?>
+				</a>
 			</div>
 
 			<!-- Helpful Links Card -->
@@ -120,9 +124,13 @@ defined( 'ABSPATH' ) || exit;
 				<p style="font-size: 13px; color: var(--tavc-text-muted); line-height: 1.4; margin-bottom: 12px;">
 					<?php esc_html_e( 'Need help configuring or want to learn more about how AI bots scan your site?', 'tbsh-ai-visibility-control' ); ?>
 				</p>
-				<p style="margin: 0; font-size: 13px;">
-					<a href="https://www.techbysh.com/docs/tbsh-ai-visibility-control.html" target="_blank" rel="noopener noreferrer" style="text-decoration: none; font-weight: 500;">
+				<p style="margin: 0; font-size: 13px; display: flex; flex-direction: column; gap: 8px;">
+					<a href="https://www.techbysh.com/docs/tbsh-ai-visibility-control.html" target="_blank" rel="noopener noreferrer" style="text-decoration: none; font-weight: 500; color: var(--tavc-primary);">
 						<?php esc_html_e( 'Read Documentation', 'tbsh-ai-visibility-control' ); ?> &rarr;
+					</a>
+					<a href="mailto:support@techbysh.com?subject=AI%20Visibility%20Control%20Support%20Inquiry" style="text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 5px; color: var(--tavc-text-muted);">
+						<span class="dashicons dashicons-email" style="font-size: 16px; width: 16px; height: 16px; color: var(--tavc-primary);"></span>
+						<span>support@techbysh.com</span>
 					</a>
 				</p>
 			</div>

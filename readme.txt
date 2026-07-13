@@ -4,7 +4,7 @@ Tags: crawler, llms.txt, robots.txt, privacy, seo
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.0.2
+Stable tag: 1.1.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,6 +34,15 @@ Unlike standard robots.txt editors or massive security suites, AI Visibility Con
 * **Referral Logger Debounce**: Uses a 5-minute transient debounce check to prevent duplicate entries and keep your database clean.
 * **Automated Health Checks**: Runs diagnostics on pretty permalinks, loopback reachability, robots.txt, and search engine visibility.
 * **Diagnostic Tools**: Rebuild cache, clear log entries, export logs as a CSV file, and reset setting options with a single click.
+
+### Source Code
+The unminified/transpiled source code for the frontend assets in this plugin is publicly available on GitHub at:
+https://github.com/TechbyshOrg/ai-visibility-manager
+
+To build the assets from source:
+1. Clone the repository
+2. Run `npm install`
+3. Run `npm run build`
 
 == Installation ==
 
@@ -88,6 +97,8 @@ Yes. The plugin is fully compatible with WooCommerce, Yoast SEO, Rank Math, AIOS
 = Is there a Pro version available, and what does it add? =
 This is the free version. It contains all the core tools to block bots and log traffic. Future premium updates will offer advanced crawl firewalls, WooCommerce AI attribution, and full content markdown exports.
 
+If you are interested in trying these premium features early, we are currently running a Pro Beta program. Contact us at support@techbysh.com to request access.
+
 == Screenshots ==
 
 1. **Overview Dashboard** – The main control panel showing the AI Visibility Health Check, Content Discoverability Report (posts and pages indexed for llms.txt), total AI referral count, and quick-glance status badges for llms.txt and robots.txt.
@@ -99,6 +110,11 @@ This is the free version. It contains all the core tools to block bots and log t
 7. **System Status & Diagnostics** – A full environment report listing AI Visibility Control version, WordPress version, PHP version, MySQL/MariaDB version, memory limit, max execution time, multisite status, and permalink structure for quick troubleshooting.
 
 == Changelog ==
+
+= 1.1.0 =
+* Excluded frontend source code from release package.
+* Added Pro Beta contact support program details.
+* Standardized internal versioning references.
 
 = 1.0.2 =
 * Updated plugin tags in readme.txt for better discoverability on WordPress.org.

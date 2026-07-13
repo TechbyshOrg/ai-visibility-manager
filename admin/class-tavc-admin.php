@@ -450,6 +450,8 @@ class TAVC_Admin {
 	 */
 	public function add_action_links( $links ) {
 		$settings_link = '<a href="' . esc_url( admin_url( 'options-general.php?page=tbsh-ai-visibility-control' ) ) . '">' . esc_html__( 'Settings', 'tbsh-ai-visibility-control' ) . '</a>';
+		$support_link = '<a href="mailto:support@techbysh.com?subject=AI%20Visibility%20Control%20Pro%20Beta%20Request" style="font-weight: bold; color: #3858e9;">' . esc_html__( 'Pro Beta', 'tbsh-ai-visibility-control' ) . '</a>';
+		array_unshift( $links, $support_link );
 		array_unshift( $links, $settings_link );
 		return $links;
 	}

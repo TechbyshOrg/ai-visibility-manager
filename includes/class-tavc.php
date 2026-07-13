@@ -89,7 +89,7 @@ class TAVC {
 	 */
 	private function __construct() {
 		$this->plugin_name = 'tbsh-ai-visibility-control';
-		$this->version     = '1.0.0';
+		$this->version     = '1.1.0';
 
 		$this->load_dependencies();
 		$this->define_admin_hooks();
