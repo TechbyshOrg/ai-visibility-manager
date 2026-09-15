@@ -46,7 +46,7 @@ class TAVC_Activator {
 
 		flush_rewrite_rules();
 
-		$plugin_version = defined( 'TAVC_VERSION' ) ? TAVC_VERSION : '1.1.0';
+		$plugin_version = defined( 'TAVC_VERSION' ) ? TAVC_VERSION : '1.2.0';
 		update_option( 'tavc_plugin_version', $plugin_version );
 	}
 

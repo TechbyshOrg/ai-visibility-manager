@@ -2,9 +2,9 @@
 Contributors: techbysh
 Tags: crawler, llms.txt, robots.txt, privacy, seo
 Requires at least: 6.2
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -110,6 +110,12 @@ If you are interested in trying these premium features early, we are currently r
 7. **System Status & Diagnostics** – A full environment report listing AI Visibility Control version, WordPress version, PHP version, MySQL/MariaDB version, memory limit, max execution time, multisite status, and permalink structure for quick troubleshooting.
 
 == Changelog ==
+
+= 1.2.0 =
+* Prevented crawler and uninstall settings forms from overwriting each other.
+* Flushed rewrite rules on cache rebuild and plugin updates so /llms.txt stays reachable.
+* Restored the active settings tab after Tools actions.
+* Added a path fallback for /llms.txt when rewrite rules have not flushed yet.
 
 = 1.1.0 =
 * Excluded frontend source code from release package.
