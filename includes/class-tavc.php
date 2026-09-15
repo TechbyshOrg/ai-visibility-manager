@@ -89,11 +89,13 @@ class TAVC {
 	 */
 	private function __construct() {
 		$this->plugin_name = 'tbsh-ai-visibility-control';
-		$this->version     = '1.1.0';
+		$this->version     = TAVC_VERSION;
 
 		$this->load_dependencies();
 		$this->define_admin_hooks();
 		$this->define_public_hooks();
+
+		add_action( 'init', array( $this, 'maybe_upgrade' ), 1 );
 	}
 
 	/**
@@ -175,6 +177,23 @@ class TAVC {
 	 */
 	public function run() {
 		// Hooks are hooked immediately in the define_admin_hooks/define_public_hooks methods.
+	}
+
+	/**
+	 * Apply database and rewrite upgrades when the stored plugin version changes.
+	 *
+	 * @since    1.1.0
+	 */
+	public function maybe_upgrade() {
+		if ( get_option( 'tavc_plugin_version', '' ) === $this->version ) {
+			return;
+		}
+
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-tavc-activator.php';
+		TAVC_Activator::activate();
+
+		delete_transient( 'tavc_health_llms_txt' );
+		delete_transient( 'tavc_health_robots' );
 	}
 
 	/**

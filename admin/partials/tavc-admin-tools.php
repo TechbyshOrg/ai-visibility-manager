@@ -74,12 +74,13 @@ defined( 'ABSPATH' ) || exit;
 	
 	<form method="post" action="options.php">
 		<?php
-		settings_fields( 'tavc_settings_group' );
+		settings_fields( 'tavc_uninstall_settings_group' );
 		$tavc_delete_on_uninstall = get_option( 'tavc_delete_on_uninstall', 0 );
 		?>
 		
 		<div style="background: var(--tavc-bg); padding: 16px; border-radius: 8px; border: 1px solid var(--tavc-border);">
 			<label style="display: flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer;">
+				<input type="hidden" name="tavc_delete_on_uninstall" value="0">
 				<input type="checkbox" name="tavc_delete_on_uninstall" id="tavc_delete_on_uninstall" value="1" <?php checked( $tavc_delete_on_uninstall, 1 ); ?>>
 				<?php esc_html_e( 'Completely Remove Data on Deletion', 'tbsh-ai-visibility-control' ); ?>
 			</label>

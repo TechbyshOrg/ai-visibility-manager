@@ -23,6 +23,7 @@ if ( ! $tavc_delete_data ) {
 delete_option( 'tavc_blocked_bots' );
 delete_option( 'tavc_delete_on_uninstall' );
 delete_option( 'tavc_llms_txt_last_rebuild' );
+delete_option( 'tavc_plugin_version' );
 
 // Delete transients
 delete_transient( 'tavc_llms_txt_cache' );

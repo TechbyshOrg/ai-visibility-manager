@@ -24,6 +24,7 @@ $tavc_discoverability_stats = $this->get_discoverability_stats();
 $tavc_overall_status = 'green';
 $tavc_fail_count     = 0;
 $tavc_warn_count     = 0;
+$tavc_indexed_count  = intval( $tavc_discoverability_stats['posts_count'] ) + intval( $tavc_discoverability_stats['pages_count'] );
 
 foreach ( $tavc_health_status as $tavc_check ) {
 	if ( $tavc_check['status'] === 'fail' ) {
@@ -35,7 +36,7 @@ foreach ( $tavc_health_status as $tavc_check ) {
 
 if ( $tavc_fail_count > 0 ) {
 	$tavc_overall_status = 'red';
-} elseif ( $tavc_warn_count > 0 || empty( $tavc_discoverability_stats['posts_count'] ) ) {
+} elseif ( $tavc_warn_count > 0 || $tavc_indexed_count < 1 ) {
 	$tavc_overall_status = 'yellow';
 }
 ?>

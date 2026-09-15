@@ -60,7 +60,7 @@ $tavc_bots_definition = array(
 	
 	<form method="post" action="options.php">
 		<?php
-		settings_fields( 'tavc_settings_group' );
+		settings_fields( 'tavc_bots_settings_group' );
 		?>
 		
 		<div class="tavc-bot-list">

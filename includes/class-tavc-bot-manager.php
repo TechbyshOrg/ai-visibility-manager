@@ -65,6 +65,11 @@ class TAVC_Bot_Manager {
 			}
 		}
 
+		$filtered_rules = apply_filters( 'tavc_custom_robots_rules', $rules );
+		if ( is_string( $filtered_rules ) ) {
+			$rules = $filtered_rules;
+		}
+
 		if ( ! empty( $rules ) ) {
 			$output .= "\n# " . __( 'AI Visibility Control Rules', 'tbsh-ai-visibility-control' ) . "\n" . $rules;
 		}

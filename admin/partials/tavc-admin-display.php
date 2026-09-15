@@ -13,6 +13,10 @@
 
 // Prevent direct access
 defined( 'ABSPATH' ) || exit;
+
+if ( ! isset( $tavc_active_tab ) ) {
+	$tavc_active_tab = 'overview';
+}
 ?>
 <div class="wrap tavc-wrap">
 	<!-- Plugin Header -->
@@ -31,22 +35,22 @@ defined( 'ABSPATH' ) || exit;
 
 	<!-- Tabs Navigation -->
 	<nav class="tavc-tabs">
-		<a href="#overview" class="tavc-tab-nav active" data-tab="overview">
+		<a href="#overview" class="tavc-tab-nav<?php echo 'overview' === $tavc_active_tab ? ' active' : ''; ?>" data-tab="overview">
 			<span class="dashicons dashicons-dashboard"></span> <?php esc_html_e( 'Overview', 'tbsh-ai-visibility-control' ); ?>
 		</a>
-		<a href="#bots" class="tavc-tab-nav" data-tab="bots">
+		<a href="#bots" class="tavc-tab-nav<?php echo 'bots' === $tavc_active_tab ? ' active' : ''; ?>" data-tab="bots">
 			<span class="dashicons dashicons-buddicons-buddypress-logo"></span> <?php esc_html_e( 'AI Bots', 'tbsh-ai-visibility-control' ); ?>
 		</a>
-		<a href="#llmstxt" class="tavc-tab-nav" data-tab="llmstxt">
+		<a href="#llmstxt" class="tavc-tab-nav<?php echo 'llmstxt' === $tavc_active_tab ? ' active' : ''; ?>" data-tab="llmstxt">
 			<span class="dashicons dashicons-media-text"></span> <?php esc_html_e( 'llms.txt', 'tbsh-ai-visibility-control' ); ?>
 		</a>
-		<a href="#referrals" class="tavc-tab-nav" data-tab="referrals">
+		<a href="#referrals" class="tavc-tab-nav<?php echo 'referrals' === $tavc_active_tab ? ' active' : ''; ?>" data-tab="referrals">
 			<span class="dashicons dashicons-chart-area"></span> <?php esc_html_e( 'AI Referrals', 'tbsh-ai-visibility-control' ); ?>
 		</a>
-		<a href="#tools" class="tavc-tab-nav" data-tab="tools">
+		<a href="#tools" class="tavc-tab-nav<?php echo 'tools' === $tavc_active_tab ? ' active' : ''; ?>" data-tab="tools">
 			<span class="dashicons dashicons-admin-tools"></span> <?php esc_html_e( 'Tools', 'tbsh-ai-visibility-control' ); ?>
 		</a>
-		<a href="#status" class="tavc-tab-nav" data-tab="status">
+		<a href="#status" class="tavc-tab-nav<?php echo 'status' === $tavc_active_tab ? ' active' : ''; ?>" data-tab="status">
 			<span class="dashicons dashicons-info-outline"></span> <?php esc_html_e( 'System Status', 'tbsh-ai-visibility-control' ); ?>
 		</a>
 	</nav>
@@ -56,32 +60,32 @@ defined( 'ABSPATH' ) || exit;
 		<!-- Left Main Content Column -->
 		<main class="tavc-main-column">
 			<!-- Overview Tab -->
-			<div id="tavc-tab-overview" class="tavc-tab-content active">
+			<div id="tavc-tab-overview" class="tavc-tab-content<?php echo 'overview' === $tavc_active_tab ? ' active' : ''; ?>">
 				<?php require_once plugin_dir_path( __FILE__ ) . 'tavc-admin-overview.php'; ?>
 			</div>
 
 			<!-- AI Bots Tab -->
-			<div id="tavc-tab-bots" class="tavc-tab-content">
+			<div id="tavc-tab-bots" class="tavc-tab-content<?php echo 'bots' === $tavc_active_tab ? ' active' : ''; ?>">
 				<?php require_once plugin_dir_path( __FILE__ ) . 'tavc-admin-bots.php'; ?>
 			</div>
 
 			<!-- llms.txt Tab -->
-			<div id="tavc-tab-llmstxt" class="tavc-tab-content">
+			<div id="tavc-tab-llmstxt" class="tavc-tab-content<?php echo 'llmstxt' === $tavc_active_tab ? ' active' : ''; ?>">
 				<?php require_once plugin_dir_path( __FILE__ ) . 'tavc-admin-llmstxt.php'; ?>
 			</div>
 
 			<!-- AI Referrals Tab -->
-			<div id="tavc-tab-referrals" class="tavc-tab-content">
+			<div id="tavc-tab-referrals" class="tavc-tab-content<?php echo 'referrals' === $tavc_active_tab ? ' active' : ''; ?>">
 				<?php require_once plugin_dir_path( __FILE__ ) . 'tavc-admin-referrals.php'; ?>
 			</div>
 
 			<!-- Tools Tab -->
-			<div id="tavc-tab-tools" class="tavc-tab-content">
+			<div id="tavc-tab-tools" class="tavc-tab-content<?php echo 'tools' === $tavc_active_tab ? ' active' : ''; ?>">
 				<?php require_once plugin_dir_path( __FILE__ ) . 'tavc-admin-tools.php'; ?>
 			</div>
 
 			<!-- System Status Tab -->
-			<div id="tavc-tab-status" class="tavc-tab-content">
+			<div id="tavc-tab-status" class="tavc-tab-content<?php echo 'status' === $tavc_active_tab ? ' active' : ''; ?>">
 				<?php require_once plugin_dir_path( __FILE__ ) . 'tavc-admin-status.php'; ?>
 			</div>
 		</main>

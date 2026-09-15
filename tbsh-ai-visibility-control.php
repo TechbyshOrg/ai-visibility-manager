@@ -29,6 +29,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+if ( ! defined( 'TAVC_VERSION' ) ) {
+	define( 'TAVC_VERSION', '1.1.0' );
+}
+
 /**
  * The code that runs during plugin activation.
  * This action is documented in includes/class-tavc-activator.php

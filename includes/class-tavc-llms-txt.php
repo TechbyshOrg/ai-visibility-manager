@@ -54,7 +54,7 @@ class TAVC_LLMS_Txt {
 	 * @since    1.0.0
 	 */
 	public function render_llms_txt() {
-		if ( get_query_var( 'tavc_llms_txt' ) != 1 ) {
+		if ( ! $this->is_llms_txt_request() ) {
 			return;
 		}
 
@@ -73,6 +73,37 @@ class TAVC_LLMS_Txt {
 		
 		echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		exit;
+	}
+
+	/**
+	 * Detect a public /llms.txt request via rewrite query var or request path.
+	 *
+	 * The path fallback keeps the endpoint working when rewrite rules have not
+	 * flushed yet, or when the request still reaches WordPress without pretty permalinks.
+	 *
+	 * @since    1.1.0
+	 * @return   bool
+	 */
+	private function is_llms_txt_request() {
+		if ( get_query_var( 'tavc_llms_txt' ) == 1 ) {
+			return true;
+		}
+
+		if ( empty( $_SERVER['REQUEST_URI'] ) ) {
+			return false;
+		}
+
+		$request_path = wp_parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ), PHP_URL_PATH );
+		if ( ! is_string( $request_path ) || '' === $request_path ) {
+			return false;
+		}
+
+		$request_path = untrailingslashit( strtolower( $request_path ) );
+		$home_path    = wp_parse_url( home_url( '/' ), PHP_URL_PATH );
+		$home_path    = is_string( $home_path ) ? untrailingslashit( strtolower( $home_path ) ) : '';
+		$expected     = $home_path . '/llms.txt';
+
+		return $request_path === $expected;
 	}
 
 	/**
@@ -95,13 +126,24 @@ class TAVC_LLMS_Txt {
 
 		$output .= "## Recent Content\n\n";
 
-		// Query all public posts and pages (Removed artificial 100 limit)
+		$post_types = apply_filters( 'tavc_llms_txt_post_types', array( 'post', 'page' ) );
+		if ( ! is_array( $post_types ) || empty( $post_types ) ) {
+			$post_types = array( 'post', 'page' );
+		}
+		$post_types = array_values( array_filter( array_map( 'sanitize_key', $post_types ) ) );
+		if ( empty( $post_types ) ) {
+			$post_types = array( 'post', 'page' );
+		}
+
+		// Query public posts and pages. Password-protected entries are omitted
+		// because those URLs are not useful to crawlers without credentials.
 		$args = array(
-			'post_type'      => array( 'post', 'page' ),
+			'post_type'      => $post_types,
 			'post_status'    => 'publish',
 			'posts_per_page' => -1,
 			'orderby'        => 'date',
 			'order'          => 'DESC',
+			'has_password'   => false,
 			'no_found_rows'  => true, // Performance optimization
 		);
 
@@ -121,7 +163,9 @@ class TAVC_LLMS_Txt {
 			$output .= __( 'No content found.', 'tbsh-ai-visibility-control' ) . "\n";
 		}
 
-		return $output;
+		$filtered = apply_filters( 'tavc_llms_txt_output', $output );
+
+		return is_string( $filtered ) ? $filtered : $output;
 	}
 
 	/**

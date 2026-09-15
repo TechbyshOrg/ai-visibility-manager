@@ -90,6 +90,7 @@ class TAVC_Admin {
 	 * @since    1.0.0
 	 */
 	public function display_plugin_admin_page() {
+		$tavc_active_tab = $this->get_active_settings_tab();
 		require_once plugin_dir_path( __FILE__ ) . 'partials/tavc-admin-display.php';
 	}
 
@@ -100,15 +101,15 @@ class TAVC_Admin {
 	 */
 	public function register_plugin_settings() {
 		register_setting(
-			'tavc_settings_group',
+			'tavc_bots_settings_group',
 			'tavc_blocked_bots',
 			array( $this, 'sanitize_blocked_bots' )
 		);
 
 		register_setting(
-			'tavc_settings_group',
+			'tavc_uninstall_settings_group',
 			'tavc_delete_on_uninstall',
-			'absint'
+			array( $this, 'sanitize_delete_on_uninstall' )
 		);
 	}
 
@@ -120,15 +121,60 @@ class TAVC_Admin {
 	 * @return   array              Sanitized options array.
 	 */
 	public function sanitize_blocked_bots( $input ) {
+		if ( ! is_array( $input ) ) {
+			$existing = get_option( 'tavc_blocked_bots', array() );
+			return is_array( $existing ) ? $existing : array();
+		}
+
 		$sanitized = array();
-		
-		if ( is_array( $input ) ) {
-			foreach ( $input as $bot_slug => $value ) {
-				$sanitized[ sanitize_key( $bot_slug ) ] = intval( $value ) === 1 ? 1 : 0;
-			}
+
+		foreach ( $input as $bot_slug => $value ) {
+			$sanitized[ sanitize_key( $bot_slug ) ] = intval( $value ) === 1 ? 1 : 0;
 		}
 
 		return $sanitized;
+	}
+
+	/**
+	 * Sanitize the uninstall data-removal checkbox.
+	 *
+	 * @since    1.1.0
+	 * @param    mixed    $input    Incoming value.
+	 * @return   int                1 when enabled, otherwise 0.
+	 */
+	public function sanitize_delete_on_uninstall( $input ) {
+		return absint( $input ) === 1 ? 1 : 0;
+	}
+
+	/**
+	 * Allowed settings tabs for query-string restoration after tool redirects.
+	 *
+	 * @since    1.1.0
+	 * @return   array
+	 */
+	private function get_allowed_settings_tabs() {
+		return array( 'overview', 'bots', 'llmstxt', 'referrals', 'tools', 'status' );
+	}
+
+	/**
+	 * Resolve the tab that should be visible when the settings page renders.
+	 *
+	 * @since    1.1.0
+	 * @return   string
+	 */
+	private function get_active_settings_tab() {
+		$allowed = $this->get_allowed_settings_tabs();
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( isset( $_GET['tab'] ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$tab = sanitize_key( wp_unslash( $_GET['tab'] ) );
+			if ( in_array( $tab, $allowed, true ) ) {
+				return $tab;
+			}
+		}
+
+		return 'overview';
 	}
 
 	/**
@@ -152,6 +198,8 @@ class TAVC_Admin {
 		switch ( $tool ) {
 			case 'rebuild_cache':
 				$llms_txt = new TAVC_LLMS_Txt();
+				$llms_txt->register_rewrite_rule();
+				flush_rewrite_rules();
 				$llms_txt->clear_llms_txt_cache();
 				
 				// Generate immediately to prime the cache
@@ -313,10 +361,9 @@ class TAVC_Admin {
 		// 2. llms.txt Reachability
 		$llms_check = get_transient( 'tavc_health_llms_txt' );
 		if ( false === $llms_check ) {
-			$url      = home_url( '/llms.txt' );
-			$response = wp_safe_remote_get( $url, array( 'timeout' => 2, 'sslverify' => false ) );
-			
-			if ( ! is_wp_error( $response ) && wp_remote_retrieve_response_code( $response ) === 200 ) {
+			$response = $this->probe_public_endpoint( home_url( '/llms.txt' ) );
+
+			if ( $this->response_looks_like_plain_text( $response ) ) {
 				$llms_check = 'pass';
 			} else {
 				$llms_check = 'fail';
@@ -340,17 +387,20 @@ class TAVC_Admin {
 		}
 
 		// 3. robots.txt Reachability
-		$robots_check = get_transient( 'tavc_health_robots' );
-		if ( false === $robots_check ) {
-			$url      = home_url( '/robots.txt' );
-			$response = wp_safe_remote_get( $url, array( 'timeout' => 2, 'sslverify' => false ) );
-			
-			if ( ! is_wp_error( $response ) && wp_remote_retrieve_response_code( $response ) === 200 ) {
-				$robots_check = 'pass';
-			} else {
-				$robots_check = 'warning';
+		if ( file_exists( ABSPATH . 'robots.txt' ) ) {
+			$robots_check = 'warning';
+		} else {
+			$robots_check = get_transient( 'tavc_health_robots' );
+			if ( false === $robots_check ) {
+				$response = $this->probe_public_endpoint( home_url( '/robots.txt' ) );
+
+				if ( $this->response_looks_like_plain_text( $response ) ) {
+					$robots_check = 'pass';
+				} else {
+					$robots_check = 'warning';
+				}
+				set_transient( 'tavc_health_robots', $robots_check, HOUR_IN_SECONDS );
 			}
-			set_transient( 'tavc_health_robots', $robots_check, HOUR_IN_SECONDS );
 		}
 
 		if ( $robots_check === 'pass' ) {
@@ -402,6 +452,48 @@ class TAVC_Admin {
 		}
 
 		return $status;
+	}
+
+	/**
+	 * Fetch a public endpoint for health diagnostics.
+	 *
+	 * @since    1.1.0
+	 * @param    string    $url    Absolute URL to request.
+	 * @return   array|WP_Error    HTTP response.
+	 */
+	private function probe_public_endpoint( $url ) {
+		return wp_safe_remote_get(
+			$url,
+			array(
+				'timeout'             => 5,
+				'redirection'         => 2,
+				'limit_response_size' => 65536,
+			)
+		);
+	}
+
+	/**
+	 * Whether a loopback response looks like a successful plain-text file, not a theme HTML page.
+	 *
+	 * @since    1.1.0
+	 * @param    array|WP_Error    $response    HTTP response.
+	 * @return   bool
+	 */
+	private function response_looks_like_plain_text( $response ) {
+		if ( is_wp_error( $response ) ) {
+			return false;
+		}
+
+		if ( (int) wp_remote_retrieve_response_code( $response ) !== 200 ) {
+			return false;
+		}
+
+		$body = wp_remote_retrieve_body( $response );
+		if ( ! is_string( $body ) || '' === trim( $body ) ) {
+			return false;
+		}
+
+		return 1 !== preg_match( '/<\s*html/i', $body );
 	}
 
 	/**

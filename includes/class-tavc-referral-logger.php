@@ -110,11 +110,15 @@ class TAVC_Referral_Logger {
 		// Supported AI engines domains to track
 		$ai_domains = array(
 			'chatgpt.com'            => 'ChatGPT',
+			'chat.openai.com'        => 'ChatGPT',
 			'perplexity.ai'          => 'Perplexity',
 			'claude.ai'              => 'Claude',
 			'copilot.microsoft.com'  => 'Copilot',
 			'gemini.google.com'      => 'Gemini',
 			'bard.google.com'        => 'Bard',
+			'grok.com'               => 'Grok',
+			'grok.x.ai'              => 'Grok',
+			'meta.ai'                => 'Meta AI',
 		);
 
 		foreach ( $ai_domains as $domain => $name ) {
