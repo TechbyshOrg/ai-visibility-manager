@@ -113,7 +113,7 @@ This plugin does not need any external service to work. It connects to one exter
 == Installation ==
 
 1. In WordPress, go to **Plugins > Add New Plugin**, search for "AI Visibility Control", then click **Install Now** and **Activate**. Or upload the plugin zip under **Plugins > Add New Plugin > Upload Plugin**.
-2. Go to **Settings > AI Visibility Control**, or click **Settings** under the plugin name on the Plugins screen.
+2. Click **AI Visibility** in the admin menu, or click **Settings** under the plugin name on the Plugins screen.
 3. Follow the **Get started** checklist on the Overview tab.
 4. On the **AI Crawlers** tab, choose a quick setup (for example "Block AI training, allow AI search") and click **Save Crawler Settings**.
 5. On the **llms.txt** tab, check the preview and choose which content is listed. Your file is at `yoursite.com/llms.txt`.

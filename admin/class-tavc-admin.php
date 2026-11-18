@@ -27,6 +27,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 class TAVC_Admin {
 
 	/**
+	 * Admin page slug (also the plugin name). Part of saved URLs: do not change.
+	 */
+	const PAGE_SLUG = 'tbsh-ai-visibility-control';
+
+	/**
+	 * Screen ID / hook suffix of the top-level admin page.
+	 */
+	const SCREEN_ID = 'toplevel_page_tbsh-ai-visibility-control';
+
+	/**
 	 * The ID of this plugin.
 	 *
 	 * @since    1.0.0
@@ -69,7 +79,7 @@ class TAVC_Admin {
 	 * @param    string    $hook    The current page hook name.
 	 */
 	public function enqueue_assets( $hook ) {
-		if ( 'settings_page_tbsh-ai-visibility-control' !== $hook ) {
+		if ( self::SCREEN_ID !== $hook ) {
 			return;
 		}
 
@@ -100,18 +110,61 @@ class TAVC_Admin {
 	}
 
 	/**
-	 * Add administration menu for Settings > AI Visibility Control.
+	 * Add the top-level "AI Visibility" admin menu.
 	 *
 	 * @since    1.0.0
+	 * @since    1.3.0 Moved from Settings to a top-level menu.
 	 */
 	public function add_plugin_admin_menu() {
-		add_options_page(
-			__( 'AI Visibility Control Settings', 'tbsh-ai-visibility-control' ),
+		add_menu_page(
 			__( 'AI Visibility Control', 'tbsh-ai-visibility-control' ),
+			__( 'AI Visibility', 'tbsh-ai-visibility-control' ),
 			'manage_options',
-			$this->plugin_name,
-			array( $this, 'display_plugin_admin_page' )
+			self::PAGE_SLUG,
+			array( $this, 'display_plugin_admin_page' ),
+			'dashicons-visibility',
+			81 // Just below Settings.
 		);
+	}
+
+	/**
+	 * URL of the plugin admin page.
+	 *
+	 * @since    1.3.0
+	 * @param    array    $args    Extra query arguments, e.g. array( 'tab' => 'bots' ).
+	 * @return   string
+	 */
+	public static function get_page_url( $args = array() ) {
+		return add_query_arg( array_merge( array( 'page' => self::PAGE_SLUG ), $args ), admin_url( 'admin.php' ) );
+	}
+
+	/**
+	 * Send the pre-1.3.0 address (Settings > AI Visibility Control) to the new page.
+	 *
+	 * Keeps bookmarks, documentation links and older summary emails working.
+	 * Hooked to admin_init, which runs before WordPress rejects unknown pages.
+	 *
+	 * @since    1.3.0
+	 */
+	public function redirect_legacy_page_url() {
+		global $pagenow;
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only redirect.
+		if ( 'options-general.php' !== $pagenow || ! isset( $_GET['page'] ) || self::PAGE_SLUG !== $_GET['page'] ) {
+			return;
+		}
+
+		$args = array();
+		foreach ( array( 'tab', 'tavc_range', 'tavc_msg', 'tavc_health', 'settings-updated' ) as $key ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only redirect.
+			if ( isset( $_GET[ $key ] ) && is_string( $_GET[ $key ] ) ) {
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only redirect.
+				$args[ $key ] = sanitize_key( wp_unslash( $_GET[ $key ] ) );
+			}
+		}
+
+		wp_safe_redirect( self::get_page_url( $args ) );
+		exit;
 	}
 
 	/**
@@ -323,13 +376,11 @@ class TAVC_Admin {
 
 		// Redirect back
 		wp_safe_redirect(
-			add_query_arg(
+			self::get_page_url(
 				array(
-					'page'     => $this->plugin_name,
 					'tab'      => $tab,
 					'tavc_msg' => $msg,
-				),
-				admin_url( 'options-general.php' )
+				)
 			)
 		);
 		exit;
@@ -380,7 +431,7 @@ class TAVC_Admin {
 	public function display_admin_notices() {
 		// Ensure we are only showing notifications on our settings page
 		$screen = get_current_screen();
-		if ( ! $screen || 'settings_page_tbsh-ai-visibility-control' !== $screen->id ) {
+		if ( ! $screen || self::SCREEN_ID !== $screen->id ) {
 			return;
 		}
 
@@ -568,7 +619,7 @@ class TAVC_Admin {
 					<?php esc_html_e( 'Checking whether your llms.txt and robots.txt files are reachable...', 'tbsh-ai-visibility-control' ); ?>
 				</p>
 				<noscript>
-					<p><a href="<?php echo esc_url( add_query_arg( array( 'page' => $this->plugin_name, 'tavc_health' => 'now' ), admin_url( 'options-general.php' ) ) ); ?>"><?php esc_html_e( 'Run the check now', 'tbsh-ai-visibility-control' ); ?></a></p>
+					<p><a href="<?php echo esc_url( self::get_page_url( array( 'tavc_health' => 'now' ) ) ); ?>"><?php esc_html_e( 'Run the check now', 'tbsh-ai-visibility-control' ); ?></a></p>
 				</noscript>
 			</div>
 			<?php
@@ -1053,7 +1104,7 @@ class TAVC_Admin {
 	 * @return   array              Modified links.
 	 */
 	public function add_action_links( $links ) {
-		$settings_link = '<a href="' . esc_url( admin_url( 'options-general.php?page=tbsh-ai-visibility-control' ) ) . '">' . esc_html__( 'Settings', 'tbsh-ai-visibility-control' ) . '</a>';
+		$settings_link = '<a href="' . esc_url( self::get_page_url() ) . '">' . esc_html__( 'Settings', 'tbsh-ai-visibility-control' ) . '</a>';
 		$support_link = '<a href="mailto:support@techbysh.com?subject=AI%20Visibility%20Control%20Pro%20Beta%20Request" style="font-weight: bold; color: #3858e9;">' . esc_html__( 'Pro Beta', 'tbsh-ai-visibility-control' ) . '</a>';
 		array_unshift( $links, $support_link );
 		array_unshift( $links, $settings_link );

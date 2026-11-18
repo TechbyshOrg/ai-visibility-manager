@@ -49,6 +49,12 @@ $tavc_tabs = array(
 	<!-- WordPress moves admin notices (e.g. "Settings saved") right after this marker instead of inside the header. -->
 	<hr class="wp-header-end">
 
+	<?php
+	// Top-level pages do not get WordPress's options-head.php, so print "Settings saved." and
+	// settings errors here (this also lets the AI Crawlers tab show custom-rule errors inline).
+	settings_errors();
+	?>
+
 	<!-- Tabs Navigation -->
 	<nav class="tavc-tabs" aria-label="<?php esc_attr_e( 'AI Visibility Control sections', 'tbsh-ai-visibility-control' ); ?>">
 		<?php foreach ( $tavc_tabs as $tavc_tab_slug => $tavc_tab ) : ?>

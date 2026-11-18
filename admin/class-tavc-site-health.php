@@ -122,7 +122,7 @@ class TAVC_Site_Health {
 			}
 		}
 
-		$settings_url = admin_url( 'options-general.php?page=tbsh-ai-visibility-control&tab=status' );
+		$settings_url = TAVC_Admin::get_page_url( array( 'tab' => 'status' ) );
 		$result       = array(
 			'label'       => $pass_label,
 			'status'      => 'good',

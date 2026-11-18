@@ -104,13 +104,11 @@ $tavc_bar_width  = max( 1, $tavc_slot_width * 0.7 );
 		<nav class="tavc-range-nav" aria-label="<?php esc_attr_e( 'Report period', 'tbsh-ai-visibility-control' ); ?>">
 			<?php foreach ( $tavc_ranges as $tavc_range_key => $tavc_range_label ) : ?>
 				<?php
-				$tavc_range_url = add_query_arg(
+				$tavc_range_url = TAVC_Admin::get_page_url(
 					array(
-						'page'       => 'tbsh-ai-visibility-control',
 						'tab'        => 'referrals',
 						'tavc_range' => $tavc_range_key,
-					),
-					admin_url( 'options-general.php' )
+					)
 				);
 				?>
 				<a href="<?php echo esc_url( $tavc_range_url ); ?>" class="tavc-range-link<?php echo $tavc_range_key === $tavc_range ? ' is-active' : ''; ?>"<?php echo $tavc_range_key === $tavc_range ? ' aria-current="page"' : ''; ?>>

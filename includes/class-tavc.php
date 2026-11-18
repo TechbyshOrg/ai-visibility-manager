@@ -152,6 +152,7 @@ class TAVC {
 		// Admin menus and settings setup
 		add_action( 'admin_menu', array( $this->admin, 'add_plugin_admin_menu' ) );
 		add_action( 'admin_init', array( $this->admin, 'register_plugin_settings' ) );
+		add_action( 'admin_init', array( $this->admin, 'redirect_legacy_page_url' ) );
 		add_action( 'admin_enqueue_scripts', array( $this->admin, 'enqueue_assets' ) );
 
 		// Tools page actions (clear logs, reset settings, rebuild cache, export CSV)
