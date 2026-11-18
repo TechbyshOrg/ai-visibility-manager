@@ -64,6 +64,7 @@ class TAVC {
 	private $bot_manager;
 	private $referral_logger;
 	private $crawler_logger;
+	private $enforcer;
 	private $woocommerce;
 	private $admin;
 	private $site_health;
@@ -126,6 +127,7 @@ class TAVC {
 		require_once $plugin_dir . 'includes/class-tavc-bot-manager.php';
 		require_once $plugin_dir . 'includes/class-tavc-referral-logger.php';
 		require_once $plugin_dir . 'includes/class-tavc-crawler-logger.php';
+		require_once $plugin_dir . 'includes/class-tavc-enforcer.php';
 		require_once $plugin_dir . 'includes/class-tavc-digest.php';
 		require_once $plugin_dir . 'includes/class-tavc-cron.php';
 		require_once $plugin_dir . 'includes/class-tavc-woocommerce.php';
@@ -137,6 +139,7 @@ class TAVC {
 		$this->bot_manager     = new TAVC_Bot_Manager();
 		$this->referral_logger = new TAVC_Referral_Logger();
 		$this->crawler_logger  = new TAVC_Crawler_Logger();
+		$this->enforcer        = new TAVC_Enforcer();
 		$this->woocommerce     = new TAVC_WooCommerce();
 		$this->admin           = new TAVC_Admin( $this->get_plugin_name(), $this->get_version() );
 		$this->site_health     = new TAVC_Site_Health( $this->admin );
@@ -191,6 +194,12 @@ class TAVC {
 		add_action( 'template_redirect', array( $this->llms_txt, 'render_llms_txt' ) );
 		add_filter( 'redirect_canonical', array( $this->llms_txt, 'prevent_canonical_redirect' ) );
 
+		// Markdown versions of pages (/some-page.md), opt-in on the llms.txt tab.
+		// Served before redirect_canonical (template_redirect priority 10).
+		add_filter( 'request', array( $this->llms_txt, 'route_markdown_request' ) );
+		add_action( 'template_redirect', array( $this->llms_txt, 'render_markdown_page' ), 5 );
+		add_action( 'wp_head', array( $this->llms_txt, 'print_markdown_alternate_link' ), 5 );
+
 		// Clear cache on content updates
 		add_action( 'save_post', array( $this->llms_txt, 'clear_llms_txt_cache' ) );
 		add_action( 'deleted_post', array( $this->llms_txt, 'clear_llms_txt_cache' ) );
@@ -199,9 +208,14 @@ class TAVC {
 		// Clear cache when the llms.txt settings change
 		add_action( 'add_option_tavc_llms_txt_settings', array( $this->llms_txt, 'clear_cache_on_settings_change' ) );
 		add_action( 'update_option_tavc_llms_txt_settings', array( $this->llms_txt, 'clear_cache_on_settings_change' ) );
+		add_action( 'delete_option_tavc_llms_txt_settings', array( $this->llms_txt, 'clear_cache_on_settings_change' ) );
 
 		// robots.txt manager
 		add_filter( 'robots_txt', array( $this->bot_manager, 'add_robots_txt_rules' ), 100, 2 );
+
+		// Refuse blocked AI crawlers (opt-in). init priority 0: every plugin has
+		// loaded, but most init work and the theme have not run yet.
+		add_action( 'init', array( $this->enforcer, 'maybe_refuse_request' ), 0 );
 
 		// AI crawler visits: priority 1 so /llms.txt and robots.txt requests are counted before they are served.
 		add_action( 'template_redirect', array( $this->crawler_logger, 'log_crawler_visit' ), 1 );

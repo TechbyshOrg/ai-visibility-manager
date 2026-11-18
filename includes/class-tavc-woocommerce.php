@@ -39,6 +39,16 @@ class TAVC_WooCommerce {
 	const REPORT_ORDER_LIMIT = 2000;
 
 	/**
+	 * Rows shown in the top products and top landing pages lists.
+	 */
+	const REPORT_TOP_ROWS = 5;
+
+	/**
+	 * Order meta where WooCommerce Order Attribution stores the first page of the visit.
+	 */
+	const SESSION_ENTRY_META_KEY = '_wc_order_attribution_session_entry';
+
+	/**
 	 * Whether WooCommerce is active and new enough for order reports.
 	 *
 	 * @since    1.3.0
@@ -124,24 +134,37 @@ class TAVC_WooCommerce {
 	}
 
 	/**
-	 * Paid orders from AI platforms, grouped by platform and currency.
+	 * Paid orders from AI platforms.
 	 *
 	 * @since    1.3.0
+	 * @since    1.4.0 Added average order value, top products and top landing pages.
 	 * @param    int    $since_timestamp    Unix timestamp (0 = all time).
-	 * @return   array                      List of array( 'source', 'currency', 'orders', 'revenue' ), plus 'limited' flag.
+	 * @return   array {
+	 *     @type array $rows          Per platform and currency: 'source', 'currency', 'orders',
+	 *                                'revenue' (after refunds) and 'average' (revenue per order).
+	 *     @type array $products      Top products: 'name', 'url', 'quantity', 'orders'.
+	 *     @type array $landing_pages Top first pages of the visit: 'path', 'orders'.
+	 *     @type bool  $limited       Whether the order limit was reached.
+	 * }
 	 */
 	public static function get_report( $since_timestamp ) {
+		$empty = array(
+			'rows'          => array(),
+			'products'      => array(),
+			'landing_pages' => array(),
+			'limited'       => false,
+		);
+
 		if ( ! self::is_available() ) {
-			return array(
-				'rows'    => array(),
-				'limited' => false,
-			);
+			return $empty;
 		}
 
 		$since_timestamp = absint( $since_timestamp );
 		$cache_key       = 'tavc_wc_report_' . ( $since_timestamp ? gmdate( 'Ymd', $since_timestamp ) : 'all' );
 		$cached          = get_transient( $cache_key );
-		if ( is_array( $cached ) ) {
+
+		// Reports cached by 1.3.0 lack the 1.4.0 keys: build them again.
+		if ( is_array( $cached ) && isset( $cached['rows'], $cached['products'], $cached['landing_pages'] ) ) {
 			return $cached;
 		}
 
@@ -162,12 +185,21 @@ class TAVC_WooCommerce {
 			$args['date_created'] = '>=' . $since_timestamp;
 		}
 
-		$orders = wc_get_orders( $args );
-		$rows   = array();
+		$orders   = wc_get_orders( $args );
+		$rows     = array();
+		$products = array();
+		$landing  = array();
 
 		foreach ( (array) $orders as $order ) {
 			if ( ! is_object( $order ) || ! method_exists( $order, 'get_meta' ) ) {
 				continue;
+			}
+
+			self::add_order_products( $order, $products );
+
+			$entry_path = self::get_entry_path( (string) $order->get_meta( self::SESSION_ENTRY_META_KEY ) );
+			if ( '' !== $entry_path ) {
+				$landing[ $entry_path ] = isset( $landing[ $entry_path ] ) ? $landing[ $entry_path ] + 1 : 1;
 			}
 
 			$source   = (string) $order->get_meta( self::ORDER_META_KEY );
@@ -194,14 +226,106 @@ class TAVC_WooCommerce {
 			}
 		);
 
+		foreach ( $rows as $key => $row ) {
+			$rows[ $key ]['average'] = $row['orders'] > 0 ? $row['revenue'] / $row['orders'] : 0.0;
+		}
+
+		uasort(
+			$products,
+			function ( $a, $b ) {
+				return array( $b['quantity'], $b['orders'] ) <=> array( $a['quantity'], $a['orders'] );
+			}
+		);
+
+		arsort( $landing );
+		$landing_pages = array();
+		foreach ( array_slice( $landing, 0, self::REPORT_TOP_ROWS, true ) as $path => $count ) {
+			$landing_pages[] = array(
+				'path'   => (string) $path,
+				'orders' => $count,
+			);
+		}
+
 		$report = array(
-			'rows'    => array_values( $rows ),
-			'limited' => count( (array) $orders ) >= self::REPORT_ORDER_LIMIT,
+			'rows'          => array_values( $rows ),
+			'products'      => array_values( array_slice( $products, 0, self::REPORT_TOP_ROWS, true ) ),
+			'landing_pages' => $landing_pages,
+			'limited'       => count( (array) $orders ) >= self::REPORT_ORDER_LIMIT,
 		);
 
 		set_transient( $cache_key, $report, 15 * MINUTE_IN_SECONDS );
 
 		return $report;
+	}
+
+	/**
+	 * Count the products of one order. Variations are counted under their
+	 * parent product.
+	 *
+	 * @since    1.4.0
+	 * @param    WC_Order    $order       Order.
+	 * @param    array       $products    Product ID => totals, by reference.
+	 */
+	private static function add_order_products( $order, &$products ) {
+		if ( ! method_exists( $order, 'get_items' ) ) {
+			return;
+		}
+
+		$seen = array();
+		foreach ( $order->get_items() as $item ) {
+			if ( ! is_object( $item ) || ! method_exists( $item, 'get_product_id' ) ) {
+				continue;
+			}
+
+			$product_id = (int) $item->get_product_id();
+			if ( $product_id <= 0 ) {
+				continue;
+			}
+
+			if ( ! isset( $products[ $product_id ] ) ) {
+				$title = get_the_title( $product_id );
+
+				$products[ $product_id ] = array(
+					'name'     => '' !== $title ? $title : (string) $item->get_name(),
+					'url'      => 'publish' === get_post_status( $product_id ) ? (string) get_permalink( $product_id ) : '',
+					'quantity' => 0,
+					'orders'   => 0,
+				);
+			}
+
+			$products[ $product_id ]['quantity'] += max( 0, (int) $item->get_quantity() );
+			if ( ! isset( $seen[ $product_id ] ) ) {
+				$products[ $product_id ]['orders']++;
+				$seen[ $product_id ] = true;
+			}
+		}
+	}
+
+	/**
+	 * Path of the first page of the visit, relative to the site, without query string.
+	 *
+	 * @since    1.4.0
+	 * @param    string    $url    Entry URL recorded by WooCommerce.
+	 * @return   string            For example "/blog/best-hoodies/", or '' when unknown.
+	 */
+	public static function get_entry_path( $url ) {
+		$url = trim( $url );
+		if ( '' === $url || '(none)' === $url ) {
+			return '';
+		}
+
+		$path = wp_parse_url( $url, PHP_URL_PATH );
+		if ( ! is_string( $path ) || '' === $path ) {
+			$path = '/';
+		}
+
+		$home_path = wp_parse_url( home_url( '/' ), PHP_URL_PATH );
+		$home_path = is_string( $home_path ) ? untrailingslashit( $home_path ) : '';
+		if ( '' !== $home_path && 0 === strpos( $path, $home_path . '/' ) ) {
+			$path = substr( $path, strlen( $home_path ) );
+		}
+
+		return substr( $path, 0, 255 );
 	}
 
 	/**

@@ -1,6 +1,6 @@
 <?php
 /**
- * Weekly AI visibility summary email.
+ * Weekly or monthly AI visibility summary email.
  *
  * @link       https://techbysh.com
  * @since      1.3.0
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Weekly AI visibility summary email.
+ * Weekly or monthly AI visibility summary email.
  *
  * @since      1.3.0
  * @package    Tavc
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class TAVC_Digest {
 
 	/**
-	 * Send the summary of the last 7 days.
+	 * Send the summary of the last week or month, as configured.
 	 *
 	 * @since    1.3.0
 	 * @param    string    $recipient    Optional address; defaults to the configured recipient.
@@ -37,10 +37,11 @@ class TAVC_Digest {
 			return false;
 		}
 
-		$message = self::build_message();
+		$settings = TAVC_Settings::get_tracking_settings();
+		$message  = self::build_message( $settings['digest_frequency'] );
 
 		/**
-		 * Filters the weekly summary email before it is sent.
+		 * Filters the summary email before it is sent.
 		 *
 		 * @since 1.3.0
 		 *
@@ -57,16 +58,27 @@ class TAVC_Digest {
 	}
 
 	/**
-	 * Build the plain-text summary for the 7 full days before today.
+	 * Build the plain-text summary: the 7 full days before today (weekly), or
+	 * the previous calendar month (monthly), compared with the period before.
 	 *
 	 * @since    1.3.0
-	 * @return   array    array( 'subject' => string, 'body' => string ).
+	 * @since    1.4.0 Added the $frequency parameter.
+	 * @param    string    $frequency    'weekly' or 'monthly'.
+	 * @return   array                   array( 'subject' => string, 'body' => string ).
 	 */
-	public static function build_message() {
+	public static function build_message( $frequency = 'weekly' ) {
+		$monthly  = 'monthly' === $frequency;
 		$timezone = wp_timezone();
-		$today    = new DateTimeImmutable( 'today', $timezone );
-		$start    = $today->modify( '-7 days' );
-		$previous = $today->modify( '-14 days' );
+
+		if ( $monthly ) {
+			$today    = new DateTimeImmutable( 'first day of this month 00:00', $timezone );
+			$start    = $today->modify( 'first day of last month' );
+			$previous = $start->modify( 'first day of last month' );
+		} else {
+			$today    = new DateTimeImmutable( 'today', $timezone );
+			$start    = $today->modify( '-7 days' );
+			$previous = $today->modify( '-14 days' );
+		}
 
 		$start_sql    = $start->format( 'Y-m-d H:i:s' );
 		$end_sql      = $today->format( 'Y-m-d H:i:s' );
@@ -100,7 +112,7 @@ class TAVC_Digest {
 			/* translators: 1: number of visits, 2: change compared with the week before. */
 			__( 'AI referral visits: %1$s (%2$s)', 'tbsh-ai-visibility-control' ),
 			number_format_i18n( $visits ),
-			self::describe_change( $visits, $previous_visits )
+			self::describe_change( $visits, $previous_visits, $monthly )
 		);
 
 		if ( ! empty( $sources ) ) {
@@ -129,18 +141,30 @@ class TAVC_Digest {
 		if ( ! empty( $crawlers ) ) {
 			foreach ( $crawlers as $slug => $crawler ) {
 				$name    = isset( $definitions[ $slug ] ) ? $definitions[ $slug ]['name'] : $slug;
-				$lines[] = '  - ' . $name . ': ' . number_format_i18n( $crawler->hits );
+				$line    = '  - ' . $name . ': ' . number_format_i18n( $crawler->hits );
+				$refused = $crawler->blocked + $crawler->limited;
+				if ( $refused > 0 ) {
+					$line .= ' ' . sprintf(
+						/* translators: %s: number of refused requests. */
+						__( '(%s refused)', 'tbsh-ai-visibility-control' ),
+						number_format_i18n( $refused )
+					);
+				}
+				$lines[] = $line;
 			}
 		}
 
 		$lines[] = '';
 		$lines[] = __( 'Full report:', 'tbsh-ai-visibility-control' ) . ' ' . admin_url( 'admin.php?page=tbsh-ai-visibility-control&tab=referrals' );
-		$lines[] = __( 'To stop these emails, turn off the weekly summary under AI Visibility > Settings & Tools.', 'tbsh-ai-visibility-control' );
+		$lines[] = __( 'To stop these emails, turn off the summary email under AI Visibility > Settings & Tools.', 'tbsh-ai-visibility-control' );
 
 		return array(
 			'subject' => sprintf(
-				/* translators: %s: site name. */
-				__( '[%s] Weekly AI visibility summary', 'tbsh-ai-visibility-control' ),
+				$monthly
+					/* translators: %s: site name. */
+					? __( '[%s] Monthly AI visibility summary', 'tbsh-ai-visibility-control' )
+					/* translators: %s: site name. */
+					: __( '[%s] Weekly AI visibility summary', 'tbsh-ai-visibility-control' ),
 				$site_name
 			),
 			'body'    => implode( "\n", $lines ),
@@ -151,25 +175,33 @@ class TAVC_Digest {
 	 * Describe the change between two counts.
 	 *
 	 * @since    1.3.0
-	 * @param    int    $current     This period.
-	 * @param    int    $previous    Previous period.
+	 * @since    1.4.0 Added the $monthly parameter.
+	 * @param    int     $current     This period.
+	 * @param    int     $previous    Previous period.
+	 * @param    bool    $monthly     Whether the periods are months.
 	 * @return   string
 	 */
-	private static function describe_change( $current, $previous ) {
+	private static function describe_change( $current, $previous, $monthly = false ) {
 		if ( $previous <= 0 ) {
-			return $current > 0 ? __( 'no visits the week before', 'tbsh-ai-visibility-control' ) : __( 'no change', 'tbsh-ai-visibility-control' );
+			if ( $current <= 0 ) {
+				return __( 'no change', 'tbsh-ai-visibility-control' );
+			}
+
+			return $monthly ? __( 'no visits the month before', 'tbsh-ai-visibility-control' ) : __( 'no visits the week before', 'tbsh-ai-visibility-control' );
 		}
 
 		$percent = round( ( ( $current - $previous ) / $previous ) * 100 );
 
 		if ( 0.0 === (float) $percent ) {
-			return __( 'no change from the week before', 'tbsh-ai-visibility-control' );
+			return $monthly ? __( 'no change from the month before', 'tbsh-ai-visibility-control' ) : __( 'no change from the week before', 'tbsh-ai-visibility-control' );
 		}
 
-		return sprintf(
+		$signed = ( $percent > 0 ? '+' : '' ) . number_format_i18n( $percent ) . '%';
+
+		return $monthly
 			/* translators: %s: signed percentage, e.g. +12% or -5%. */
-			__( '%s compared with the week before', 'tbsh-ai-visibility-control' ),
-			( $percent > 0 ? '+' : '' ) . number_format_i18n( $percent ) . '%'
-		);
+			? sprintf( __( '%s compared with the month before', 'tbsh-ai-visibility-control' ), $signed )
+			/* translators: %s: signed percentage, e.g. +12% or -5%. */
+			: sprintf( __( '%s compared with the week before', 'tbsh-ai-visibility-control' ), $signed );
 	}
 }

@@ -60,7 +60,7 @@ class TAVC_Activator {
 
 		TAVC_Cron::schedule_events();
 
-		$plugin_version = defined( 'TAVC_VERSION' ) ? TAVC_VERSION : '1.3.0';
+		$plugin_version = defined( 'TAVC_VERSION' ) ? TAVC_VERSION : '1.4.0';
 		update_option( 'tavc_plugin_version', $plugin_version );
 	}
 
@@ -97,6 +97,8 @@ class TAVC_Activator {
 			url_hash char(32) NOT NULL,
 			url_path varchar(255) DEFAULT '' NOT NULL,
 			hits int(10) unsigned DEFAULT 0 NOT NULL,
+			blocked int(10) unsigned DEFAULT 0 NOT NULL,
+			limited int(10) unsigned DEFAULT 0 NOT NULL,
 			last_seen datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
 			PRIMARY KEY  (id),
 			UNIQUE KEY bot_date_url (bot,hit_date,url_hash),

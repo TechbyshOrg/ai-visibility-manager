@@ -28,6 +28,7 @@ delete_option( 'tavc_llms_txt_settings' );
 delete_option( 'tavc_tracking_settings' );
 delete_option( 'tavc_content_signals' );
 delete_option( 'tavc_custom_robots_rules' );
+delete_option( 'tavc_enforcement_settings' );
 
 // Delete transients
 delete_transient( 'tavc_llms_txt_cache' );
@@ -44,9 +45,11 @@ wp_clear_scheduled_hook( 'tavc_weekly_digest' );
 
 global $wpdb;
 
-// Cached WooCommerce reports (keys include a date)
-// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s", $wpdb->esc_like( '_transient_tavc_wc_report_' ) . '%', $wpdb->esc_like( '_transient_timeout_tavc_wc_report_' ) . '%' ) );
+// Cached WooCommerce reports (keys include a date) and crawl rate limit counters (one per crawler)
+foreach ( array( 'tavc_wc_report_', 'tavc_rate_limit_' ) as $tavc_transient_prefix ) {
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+	$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s", $wpdb->esc_like( '_transient_' . $tavc_transient_prefix ) . '%', $wpdb->esc_like( '_transient_timeout_' . $tavc_transient_prefix ) . '%' ) );
+}
 
 // Per-post "Exclude from llms.txt" flags
 delete_post_meta_by_key( '_tavc_llms_exclude' );

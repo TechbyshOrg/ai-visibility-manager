@@ -421,14 +421,40 @@ class TAVC_DB {
 	*/
 
 	/**
+	 * Whether the crawler table has the "blocked" and "limited" columns added in 1.4.0.
+	 *
+	 * Normally true once TAVC::maybe_upgrade() has run; the check keeps logging
+	 * and reports working if that migration could not alter the table.
+	 *
+	 * @since    1.4.0
+	 * @return   bool
+	 */
+	private static function crawler_has_outcome_columns() {
+		global $wpdb;
+
+		static $has_columns = null;
+
+		if ( null === $has_columns ) {
+			$table_name = self::get_crawler_table_name();
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$has_columns = self::table_exists( $table_name ) && 2 === count( (array) $wpdb->get_col( $wpdb->prepare( "SHOW COLUMNS FROM %i WHERE Field IN ('blocked', 'limited')", $table_name ) ) );
+		}
+
+		return $has_columns;
+	}
+
+	/**
 	 * Count one crawler request. Rows are aggregated per crawler, day and path.
 	 *
 	 * @since    1.3.0
-	 * @param    string    $bot     Crawler slug.
-	 * @param    string    $path    Requested URL path.
-	 * @return   int|false          Rows affected or false on failure.
+	 * @since    1.4.0 Added the $outcome parameter.
+	 * @param    string    $bot        Crawler slug.
+	 * @param    string    $path       Requested URL path.
+	 * @param    string    $outcome    Empty for a served request, 'blocked' when it was refused with
+	 *                                 a 403, or 'limited' when it was refused by the rate limit (429).
+	 * @return   int|false             Rows affected or false on failure.
 	 */
-	public static function record_crawler_hit( $bot, $path ) {
+	public static function record_crawler_hit( $bot, $path, $outcome = '' ) {
 		global $wpdb;
 
 		$table_name = self::get_crawler_table_name();
@@ -439,6 +465,26 @@ class TAVC_DB {
 		$bot  = substr( sanitize_key( $bot ), 0, 64 );
 		$path = substr( (string) $path, 0, 255 );
 		$now  = current_time( 'mysql' );
+
+		if ( in_array( $outcome, array( 'blocked', 'limited' ), true ) && self::crawler_has_outcome_columns() ) {
+			$blocked = 'blocked' === $outcome ? 1 : 0;
+			$limited = 'limited' === $outcome ? 1 : 0;
+
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			return $wpdb->query(
+				$wpdb->prepare(
+					'INSERT INTO %i (hit_date, bot, url_hash, url_path, hits, blocked, limited, last_seen) VALUES (%s, %s, %s, %s, 1, %d, %d, %s) ON DUPLICATE KEY UPDATE hits = hits + 1, blocked = blocked + VALUES(blocked), limited = limited + VALUES(limited), last_seen = VALUES(last_seen)',
+					$table_name,
+					substr( $now, 0, 10 ),
+					$bot,
+					md5( $path ),
+					$path,
+					$blocked,
+					$limited,
+					$now
+				)
+			);
+		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		return $wpdb->query(
@@ -460,7 +506,9 @@ class TAVC_DB {
 	 * @since    1.3.0
 	 * @param    string         $since    Inclusive start date, site-local 'Y-m-d'.
 	 * @param    string|null    $until    Optional exclusive end date, site-local 'Y-m-d'.
-	 * @return   array                    Crawler slug => object( hits, last_seen ).
+	 * @return   array                    Crawler slug => object( hits, blocked, limited, last_seen ).
+	 *                                    "hits" includes the refused requests counted in
+	 *                                    "blocked" (403) and "limited" (429).
 	 */
 	public static function get_crawler_summary( $since, $until = null ) {
 		global $wpdb;
@@ -470,13 +518,22 @@ class TAVC_DB {
 			return array();
 		}
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT bot, SUM(hits) AS hits, MAX(last_seen) AS last_seen FROM %i WHERE hit_date >= %s AND hit_date < %s GROUP BY bot ORDER BY hits DESC', $table_name, $since, null !== $until ? $until : '9999-12-31' ) );
+		$until = null !== $until ? $until : '9999-12-31';
+
+		if ( self::crawler_has_outcome_columns() ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT bot, SUM(hits) AS hits, SUM(blocked) AS blocked, SUM(limited) AS limited, MAX(last_seen) AS last_seen FROM %i WHERE hit_date >= %s AND hit_date < %s GROUP BY bot ORDER BY hits DESC', $table_name, $since, $until ) );
+		} else {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT bot, SUM(hits) AS hits, 0 AS blocked, 0 AS limited, MAX(last_seen) AS last_seen FROM %i WHERE hit_date >= %s AND hit_date < %s GROUP BY bot ORDER BY hits DESC', $table_name, $since, $until ) );
+		}
 
 		$summary = array();
 		foreach ( (array) $rows as $row ) {
 			$summary[ $row->bot ] = (object) array(
 				'hits'      => intval( $row->hits ),
+				'blocked'   => intval( $row->blocked ),
+				'limited'   => intval( $row->limited ),
 				'last_seen' => $row->last_seen,
 			);
 		}
@@ -549,6 +606,29 @@ class TAVC_DB {
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		return intval( $wpdb->get_var( $wpdb->prepare( 'SELECT SUM(hits) FROM %i WHERE hit_date >= %s AND hit_date < %s', $table_name, $start, $end ) ) );
+	}
+
+	/**
+	 * Every crawler row, newest day first, for CSV export.
+	 *
+	 * @since    1.4.0
+	 * @return   array    Objects with hit_date, bot, url_path, hits, blocked, limited, last_seen.
+	 */
+	public static function get_all_crawler_hits_for_csv() {
+		global $wpdb;
+
+		$table_name = self::get_crawler_table_name();
+		if ( ! self::table_exists( $table_name ) ) {
+			return array();
+		}
+
+		if ( self::crawler_has_outcome_columns() ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			return (array) $wpdb->get_results( $wpdb->prepare( 'SELECT hit_date, bot, url_path, hits, blocked, limited, last_seen FROM %i ORDER BY hit_date DESC, bot ASC, hits DESC', $table_name ) );
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		return (array) $wpdb->get_results( $wpdb->prepare( 'SELECT hit_date, bot, url_path, hits, 0 AS blocked, 0 AS limited, last_seen FROM %i ORDER BY hit_date DESC, bot ASC, hits DESC', $table_name ) );
 	}
 
 	/**

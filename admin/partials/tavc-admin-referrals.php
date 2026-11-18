@@ -338,6 +338,7 @@ $tavc_bar_width  = max( 1, $tavc_slot_width * 0.7 );
 						<th scope="col"><?php esc_html_e( 'AI Source', 'tbsh-ai-visibility-control' ); ?></th>
 						<th scope="col" class="tavc-num"><?php esc_html_e( 'Paid Orders', 'tbsh-ai-visibility-control' ); ?></th>
 						<th scope="col" class="tavc-num"><?php esc_html_e( 'Revenue (after refunds)', 'tbsh-ai-visibility-control' ); ?></th>
+						<th scope="col" class="tavc-num"><?php esc_html_e( 'Average Order', 'tbsh-ai-visibility-control' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -346,10 +347,73 @@ $tavc_bar_width  = max( 1, $tavc_slot_width * 0.7 );
 							<td><strong><?php echo esc_html( $tavc_wc_row['source'] ); ?></strong></td>
 							<td class="tavc-num"><?php echo esc_html( number_format_i18n( $tavc_wc_row['orders'] ) ); ?></td>
 							<td class="tavc-num"><?php echo wp_kses_post( wc_price( $tavc_wc_row['revenue'], array( 'currency' => $tavc_wc_row['currency'] ) ) ); ?></td>
+							<td class="tavc-num"><?php echo wp_kses_post( wc_price( $tavc_wc_row['average'], array( 'currency' => $tavc_wc_row['currency'] ) ) ); ?></td>
 						</tr>
 					<?php endforeach; ?>
 				</tbody>
 			</table>
+			</div>
+
+			<div class="tavc-two-column-grid tavc-wc-breakdown">
+				<div class="tavc-panel">
+					<h3 class="tavc-panel-title"><?php esc_html_e( 'Top Products Bought by AI Visitors', 'tbsh-ai-visibility-control' ); ?></h3>
+					<?php if ( empty( $tavc_wc_report['products'] ) ) : ?>
+						<p class="tavc-muted-text"><?php esc_html_e( 'No products to show.', 'tbsh-ai-visibility-control' ); ?></p>
+					<?php else : ?>
+						<div class="tavc-table-scroll">
+						<table class="tavc-table">
+							<thead>
+								<tr>
+									<th scope="col"><?php esc_html_e( 'Product', 'tbsh-ai-visibility-control' ); ?></th>
+									<th scope="col" class="tavc-num"><?php esc_html_e( 'Units', 'tbsh-ai-visibility-control' ); ?></th>
+									<th scope="col" class="tavc-num"><?php esc_html_e( 'Orders', 'tbsh-ai-visibility-control' ); ?></th>
+								</tr>
+							</thead>
+							<tbody>
+								<?php foreach ( $tavc_wc_report['products'] as $tavc_wc_product ) : ?>
+									<tr>
+										<td>
+											<?php if ( '' !== $tavc_wc_product['url'] ) : ?>
+												<a href="<?php echo esc_url( $tavc_wc_product['url'] ); ?>"><?php echo esc_html( $tavc_wc_product['name'] ); ?></a>
+											<?php else : ?>
+												<?php echo esc_html( $tavc_wc_product['name'] ); ?>
+											<?php endif; ?>
+										</td>
+										<td class="tavc-num"><?php echo esc_html( number_format_i18n( $tavc_wc_product['quantity'] ) ); ?></td>
+										<td class="tavc-num"><?php echo esc_html( number_format_i18n( $tavc_wc_product['orders'] ) ); ?></td>
+									</tr>
+								<?php endforeach; ?>
+							</tbody>
+						</table>
+						</div>
+					<?php endif; ?>
+				</div>
+
+				<div class="tavc-panel">
+					<h3 class="tavc-panel-title"><?php esc_html_e( 'Pages Where AI Buyers Arrived', 'tbsh-ai-visibility-control' ); ?></h3>
+					<?php if ( empty( $tavc_wc_report['landing_pages'] ) ) : ?>
+						<p class="tavc-muted-text"><?php esc_html_e( 'WooCommerce did not record the first page of these visits.', 'tbsh-ai-visibility-control' ); ?></p>
+					<?php else : ?>
+						<div class="tavc-table-scroll">
+						<table class="tavc-table">
+							<thead>
+								<tr>
+									<th scope="col"><?php esc_html_e( 'First Page of the Visit', 'tbsh-ai-visibility-control' ); ?></th>
+									<th scope="col" class="tavc-num"><?php esc_html_e( 'Orders', 'tbsh-ai-visibility-control' ); ?></th>
+								</tr>
+							</thead>
+							<tbody>
+								<?php foreach ( $tavc_wc_report['landing_pages'] as $tavc_wc_landing ) : ?>
+									<tr>
+										<td class="tavc-truncate" title="<?php echo esc_attr( $tavc_wc_landing['path'] ); ?>"><code><?php echo esc_html( $tavc_wc_landing['path'] ); ?></code></td>
+										<td class="tavc-num"><?php echo esc_html( number_format_i18n( $tavc_wc_landing['orders'] ) ); ?></td>
+									</tr>
+								<?php endforeach; ?>
+							</tbody>
+						</table>
+						</div>
+					<?php endif; ?>
+				</div>
 			</div>
 			<p class="tavc-muted-text tavc-small-text">
 				<?php

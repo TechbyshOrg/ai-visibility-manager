@@ -275,7 +275,7 @@
   "description": "Free WordPress plugin to block AI training crawlers, stay visible in AI search, publish llms.txt, and see the visits and WooCommerce sales AI assistants send.",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "WordPress 6.2 or later",
-  "softwareVersion": "1.3.0",
+  "softwareVersion": "1.4.0",
   "url": "https://wordpress.org/plugins/tbsh-ai-visibility-control/",
   "downloadUrl": "https://downloads.wordpress.org/plugin/tbsh-ai-visibility-control.zip",
   "license": "https://www.gnu.org/licenses/gpl-2.0.html",
@@ -400,8 +400,8 @@
 
             <p>The plugin has three parts:</p>
             <ul>
-                <li><strong>AI crawler control:</strong> choose which of 19 AI crawlers may read your site. The plugin adds the matching rules to your robots.txt file.</li>
-                <li><strong>llms.txt:</strong> an automatic, up-to-date list of your content for AI tools, with an optional full-text <code>llms-full.txt</code>.</li>
+                <li><strong>AI crawler control:</strong> choose which of 21 AI crawlers may read your site. The plugin adds the matching rules to your robots.txt file, and can also turn blocked crawlers away or slow down busy ones.</li>
+                <li><strong>llms.txt:</strong> an automatic, up-to-date list of your content for AI tools, with an optional full-text <code>llms-full.txt</code> and optional Markdown versions of your pages.</li>
                 <li><strong>AI traffic:</strong> reports of the visitors and WooCommerce orders that AI assistants send you, and of the AI crawlers that read your site.</li>
             </ul>
             <p><strong>Requirements:</strong> WordPress 6.2 or later and PHP 7.4 or later. WooCommerce 8.5 or later for AI sales reports.</p>
@@ -447,7 +447,7 @@
         <!-- AI crawlers -->
         <section id="ai-crawlers">
             <h2>4. Block AI Crawlers</h2>
-            <p>The AI Crawlers tab lists 19 AI crawlers in three groups. Each one shows an <strong>Allowed</strong> or <strong>Blocked</strong> label. Blocked crawlers get a <code>Disallow: /</code> rule, added at the end of the robots.txt file that WordPress creates, so rules from other plugins stay in place.</p>
+            <p>The AI Crawlers tab lists 21 AI crawlers in three groups. Each one shows an <strong>Allowed</strong> or <strong>Blocked</strong> label. Blocked crawlers get a <code>Disallow: /</code> rule, added at the end of the robots.txt file that WordPress creates, so rules from other plugins stay in place.</p>
 
             <h3>Quick setup</h3>
             <ul>
@@ -468,7 +468,7 @@
                 <tbody>
                     <tr>
                         <td><strong>AI training</strong></td>
-                        <td>GPTBot, ClaudeBot, Google-Extended, Applebot-Extended, CCBot, Amazonbot, Bytespider, meta-externalagent, AI2Bot</td>
+                        <td>GPTBot, ClaudeBot, Google-Extended, Applebot-Extended, CCBot, Amazonbot, Bytespider, meta-externalagent, FacebookBot, AI2Bot, omgili</td>
                         <td>Collect content that may be used to train AI models.</td>
                     </tr>
                     <tr>
@@ -486,7 +486,17 @@
 
             <div class="card">
                 <h3>AI crawler activity</h3>
-                <p>See which AI crawlers visited in the last 30 days, how many requests each made, when each was last seen, and the most crawled pages. Crawlers are recognised by their User-Agent. Visits served from a page cache or CDN are not counted.</p>
+                <p>See which AI crawlers visited in the last 30 days, how many requests each made, how many were refused, when each was last seen, and the most crawled pages. Crawlers are recognised by their User-Agent. Visits served from a page cache or CDN are not counted.</p>
+            </div>
+
+            <div class="card">
+                <h3>Enforce your choices (optional)</h3>
+                <p>robots.txt only asks crawlers to stay away. Under <strong>Enforce Your Choices</strong> on the AI Crawlers tab you can go further:</p>
+                <ul>
+                    <li><strong>Refuse requests from blocked crawlers:</strong> blocked crawlers get a short <code>403 Forbidden</code> response instead of your pages. <code>robots.txt</code>, <code>llms.txt</code> and <code>llms-full.txt</code> are always served, so every crawler can read your rules.</li>
+                    <li><strong>Crawl rate limit:</strong> each AI training and search crawler may make 10 to 300 requests per minute (your choice). Extra requests get a <code>429 Too Many Requests</code> response with a <code>Retry-After</code> header. User-requested fetchers such as ChatGPT-User are never limited.</li>
+                </ul>
+                <p>Crawlers are recognised by their User-Agent, which a bot can fake, and pages served from a page cache or CDN never reach WordPress. For complete blocking, also add a User-Agent rule in your cache plugin, CDN or web server. The plugin warns you when a page cache is active.</p>
             </div>
 
             <div class="card">
@@ -527,6 +537,12 @@ Your About text, or your site tagline.
                 <p><strong>Check first if you use a membership or paywall plugin:</strong> WordPress reports members-only content as public, so it would be included.</p>
             </div>
 
+            <div class="card">
+                <h3>Markdown versions of pages (optional)</h3>
+                <p>Turn on <strong>Serve a Markdown version of each listed page</strong> and every page listed in llms.txt is also available as clean Markdown at its address plus <code>.md</code>, for example <code>yoursite.com/about.md</code>, as the llms.txt proposal recommends. A static front page is available at <code>/index.md</code>. Each page also links to its Markdown version in its HTML head, and you can let llms.txt link to the <code>.md</code> versions instead of the normal pages.</p>
+                <p>The same rules as llms.txt apply: other content types, excluded, noindex and password-protected content has no Markdown version. With plain permalinks the address is <code>?p=123&amp;tavc_markdown=1</code>.</p>
+            </div>
+
             <div class="alert alert-info">
                 <strong>Always up to date:</strong> a saved copy of the file is served so it loads instantly. It is refreshed automatically when you publish, edit or delete content, or when you click <strong>Rebuild llms.txt</strong>.
             </div>
@@ -545,7 +561,7 @@ Your About text, or your site tagline.
 
             <div class="card">
                 <h3>WooCommerce sales from AI</h3>
-                <p>With WooCommerce 8.5 or later and WooCommerce Order Attribution turned on, orders whose visit came from an AI assistant are tagged with the AI source. The AI Traffic tab shows paid orders and revenue (after refunds) by AI platform, and the source appears on the order screen. Compatible with High-Performance Order Storage and the block checkout.</p>
+                <p>With WooCommerce 8.5 or later and WooCommerce Order Attribution turned on, orders whose visit came from an AI assistant are tagged with the AI source. The AI Traffic tab shows paid orders, revenue (after refunds) and average order value by AI platform, the products AI visitors buy most and the pages where they arrived, and the source appears on the order screen. Compatible with High-Performance Order Storage and the block checkout.</p>
             </div>
 
             <div class="card">
@@ -558,8 +574,8 @@ Your About text, or your site tagline.
         <section id="settings">
             <h2>7. Settings &amp; Tools</h2>
             <ul>
-                <li><strong>Tracking &amp; data settings:</strong> UTM detection, cache-compatible tracking, AI crawler logging, how long logs are kept (forever, 30, 90, 180 days or 1 year), and an optional weekly summary email sent every Monday morning.</li>
-                <li><strong>Maintenance:</strong> Rebuild llms.txt, export all AI visits as a CSV file, and send a test summary email.</li>
+                <li><strong>Tracking &amp; data settings:</strong> UTM detection, cache-compatible tracking, AI crawler logging, how long logs are kept (forever, 30, 90, 180 days or 1 year), and an optional summary email, sent weekly (Monday morning) or monthly (on the 1st).</li>
+                <li><strong>Maintenance:</strong> Rebuild llms.txt, export all AI visits or all AI crawler visits as a CSV file, and send a test summary email.</li>
                 <li><strong>Danger Zone:</strong> delete AI traffic logs, delete crawler logs, or reset crawler blocks. Each action asks for confirmation and says what will be deleted.</li>
                 <li><strong>When the plugin is deleted:</strong> choose whether all data is removed.</li>
             </ul>
@@ -669,6 +685,8 @@ Your About text, or your site tagline.
                 <li><code>tavc_llms_txt_post_types</code>, <code>tavc_llms_txt_include_post</code>: choose the content listed in llms.txt and llms-full.txt.</li>
                 <li><code>tavc_llms_full_txt_output</code>, <code>tavc_llms_full_txt_max_bytes</code>: change llms-full.txt content and its size limit.</li>
                 <li><code>tavc_custom_robots_rules</code>: change the crawler rules added to robots.txt.</li>
+                <li><code>tavc_refuse_blocked_crawler</code>, <code>tavc_enforcement_exempt_paths</code>, <code>tavc_rate_limit_per_minute</code>: fine-tune which crawler requests are refused or rate limited. The <code>tavc_crawler_request_refused</code> action fires when a request is refused.</li>
+                <li><code>tavc_markdown_page_output</code>: change the Markdown version of a page.</li>
                 <li><code>tavc_log_crawler_visit</code>, <code>tavc_beacon_hourly_limit</code>, <code>tavc_digest_email</code>, <code>tavc_woocommerce_order_ai_source</code>.</li>
             </ul>
         </section>

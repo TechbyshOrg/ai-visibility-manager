@@ -38,6 +38,11 @@ class TAVC_Settings {
 	const MAX_ROBOTS_LINES_PER_GROUP = 50;
 
 	/**
+	 * Allowed crawl rate limits, in requests per minute per crawler.
+	 */
+	const RATE_LIMITS = array( 10, 30, 60, 120, 300 );
+
+	/**
 	 * Settings errors already reported in this request, to avoid duplicates when
 	 * WordPress runs a sanitizer twice for a brand-new option.
 	 *
@@ -68,6 +73,8 @@ class TAVC_Settings {
 			'exclude_noindex'  => 1,
 			'full_enabled'     => 0,
 			'full_max_items'   => 100,
+			'markdown_pages'   => 0,
+			'markdown_links'   => 0,
 		);
 	}
 
@@ -94,6 +101,8 @@ class TAVC_Settings {
 		$settings['exclude_noindex']  = self::to_flag( $settings['exclude_noindex'] );
 		$settings['full_enabled']     = self::to_flag( $settings['full_enabled'] );
 		$settings['full_max_items']   = max( 1, absint( $settings['full_max_items'] ) );
+		$settings['markdown_pages']   = self::to_flag( $settings['markdown_pages'] );
+		$settings['markdown_links']   = self::to_flag( $settings['markdown_links'] );
 
 		return array_intersect_key( $settings, $defaults );
 	}
@@ -155,6 +164,8 @@ class TAVC_Settings {
 			'exclude_noindex'  => self::to_flag( isset( $input['exclude_noindex'] ) ? $input['exclude_noindex'] : 0 ),
 			'full_enabled'     => self::to_flag( isset( $input['full_enabled'] ) ? $input['full_enabled'] : 0 ),
 			'full_max_items'   => min( 500, max( 1, absint( isset( $input['full_max_items'] ) ? $input['full_max_items'] : $defaults['full_max_items'] ) ) ),
+			'markdown_pages'   => self::to_flag( isset( $input['markdown_pages'] ) ? $input['markdown_pages'] : 0 ),
+			'markdown_links'   => self::to_flag( isset( $input['markdown_links'] ) ? $input['markdown_links'] : 0 ),
 		);
 	}
 
@@ -182,6 +193,7 @@ class TAVC_Settings {
 			'crawler_retention_days'  => 90,
 			'digest_enabled'          => 0,
 			'digest_email'            => '',
+			'digest_frequency'        => 'weekly',
 		);
 	}
 
@@ -202,6 +214,10 @@ class TAVC_Settings {
 		$settings['crawler_logging'] = self::to_flag( $settings['crawler_logging'] );
 		$settings['digest_enabled']  = self::to_flag( $settings['digest_enabled'] );
 		$settings['digest_email']    = is_string( $settings['digest_email'] ) ? $settings['digest_email'] : '';
+
+		if ( ! in_array( $settings['digest_frequency'], array( 'weekly', 'monthly' ), true ) ) {
+			$settings['digest_frequency'] = $defaults['digest_frequency'];
+		}
 
 		foreach ( array( 'referral_retention_days', 'crawler_retention_days' ) as $key ) {
 			$settings[ $key ] = absint( $settings[ $key ] );
@@ -226,6 +242,19 @@ class TAVC_Settings {
 			90  => __( '90 days', 'tbsh-ai-visibility-control' ),
 			180 => __( '180 days', 'tbsh-ai-visibility-control' ),
 			365 => __( '1 year', 'tbsh-ai-visibility-control' ),
+		);
+	}
+
+	/**
+	 * Summary email frequencies.
+	 *
+	 * @since    1.4.0
+	 * @return   array    Frequency => label.
+	 */
+	public static function get_digest_frequency_choices() {
+		return array(
+			'weekly'  => __( 'Weekly (Monday morning)', 'tbsh-ai-visibility-control' ),
+			'monthly' => __( 'Monthly (1st of the month)', 'tbsh-ai-visibility-control' ),
 		);
 	}
 
@@ -280,7 +309,105 @@ class TAVC_Settings {
 		}
 		$output['digest_email'] = $email;
 
+		$frequency                  = isset( $input['digest_frequency'] ) ? sanitize_key( (string) $input['digest_frequency'] ) : 'weekly';
+		$output['digest_frequency'] = in_array( $frequency, array( 'weekly', 'monthly' ), true ) ? $frequency : 'weekly';
+
 		return $output;
+	}
+
+	/*
+	|--------------------------------------------------------------------------
+	| Crawler enforcement (option: tavc_enforcement_settings)
+	|--------------------------------------------------------------------------
+	*/
+
+	/**
+	 * Default enforcement settings. Everything is off: robots.txt rules alone
+	 * are the pre-1.4.0 behaviour.
+	 *
+	 * @since    1.4.0
+	 * @return   array
+	 */
+	public static function get_enforcement_defaults() {
+		return array(
+			'enforce_blocks'        => 0,
+			'rate_limit'            => 0,
+			'rate_limit_per_minute' => 60,
+		);
+	}
+
+	/**
+	 * Requests-per-minute choices for the crawl rate limit.
+	 *
+	 * @since    1.4.0
+	 * @return   array    Requests per minute => label.
+	 */
+	public static function get_rate_limit_choices() {
+		$choices = array();
+		foreach ( self::RATE_LIMITS as $limit ) {
+			$choices[ $limit ] = sprintf(
+				/* translators: %s: number of requests. */
+				__( '%s requests per minute', 'tbsh-ai-visibility-control' ),
+				number_format_i18n( $limit )
+			);
+		}
+
+		return $choices;
+	}
+
+	/**
+	 * Saved enforcement settings merged over the defaults.
+	 *
+	 * Runs on every front-end request, so it only reads the autoloaded option.
+	 *
+	 * @since    1.4.0
+	 * @return   array
+	 */
+	public static function get_enforcement_settings() {
+		$saved    = get_option( 'tavc_enforcement_settings', array() );
+		$defaults = self::get_enforcement_defaults();
+		$settings = wp_parse_args( is_array( $saved ) ? $saved : array(), $defaults );
+
+		$settings['enforce_blocks']        = self::to_flag( $settings['enforce_blocks'] );
+		$settings['rate_limit']            = self::to_flag( $settings['rate_limit'] );
+		$settings['rate_limit_per_minute'] = self::validate_rate_limit( $settings['rate_limit_per_minute'] );
+
+		return array_intersect_key( $settings, $defaults );
+	}
+
+	/**
+	 * A rate limit from the allowed choices, or the default.
+	 *
+	 * Checked against a fixed list (not the translated labels) because the
+	 * getter runs on front-end requests.
+	 *
+	 * @since    1.4.0
+	 * @param    mixed    $value    Raw value.
+	 * @return   int
+	 */
+	private static function validate_rate_limit( $value ) {
+		$value = absint( $value );
+
+		return in_array( $value, self::RATE_LIMITS, true ) ? $value : 60;
+	}
+
+	/**
+	 * Sanitize the enforcement settings form.
+	 *
+	 * @since    1.4.0
+	 * @param    mixed    $input    Submitted value.
+	 * @return   array
+	 */
+	public static function sanitize_enforcement_settings( $input ) {
+		if ( ! is_array( $input ) ) {
+			return self::get_enforcement_settings();
+		}
+
+		return array(
+			'enforce_blocks'        => self::to_flag( isset( $input['enforce_blocks'] ) ? $input['enforce_blocks'] : 0 ),
+			'rate_limit'            => self::to_flag( isset( $input['rate_limit'] ) ? $input['rate_limit'] : 0 ),
+			'rate_limit_per_minute' => self::validate_rate_limit( isset( $input['rate_limit_per_minute'] ) ? $input['rate_limit_per_minute'] : 60 ),
+		);
 	}
 
 	/*

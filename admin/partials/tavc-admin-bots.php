@@ -51,6 +51,23 @@ foreach ( $tavc_bot_presets as $tavc_preset_key => $tavc_preset ) {
 
 // Invalid custom rules from the last save, shown next to the editor.
 $tavc_rule_errors = get_settings_errors( 'tavc_custom_robots_rules' );
+
+// Server-side enforcement (1.4.0).
+$tavc_enforcement   = TAVC_Settings::get_enforcement_settings();
+$tavc_page_cache_on = defined( 'WP_CACHE' ) && WP_CACHE;
+$tavc_blocked_users = array();
+foreach ( $tavc_bots_definition as $tavc_slug => $tavc_bot ) {
+	if ( TAVC_Bots::CATEGORY_USER === $tavc_bot['category'] && ! empty( $tavc_blocked_bots[ $tavc_slug ] ) ) {
+		$tavc_blocked_users[] = $tavc_bot['name'];
+	}
+}
+$tavc_any_refused = false;
+foreach ( $tavc_crawler_summary as $tavc_activity ) {
+	if ( ! empty( $tavc_activity->blocked ) || ! empty( $tavc_activity->limited ) ) {
+		$tavc_any_refused = true;
+		break;
+	}
+}
 ?>
 
 <div class="tavc-card">
@@ -176,6 +193,73 @@ $tavc_rule_errors = get_settings_errors( 'tavc_custom_robots_rules' );
 
 <div class="tavc-card">
 	<h2 class="tavc-card-title">
+		<span aria-hidden="true" class="dashicons dashicons-shield"></span>
+		<?php esc_html_e( 'Enforce Your Choices', 'tbsh-ai-visibility-control' ); ?>
+	</h2>
+
+	<p class="tavc-intro">
+		<?php esc_html_e( 'robots.txt only asks crawlers to stay away, and some ignore it. Enforcement makes your site itself turn blocked crawlers away.', 'tbsh-ai-visibility-control' ); ?>
+	</p>
+
+	<form method="post" action="options.php">
+		<?php settings_fields( 'tavc_enforcement_settings_group' ); ?>
+
+		<fieldset class="tavc-field">
+			<legend class="tavc-field-label"><?php esc_html_e( 'Blocked crawlers', 'tbsh-ai-visibility-control' ); ?></legend>
+			<label class="tavc-checkbox-row">
+				<input type="hidden" name="tavc_enforcement_settings[enforce_blocks]" value="0">
+				<input type="checkbox" name="tavc_enforcement_settings[enforce_blocks]" value="1" aria-describedby="tavc_enforce_help" <?php checked( $tavc_enforcement['enforce_blocks'], 1 ); ?>>
+				<?php esc_html_e( 'Refuse requests from blocked crawlers', 'tbsh-ai-visibility-control' ); ?>
+			</label>
+			<p class="tavc-field-help" id="tavc_enforce_help">
+				<?php esc_html_e( 'Crawlers you block above get a short "403 Forbidden" response instead of your pages. They can still read robots.txt and llms.txt, so they can see your rules. Crawlers are recognised by their User-Agent.', 'tbsh-ai-visibility-control' ); ?>
+			</p>
+		</fieldset>
+
+		<fieldset class="tavc-field">
+			<legend class="tavc-field-label"><?php esc_html_e( 'Crawl rate', 'tbsh-ai-visibility-control' ); ?></legend>
+			<label class="tavc-checkbox-row">
+				<input type="hidden" name="tavc_enforcement_settings[rate_limit]" value="0">
+				<input type="checkbox" name="tavc_enforcement_settings[rate_limit]" value="1" aria-describedby="tavc_rate_limit_help" <?php checked( $tavc_enforcement['rate_limit'], 1 ); ?>>
+				<?php esc_html_e( 'Limit how fast allowed AI crawlers can request pages', 'tbsh-ai-visibility-control' ); ?>
+			</label>
+			<label for="tavc_rate_limit_per_minute" class="tavc-field-sublabel"><?php esc_html_e( 'Maximum per crawler', 'tbsh-ai-visibility-control' ); ?></label>
+			<select name="tavc_enforcement_settings[rate_limit_per_minute]" id="tavc_rate_limit_per_minute" aria-describedby="tavc_rate_limit_help">
+				<?php foreach ( TAVC_Settings::get_rate_limit_choices() as $tavc_limit => $tavc_label ) : ?>
+					<option value="<?php echo esc_attr( $tavc_limit ); ?>" <?php selected( $tavc_enforcement['rate_limit_per_minute'], $tavc_limit ); ?>><?php echo esc_html( $tavc_label ); ?></option>
+				<?php endforeach; ?>
+			</select>
+			<p class="tavc-field-help" id="tavc_rate_limit_help">
+				<?php esc_html_e( 'Requests above the limit get a "429 Too Many Requests" response asking the crawler to slow down; well-behaved crawlers retry later. Each AI training and search crawler is counted separately. User-requested fetchers such as ChatGPT-User are never limited, because a person is waiting for the answer.', 'tbsh-ai-visibility-control' ); ?>
+			</p>
+		</fieldset>
+
+		<?php if ( $tavc_page_cache_on ) : ?>
+			<p class="tavc-notice-inline tavc-notice-warning">
+				<?php esc_html_e( 'A page cache is active on this site. Pages served from the cache (or from a CDN) never reach WordPress, so those requests cannot be refused or counted. To block crawlers completely, also add a User-Agent rule in your cache plugin, CDN or web server.', 'tbsh-ai-visibility-control' ); ?>
+			</p>
+		<?php endif; ?>
+
+		<?php if ( $tavc_enforcement['enforce_blocks'] && $tavc_blocked_users ) : ?>
+			<p class="tavc-notice-inline tavc-notice-warning">
+				<?php
+				printf(
+					/* translators: %s: comma-separated crawler names, e.g. ChatGPT-User. */
+					esc_html__( 'You block these user-requested fetchers: %s. With enforcement on, AI assistants cannot open your pages even when a person asks them to.', 'tbsh-ai-visibility-control' ),
+					esc_html( implode( ', ', $tavc_blocked_users ) )
+				);
+				?>
+			</p>
+		<?php endif; ?>
+
+		<div class="tavc-actions">
+			<?php submit_button( __( 'Save Enforcement Settings', 'tbsh-ai-visibility-control' ), 'secondary', 'tavc_submit_enforcement', false ); ?>
+		</div>
+	</form>
+</div>
+
+<div class="tavc-card">
+	<h2 class="tavc-card-title">
 		<span aria-hidden="true" class="dashicons dashicons-visibility"></span>
 		<?php esc_html_e( 'AI Crawler Activity (Last 30 Days)', 'tbsh-ai-visibility-control' ); ?>
 	</h2>
@@ -200,6 +284,9 @@ $tavc_rule_errors = get_settings_errors( 'tavc_custom_robots_rules' );
 						<tr>
 							<th scope="col"><?php esc_html_e( 'Crawler', 'tbsh-ai-visibility-control' ); ?></th>
 							<th scope="col" class="tavc-num"><?php esc_html_e( 'Requests', 'tbsh-ai-visibility-control' ); ?></th>
+							<?php if ( $tavc_any_refused ) : ?>
+								<th scope="col" class="tavc-num"><?php esc_html_e( 'Refused', 'tbsh-ai-visibility-control' ); ?></th>
+							<?php endif; ?>
 							<th scope="col"><?php esc_html_e( 'Last Seen', 'tbsh-ai-visibility-control' ); ?></th>
 						</tr>
 					</thead>
@@ -213,6 +300,9 @@ $tavc_rule_errors = get_settings_errors( 'tavc_custom_robots_rules' );
 									<?php endif; ?>
 								</td>
 								<td class="tavc-num"><?php echo esc_html( number_format_i18n( $tavc_activity->hits ) ); ?></td>
+								<?php if ( $tavc_any_refused ) : ?>
+									<td class="tavc-num"><?php echo esc_html( number_format_i18n( $tavc_activity->blocked + $tavc_activity->limited ) ); ?></td>
+								<?php endif; ?>
 								<td class="tavc-muted-text">
 									<?php
 									printf(
@@ -253,6 +343,9 @@ $tavc_rule_errors = get_settings_errors( 'tavc_custom_robots_rules' );
 		</div>
 		<p class="tavc-muted-text tavc-small-text">
 			<?php esc_html_e( 'Crawlers are identified by their User-Agent, which can be imitated. Requests served from a page cache or CDN are not counted.', 'tbsh-ai-visibility-control' ); ?>
+			<?php if ( $tavc_any_refused ) : ?>
+				<?php esc_html_e( '"Refused" counts requests turned away because the crawler is blocked (403) or over the crawl rate limit (429).', 'tbsh-ai-visibility-control' ); ?>
+			<?php endif; ?>
 		</p>
 	<?php endif; ?>
 </div>

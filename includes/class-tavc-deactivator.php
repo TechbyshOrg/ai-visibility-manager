@@ -43,6 +43,13 @@ class TAVC_Deactivator {
 		delete_transient( 'tavc_beacon_rate' );
 		delete_transient( 'tavc_beacon_hourly' );
 
+		// Crawl rate limit counters (one per crawler, expire after two minutes anyway).
+		if ( class_exists( 'TAVC_Bots' ) && class_exists( 'TAVC_Enforcer' ) ) {
+			foreach ( array_keys( TAVC_Bots::get_definitions() ) as $bot ) {
+				delete_transient( TAVC_Enforcer::RATE_CACHE_GROUP . '_' . $bot );
+			}
+		}
+
 		// Stop scheduled log clean-up and summary emails; they are rescheduled on activation.
 		wp_clear_scheduled_hook( 'tavc_daily_maintenance' );
 		wp_clear_scheduled_hook( 'tavc_weekly_digest' );

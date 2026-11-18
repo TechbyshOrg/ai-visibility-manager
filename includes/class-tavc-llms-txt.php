@@ -21,6 +21,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * handles transient caching, and hooks into save/delete actions to clear cache.
  * Since 1.3.0 it also serves the optional /llms-full.txt file and honours the
  * llms.txt settings (content types, exclusions, noindex, intro and excerpts).
+ * Since 1.4.0 it can serve a Markdown version of each listed page at the
+ * page URL plus ".md" (for example /about.md), following the same rules.
  *
  * @since      1.0.0
  * @package    Tavc
@@ -45,6 +47,11 @@ class TAVC_LLMS_Txt {
 	const EXCLUDE_META_KEY = '_tavc_llms_exclude';
 
 	/**
+	 * Query var that asks for the Markdown version of the queried post.
+	 */
+	const MARKDOWN_QUERY_VAR = 'tavc_markdown';
+
+	/**
 	 * Register rewrite rules for /llms.txt and /llms-full.txt
 	 *
 	 * @since    1.0.0
@@ -63,6 +70,7 @@ class TAVC_LLMS_Txt {
 	 */
 	public function add_query_vars( $vars ) {
 		$vars[] = 'tavc_llms_txt';
+		$vars[] = self::MARKDOWN_QUERY_VAR;
 		return $vars;
 	}
 
@@ -119,7 +127,11 @@ class TAVC_LLMS_Txt {
 	 * @return   string|false
 	 */
 	public function prevent_canonical_redirect( $redirect_url ) {
-		return $this->get_requested_type() ? false : $redirect_url;
+		if ( $this->get_requested_type() || $this->is_markdown_request() ) {
+			return false;
+		}
+
+		return $redirect_url;
 	}
 
 	/**
@@ -464,7 +476,8 @@ class TAVC_LLMS_Txt {
 		 *
 		 * @param bool    $include Whether to include the post.
 		 * @param WP_Post $post    Post.
-		 * @param string  $context 'index' for llms.txt, 'full' for llms-full.txt.
+		 * @param string  $context 'index' for llms.txt, 'full' for llms-full.txt,
+		 *                         'markdown' for the page's Markdown version (since 1.4.0).
 		 */
 		return ! apply_filters( 'tavc_llms_txt_include_post', true, $post, $context );
 	}
@@ -509,7 +522,9 @@ class TAVC_LLMS_Txt {
 	 * @return   string
 	 */
 	private function format_post_line( $post, $settings ) {
-		$line = sprintf( '- [%s](%s)', TAVC_Markdown::escape_brackets( $this->get_post_title( $post ) ), get_permalink( $post ) );
+		$url = ( ! empty( $settings['markdown_pages'] ) && ! empty( $settings['markdown_links'] ) ) ? $this->get_markdown_url( $post ) : get_permalink( $post );
+
+		$line = sprintf( '- [%s](%s)', TAVC_Markdown::escape_brackets( $this->get_post_title( $post ) ), $url );
 
 		if ( ! empty( $settings['include_excerpts'] ) ) {
 			$excerpt = $this->get_post_summary( $post );
@@ -529,12 +544,7 @@ class TAVC_LLMS_Txt {
 	 * @return   string
 	 */
 	private function format_full_section( $post ) {
-		$content = $this->strip_shortcodes( $post->post_content );
-		if ( ! has_blocks( $content ) ) {
-			$content = wpautop( $content );
-		}
-
-		$markdown = TAVC_Markdown::from_html( $content );
+		$markdown = $this->get_post_markdown( $post );
 
 		$section  = "\n## " . $this->get_post_title( $post ) . "\n\n";
 		$section .= 'URL: ' . get_permalink( $post ) . "\n";
@@ -602,6 +612,304 @@ class TAVC_LLMS_Txt {
 		$text = html_entity_decode( wp_strip_all_tags( (string) $text ), ENT_QUOTES, 'UTF-8' );
 
 		return trim( preg_replace( '/\s+/u', ' ', $text ) );
+	}
+
+	/**
+	 * Post content as Markdown.
+	 *
+	 * @since    1.4.0
+	 * @param    WP_Post    $post    Post.
+	 * @return   string
+	 */
+	private function get_post_markdown( $post ) {
+		$content = $this->strip_shortcodes( $post->post_content );
+		if ( ! has_blocks( $content ) ) {
+			$content = wpautop( $content );
+		}
+
+		return TAVC_Markdown::from_html( $content );
+	}
+
+	/*
+	|--------------------------------------------------------------------------
+	| Markdown versions of pages (1.4.0)
+	|--------------------------------------------------------------------------
+	*/
+
+	/**
+	 * Address of a post's Markdown version: the permalink plus ".md", or
+	 * ?tavc_markdown=1 when the site uses plain permalinks.
+	 *
+	 * @since    1.4.0
+	 * @param    WP_Post|int    $post    Post or ID.
+	 * @return   string
+	 */
+	public function get_markdown_url( $post ) {
+		$post      = get_post( $post );
+		$permalink = $post ? get_permalink( $post ) : '';
+		if ( ! $permalink ) {
+			return '';
+		}
+
+		// Plain permalinks, or a permalink that carries a query string (some
+		// translation plugins add ?lang=): use the query var.
+		if ( '' === (string) get_option( 'permalink_structure' ) || false !== strpos( $permalink, '?' ) ) {
+			return add_query_arg( self::MARKDOWN_QUERY_VAR, '1', $permalink );
+		}
+
+		// A static front page lives at the home URL, which has no slug to extend.
+		if ( 'page' === get_option( 'show_on_front' ) && (int) get_option( 'page_on_front' ) === (int) $post->ID ) {
+			return home_url( '/index.md' );
+		}
+
+		return untrailingslashit( $permalink ) . '.md';
+	}
+
+	/**
+	 * Point "/some-page.md" requests at the post behind "/some-page".
+	 *
+	 * Hooked to the "request" filter: the rewrite rules do not know the ".md"
+	 * suffix, so the post is resolved from the path and the query is rewritten
+	 * to that post, flagged with the Markdown query var.
+	 *
+	 * @since    1.4.0
+	 * @param    array    $query_vars    Parsed query vars.
+	 * @return   array
+	 */
+	public function route_markdown_request( $query_vars ) {
+		$path = $this->get_markdown_request_path();
+		if ( null === $path ) {
+			return $query_vars;
+		}
+
+		$settings = TAVC_Settings::get_llms_settings();
+		if ( empty( $settings['markdown_pages'] ) ) {
+			return $query_vars;
+		}
+
+		if ( '/index.md' === strtolower( $path ) ) {
+			$post_id = 'page' === get_option( 'show_on_front' ) ? (int) get_option( 'page_on_front' ) : 0;
+		} else {
+			$post_id = url_to_postid( home_url( substr( $path, 0, -3 ) ) );
+		}
+
+		if ( $post_id <= 0 ) {
+			return $query_vars;
+		}
+
+		$post_type = get_post_type( $post_id );
+		if ( ! $post_type ) {
+			return $query_vars;
+		}
+
+		return array(
+			'p'                      => $post_id,
+			'post_type'              => $post_type,
+			self::MARKDOWN_QUERY_VAR => '1',
+		);
+	}
+
+	/**
+	 * Serve the Markdown version of the queried post.
+	 *
+	 * Runs on template_redirect before the canonical redirect. For posts that
+	 * llms.txt would not list (other content types, excluded, noindex,
+	 * password-protected), a ".md" address gets a normal 404 page and the
+	 * ?tavc_markdown=1 form shows the normal page. While the feature is off
+	 * the query var is ignored.
+	 *
+	 * @since    1.4.0
+	 */
+	public function render_markdown_page() {
+		if ( '1' !== (string) get_query_var( self::MARKDOWN_QUERY_VAR ) ) {
+			return;
+		}
+
+		$settings = TAVC_Settings::get_llms_settings();
+		if ( empty( $settings['markdown_pages'] ) ) {
+			return;
+		}
+
+		$post = get_queried_object();
+		if ( ! ( $post instanceof WP_Post ) || ! $this->is_markdown_available( $post, $settings ) ) {
+			if ( null !== $this->get_markdown_request_path() ) {
+				$this->send_not_found();
+			}
+			return;
+		}
+
+		$output = $this->generate_markdown_page( $post );
+
+		header( 'Content-Type: text/markdown; charset=utf-8' );
+		header( 'X-Robots-Tag: noindex, follow' );
+
+		echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- plain-text Markdown, not HTML.
+		exit;
+	}
+
+	/**
+	 * Markdown document for one post.
+	 *
+	 * @since    1.4.0
+	 * @param    WP_Post    $post    Post.
+	 * @return   string
+	 */
+	public function generate_markdown_page( $post ) {
+		$markdown = $this->get_post_markdown( $post );
+
+		$output  = '# ' . $this->get_post_title( $post ) . "\n\n";
+		$output .= 'URL: ' . get_permalink( $post ) . "\n";
+		$output .= 'Published: ' . get_the_date( 'Y-m-d', $post ) . "\n";
+		if ( get_the_modified_date( 'Y-m-d', $post ) !== get_the_date( 'Y-m-d', $post ) ) {
+			$output .= 'Updated: ' . get_the_modified_date( 'Y-m-d', $post ) . "\n";
+		}
+		$body = '' !== $markdown ? $markdown : $this->get_post_summary( $post );
+		if ( '' !== $body ) {
+			$output .= "\n" . $body . "\n";
+		}
+
+		/**
+		 * Filters the Markdown version of a post.
+		 *
+		 * @since 1.4.0
+		 *
+		 * @param string  $output Markdown text.
+		 * @param WP_Post $post   Post.
+		 */
+		$filtered = apply_filters( 'tavc_markdown_page_output', $output, $post );
+
+		return is_string( $filtered ) ? $filtered : $output;
+	}
+
+	/**
+	 * Advertise the Markdown version in the page head.
+	 *
+	 * @since    1.4.0
+	 */
+	public function print_markdown_alternate_link() {
+		if ( ! is_singular() ) {
+			return;
+		}
+
+		$settings = TAVC_Settings::get_llms_settings();
+		$post     = get_queried_object();
+		if ( empty( $settings['markdown_pages'] ) || ! ( $post instanceof WP_Post ) || ! $this->is_markdown_available( $post, $settings ) ) {
+			return;
+		}
+
+		printf( '<link rel="alternate" type="text/markdown" href="%s">' . "\n", esc_url( $this->get_markdown_url( $post ) ) );
+	}
+
+	/**
+	 * Whether a post has a Markdown version: the same rules as llms.txt.
+	 *
+	 * @since    1.4.0
+	 * @param    WP_Post    $post        Post.
+	 * @param    array      $settings    llms.txt settings.
+	 * @return   bool
+	 */
+	public function is_markdown_available( $post, $settings ) {
+		if ( 'publish' !== $post->post_status || '' !== (string) $post->post_password ) {
+			return false;
+		}
+
+		if ( ! in_array( $post->post_type, $this->get_selected_post_types( $settings ), true ) || ! is_post_publicly_viewable( $post ) ) {
+			return false;
+		}
+
+		if ( '1' === (string) get_post_meta( $post->ID, self::EXCLUDE_META_KEY, true ) ) {
+			return false;
+		}
+
+		if ( ! empty( $settings['exclude_noindex'] ) && $this->is_aioseo_noindex( $post->ID ) ) {
+			return false;
+		}
+
+		return ! $this->is_post_excluded( $post, $settings, 'markdown' );
+	}
+
+	/**
+	 * Content types chosen for llms.txt, after the tavc_llms_txt_post_types filter.
+	 *
+	 * @since    1.4.0
+	 * @param    array    $settings    llms.txt settings.
+	 * @return   string[]
+	 */
+	private function get_selected_post_types( $settings ) {
+		/** This filter is documented in includes/class-tavc-llms-txt.php */
+		$post_types = apply_filters( 'tavc_llms_txt_post_types', $settings['post_types'] );
+		$post_types = is_array( $post_types ) ? array_values( array_filter( array_map( 'sanitize_key', $post_types ) ) ) : array();
+
+		return empty( $post_types ) ? array( 'post', 'page' ) : $post_types;
+	}
+
+	/**
+	 * Whether All in One SEO marks one post as noindex (stored in its own table).
+	 *
+	 * @since    1.4.0
+	 * @param    int    $post_id    Post ID.
+	 * @return   bool
+	 */
+	private function is_aioseo_noindex( $post_id ) {
+		global $wpdb;
+
+		$aioseo_table = $wpdb->prefix . 'aioseo_posts';
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $aioseo_table ) ) ) !== $aioseo_table ) {
+			return false;
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		return (bool) $wpdb->get_var( $wpdb->prepare( 'SELECT 1 FROM %i WHERE post_id = %d AND robots_default = 0 AND robots_noindex = 1', $aioseo_table, $post_id ) );
+	}
+
+	/**
+	 * Whether the current request asks for a Markdown version.
+	 *
+	 * @since    1.4.0
+	 * @return   bool
+	 */
+	private function is_markdown_request() {
+		if ( '1' === (string) get_query_var( self::MARKDOWN_QUERY_VAR ) ) {
+			return true;
+		}
+
+		if ( null === $this->get_markdown_request_path() ) {
+			return false;
+		}
+
+		// When the feature is off, ".md" URLs keep the normal 404 handling.
+		$settings = TAVC_Settings::get_llms_settings();
+
+		return ! empty( $settings['markdown_pages'] );
+	}
+
+	/**
+	 * Request path relative to the home URL when it ends in ".md", else null.
+	 *
+	 * @since    1.4.0
+	 * @return   string|null    For example "/about.md".
+	 */
+	private function get_markdown_request_path() {
+		if ( empty( $_SERVER['REQUEST_URI'] ) ) {
+			return null;
+		}
+
+		$path = wp_parse_url( esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ), PHP_URL_PATH );
+		if ( ! is_string( $path ) || strlen( $path ) < 5 || '.md' !== strtolower( substr( $path, -3 ) ) ) {
+			return null;
+		}
+
+		$home_path = wp_parse_url( home_url( '/' ), PHP_URL_PATH );
+		$home_path = is_string( $home_path ) ? untrailingslashit( $home_path ) : '';
+		if ( '' !== $home_path ) {
+			if ( 0 !== strpos( $path, $home_path . '/' ) ) {
+				return null;
+			}
+			$path = substr( $path, strlen( $home_path ) );
+		}
+
+		return $path;
 	}
 
 	/**

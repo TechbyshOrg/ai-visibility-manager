@@ -2,7 +2,7 @@
 /**
  * Scheduled tasks.
  *
- * Daily log retention clean-up and the optional weekly summary email.
+ * Daily log retention clean-up and the optional weekly or monthly summary email.
  *
  * @link       https://techbysh.com
  * @since      1.3.0
@@ -32,7 +32,8 @@ class TAVC_Cron {
 	const DAILY_HOOK = 'tavc_daily_maintenance';
 
 	/**
-	 * Weekly summary email event hook.
+	 * Summary email event hook. The name dates from 1.3.0, when the summary
+	 * was weekly only; it is kept so existing schedules keep working.
 	 */
 	const DIGEST_HOOK = 'tavc_weekly_digest';
 
@@ -60,11 +61,16 @@ class TAVC_Cron {
 	}
 
 	/**
-	 * Schedule or remove the weekly summary to match the saved setting.
+	 * Schedule or remove the summary email to match the saved settings.
+	 *
+	 * Weekly summaries use a recurring "weekly" event. Months differ in
+	 * length, so monthly summaries use a single event on the 1st that is
+	 * scheduled again after each run.
 	 *
 	 * Hooked to updates of the tavc_tracking_settings option.
 	 *
 	 * @since    1.3.0
+	 * @since    1.4.0 Supports monthly summaries.
 	 */
 	public static function sync_digest_schedule() {
 		$settings = TAVC_Settings::get_tracking_settings();
@@ -74,23 +80,41 @@ class TAVC_Cron {
 			return;
 		}
 
-		if ( ! wp_next_scheduled( self::DIGEST_HOOK ) ) {
-			wp_schedule_event( self::get_next_digest_time(), 'weekly', self::DIGEST_HOOK );
+		$monthly = 'monthly' === $settings['digest_frequency'];
+		$event   = wp_get_scheduled_event( self::DIGEST_HOOK );
+
+		// Replace an event of the other kind (switching weekly <-> monthly).
+		if ( $event && ( $monthly ? false !== $event->schedule : 'weekly' !== $event->schedule ) ) {
+			wp_clear_scheduled_hook( self::DIGEST_HOOK );
+			$event = false;
+		}
+
+		if ( $event ) {
+			return;
+		}
+
+		if ( $monthly ) {
+			wp_schedule_single_event( self::get_next_digest_time( 'monthly' ), self::DIGEST_HOOK );
+		} else {
+			wp_schedule_event( self::get_next_digest_time( 'weekly' ), 'weekly', self::DIGEST_HOOK );
 		}
 	}
 
 	/**
-	 * Next Monday at 08:00 in the site's timezone, as a Unix timestamp.
+	 * Next send time in the site's timezone, as a Unix timestamp: next Monday
+	 * at 08:00 (weekly) or the 1st of next month at 08:00 (monthly).
 	 *
 	 * @since    1.3.0
+	 * @since    1.4.0 Added the $frequency parameter.
+	 * @param    string    $frequency    'weekly' or 'monthly'.
 	 * @return   int
 	 */
-	private static function get_next_digest_time() {
+	public static function get_next_digest_time( $frequency = 'weekly' ) {
 		try {
-			$next = new DateTimeImmutable( 'next monday 08:00', wp_timezone() );
+			$next = new DateTimeImmutable( 'monthly' === $frequency ? 'first day of next month 08:00' : 'next monday 08:00', wp_timezone() );
 			return $next->getTimestamp();
 		} catch ( Exception $e ) {
-			return time() + WEEK_IN_SECONDS;
+			return time() + ( 'monthly' === $frequency ? MONTH_IN_SECONDS : WEEK_IN_SECONDS );
 		}
 	}
 
@@ -114,9 +138,10 @@ class TAVC_Cron {
 	}
 
 	/**
-	 * Send the weekly summary email when it is enabled.
+	 * Send the summary email when it is enabled.
 	 *
 	 * @since    1.3.0
+	 * @since    1.4.0 Schedules the next monthly summary.
 	 */
 	public static function run_weekly_digest() {
 		$settings = TAVC_Settings::get_tracking_settings();
@@ -126,5 +151,8 @@ class TAVC_Cron {
 		}
 
 		TAVC_Digest::send();
+
+		// A monthly summary is a single event: schedule the next one.
+		self::sync_digest_schedule();
 	}
 }

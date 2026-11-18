@@ -1,0 +1,19 @@
+# Separate Pro plugin copy (not part of this plugin)
+pro-plugin/
+
+# Local editor and OS files
+.vscode/
+.idea/
+*.suo
+*.user
+*.usr
+.DS_Store
+Thumbs.db
+
+# Dependencies and logs (none are used by this plugin)
+node_modules/
+vendor/
+*.log
+
+# Release zips built locally
+tbsh-ai-visibility-control_*.zip

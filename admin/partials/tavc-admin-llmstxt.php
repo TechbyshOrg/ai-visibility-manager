@@ -229,6 +229,30 @@ $tavc_file_size = strlen( $tavc_preview_content );
 			<input type="number" name="tavc_llms_txt_settings[full_max_items]" id="tavc_llms_full_max" class="small-text" min="1" max="500" step="1" value="<?php echo esc_attr( $tavc_llms_settings['full_max_items'] ); ?>">
 		</fieldset>
 
+		<fieldset class="tavc-field tavc-subsection">
+			<legend class="tavc-field-label"><?php esc_html_e( 'Markdown versions of pages', 'tbsh-ai-visibility-control' ); ?></legend>
+			<label class="tavc-checkbox-row">
+				<input type="hidden" name="tavc_llms_txt_settings[markdown_pages]" value="0">
+				<input type="checkbox" name="tavc_llms_txt_settings[markdown_pages]" value="1" aria-describedby="tavc_llms_markdown_help" <?php checked( $tavc_llms_settings['markdown_pages'], 1 ); ?>>
+				<?php esc_html_e( 'Serve a Markdown version of each listed page', 'tbsh-ai-visibility-control' ); ?>
+			</label>
+			<p class="tavc-field-help" id="tavc_llms_markdown_help">
+				<?php
+				printf(
+					/* translators: %s: example address such as https://example.com/about.md */
+					esc_html__( 'Adds ".md" to the address of every page listed in llms.txt, for example %s, as the llms.txt proposal recommends. AI tools can read these clean text versions instead of the full web page. Each page also gets a link to its Markdown version in its HTML head. Content that llms.txt leaves out (other content types, excluded, noindex or password-protected) has no Markdown version.', 'tbsh-ai-visibility-control' ),
+					'<code>' . esc_html( home_url( '/about.md' ) ) . '</code>'
+				);
+				?>
+			</p>
+			<label class="tavc-checkbox-row">
+				<input type="hidden" name="tavc_llms_txt_settings[markdown_links]" value="0">
+				<input type="checkbox" name="tavc_llms_txt_settings[markdown_links]" value="1" aria-describedby="tavc_llms_markdown_links_help" <?php checked( $tavc_llms_settings['markdown_links'], 1 ); ?>>
+				<?php esc_html_e( 'Link to the Markdown versions in llms.txt', 'tbsh-ai-visibility-control' ); ?>
+			</label>
+			<p class="tavc-field-help" id="tavc_llms_markdown_links_help"><?php esc_html_e( 'Only used while Markdown versions are on. Otherwise llms.txt links to the normal pages.', 'tbsh-ai-visibility-control' ); ?></p>
+		</fieldset>
+
 		<div class="tavc-actions">
 			<?php submit_button( __( 'Save llms.txt Settings', 'tbsh-ai-visibility-control' ), 'primary', 'tavc_submit_llms', false ); ?>
 		</div>

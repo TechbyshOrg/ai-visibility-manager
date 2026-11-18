@@ -14,7 +14,7 @@
  * @wordpress-plugin
  * Plugin Name:       AI Visibility Control – Block AI Crawlers, llms.txt & AI Traffic
  * Description:       Block AI training crawlers, stay visible in AI search, publish llms.txt, and see the visits and sales AI assistants send to your site.
- * Version:           1.3.0
+ * Version:           1.4.0
  * Author:            Techbysh
  * Author URI:        https://techbysh.com
  * License:           GPL-2.0-or-later
@@ -30,7 +30,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! defined( 'TAVC_VERSION' ) ) {
-	define( 'TAVC_VERSION', '1.3.0' );
+	define( 'TAVC_VERSION', '1.4.0' );
 }
 
 if ( ! defined( 'TAVC_PLUGIN_FILE' ) ) {

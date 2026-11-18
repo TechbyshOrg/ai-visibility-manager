@@ -149,6 +149,20 @@ class TAVC_Bots {
 				'desc'     => __( 'Collects web content used to train open language models.', 'tbsh-ai-visibility-control' ),
 				'ua'       => 'AI2Bot',
 			),
+			'facebookbot'          => array(
+				'name'     => 'FacebookBot',
+				'vendor'   => 'Meta',
+				'category' => self::CATEGORY_TRAINING,
+				'desc'     => __( 'An older Meta crawler that collects public web content to train AI models, such as speech recognition. Blocking it does not affect Facebook link previews, which use a different crawler.', 'tbsh-ai-visibility-control' ),
+				'ua'       => 'FacebookBot',
+			),
+			'omgili'               => array(
+				'name'     => 'omgili',
+				'vendor'   => 'Webz.io',
+				'category' => self::CATEGORY_TRAINING,
+				'desc'     => __( 'Collects web content for datasets that Webz.io sells, including for AI model training.', 'tbsh-ai-visibility-control' ),
+				'ua'       => 'omgili',
+			),
 
 			// Search crawlers.
 			'oai-searchbot'        => array(

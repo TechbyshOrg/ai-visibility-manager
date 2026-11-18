@@ -93,13 +93,19 @@ $tavc_tool_url = function ( $tool ) {
 		</fieldset>
 
 		<fieldset class="tavc-field">
-			<legend class="tavc-field-label"><?php esc_html_e( 'Weekly summary email', 'tbsh-ai-visibility-control' ); ?></legend>
+			<legend class="tavc-field-label"><?php esc_html_e( 'Summary email', 'tbsh-ai-visibility-control' ); ?></legend>
 			<label class="tavc-checkbox-row">
 				<input type="hidden" name="tavc_tracking_settings[digest_enabled]" value="0">
 				<input type="checkbox" name="tavc_tracking_settings[digest_enabled]" value="1" aria-describedby="tavc_digest_help" <?php checked( $tavc_tracking['digest_enabled'], 1 ); ?>>
-				<?php esc_html_e( 'Email a weekly summary of AI traffic and crawler visits', 'tbsh-ai-visibility-control' ); ?>
+				<?php esc_html_e( 'Email a summary of AI traffic and crawler visits', 'tbsh-ai-visibility-control' ); ?>
 			</label>
-			<p class="tavc-field-help" id="tavc_digest_help"><?php esc_html_e( 'Sent every Monday morning (site time).', 'tbsh-ai-visibility-control' ); ?></p>
+			<label for="tavc_digest_frequency" class="tavc-field-sublabel"><?php esc_html_e( 'How often', 'tbsh-ai-visibility-control' ); ?></label>
+			<select name="tavc_tracking_settings[digest_frequency]" id="tavc_digest_frequency" aria-describedby="tavc_digest_help">
+				<?php foreach ( TAVC_Settings::get_digest_frequency_choices() as $tavc_frequency => $tavc_label ) : ?>
+					<option value="<?php echo esc_attr( $tavc_frequency ); ?>" <?php selected( $tavc_tracking['digest_frequency'], $tavc_frequency ); ?>><?php echo esc_html( $tavc_label ); ?></option>
+				<?php endforeach; ?>
+			</select>
+			<p class="tavc-field-help" id="tavc_digest_help"><?php esc_html_e( 'Sent at 8 AM site time. The weekly summary covers the last 7 days; the monthly summary covers the previous calendar month.', 'tbsh-ai-visibility-control' ); ?></p>
 			<label for="tavc_digest_email" class="tavc-field-sublabel"><?php esc_html_e( 'Send to', 'tbsh-ai-visibility-control' ); ?></label>
 			<input type="email" name="tavc_tracking_settings[digest_email]" id="tavc_digest_email" class="regular-text" autocomplete="email" value="<?php echo esc_attr( $tavc_tracking['digest_email'] ); ?>" placeholder="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>" aria-describedby="tavc_digest_email_help">
 			<p class="tavc-field-help" id="tavc_digest_email_help"><?php esc_html_e( 'Leave empty to use the site admin email.', 'tbsh-ai-visibility-control' ); ?></p>
@@ -127,7 +133,13 @@ $tavc_tool_url = function ( $tool ) {
 		<div class="tavc-tool-card">
 			<h3><?php esc_html_e( 'Export AI Traffic (CSV)', 'tbsh-ai-visibility-control' ); ?></h3>
 			<p><?php esc_html_e( 'Downloads a spreadsheet of every logged AI visit: date, AI platform, page visited and how it was detected.', 'tbsh-ai-visibility-control' ); ?></p>
-			<a href="<?php echo esc_url( $tavc_tool_url( 'export_csv' ) ); ?>" class="button button-secondary"><?php esc_html_e( 'Download CSV', 'tbsh-ai-visibility-control' ); ?></a>
+			<a href="<?php echo esc_url( $tavc_tool_url( 'export_csv' ) ); ?>" class="button button-secondary"><?php esc_html_e( 'Download CSV', 'tbsh-ai-visibility-control' ); ?><span class="screen-reader-text"> <?php esc_html_e( '(AI traffic)', 'tbsh-ai-visibility-control' ); ?></span></a>
+		</div>
+
+		<div class="tavc-tool-card">
+			<h3><?php esc_html_e( 'Export AI Crawler Visits (CSV)', 'tbsh-ai-visibility-control' ); ?></h3>
+			<p><?php esc_html_e( 'Downloads a spreadsheet of logged AI crawler requests per day: crawler, path, number of requests and how many were refused.', 'tbsh-ai-visibility-control' ); ?></p>
+			<a href="<?php echo esc_url( $tavc_tool_url( 'export_crawler_csv' ) ); ?>" class="button button-secondary"><?php esc_html_e( 'Download CSV', 'tbsh-ai-visibility-control' ); ?><span class="screen-reader-text"> <?php esc_html_e( '(AI crawler visits)', 'tbsh-ai-visibility-control' ); ?></span></a>
 		</div>
 
 		<div class="tavc-tool-card">
@@ -136,7 +148,7 @@ $tavc_tool_url = function ( $tool ) {
 				<?php
 				printf(
 					/* translators: %s: email address. */
-					esc_html__( 'Sends the weekly AI visibility summary to %s now.', 'tbsh-ai-visibility-control' ),
+					esc_html__( 'Sends the AI visibility summary to %s now, using the frequency chosen above.', 'tbsh-ai-visibility-control' ),
 					esc_html( TAVC_Settings::get_digest_recipient() )
 				);
 				?>

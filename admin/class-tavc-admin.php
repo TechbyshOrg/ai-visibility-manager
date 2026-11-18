@@ -190,6 +190,16 @@ class TAVC_Admin {
 		);
 
 		register_setting(
+			'tavc_enforcement_settings_group',
+			'tavc_enforcement_settings',
+			array(
+				'type'              => 'array',
+				'sanitize_callback' => array( 'TAVC_Settings', 'sanitize_enforcement_settings' ),
+				'default'           => array(),
+			)
+		);
+
+		register_setting(
 			'tavc_uninstall_settings_group',
 			'tavc_delete_on_uninstall',
 			array( $this, 'sanitize_delete_on_uninstall' )
@@ -370,6 +380,10 @@ class TAVC_Admin {
 				$this->export_referrals_csv();
 				exit;
 
+			case 'export_crawler_csv':
+				$this->export_crawler_csv();
+				exit;
+
 			default:
 				break;
 		}
@@ -416,6 +430,53 @@ class TAVC_Admin {
 				self::csv_safe( $log->target_url ),
 				TAVC_AI_Sources::get_method_label( isset( $log->method ) ? $log->method : '' )
 			) );
+		}
+
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+		fclose( $output );
+		exit;
+	}
+
+	/**
+	 * Export the AI crawler visit log to CSV: one row per crawler, day and path.
+	 *
+	 * @since    1.4.0
+	 */
+	private function export_crawler_csv() {
+		header( 'Content-Type: text/csv; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename="tbsh-ai-crawler-visits-' . current_time( 'Y-m-d' ) . '.csv"' );
+		header( 'Pragma: no-cache' );
+		header( 'Expires: 0' );
+
+		$output      = fopen( 'php://output', 'w' );
+		$definitions = TAVC_Bots::get_definitions();
+
+		fputcsv(
+			$output,
+			array(
+				__( 'Date', 'tbsh-ai-visibility-control' ),
+				__( 'Crawler', 'tbsh-ai-visibility-control' ),
+				__( 'Path', 'tbsh-ai-visibility-control' ),
+				__( 'Requests', 'tbsh-ai-visibility-control' ),
+				__( 'Refused (blocked, 403)', 'tbsh-ai-visibility-control' ),
+				__( 'Refused (rate limit, 429)', 'tbsh-ai-visibility-control' ),
+				__( 'Last Seen', 'tbsh-ai-visibility-control' ),
+			)
+		);
+
+		foreach ( TAVC_DB::get_all_crawler_hits_for_csv() as $row ) {
+			fputcsv(
+				$output,
+				array(
+					$row->hit_date,
+					isset( $definitions[ $row->bot ] ) ? $definitions[ $row->bot ]['name'] : $row->bot,
+					self::csv_safe( $row->url_path ),
+					intval( $row->hits ),
+					intval( $row->blocked ),
+					intval( $row->limited ),
+					$row->last_seen,
+				)
+			);
 		}
 
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
@@ -596,6 +657,17 @@ class TAVC_Admin {
 				'status' => 'pass',
 				'title'  => __( 'Site State Public', 'tbsh-ai-visibility-control' ),
 				'desc'   => __( 'No active maintenance or offline triggers detected.', 'tbsh-ai-visibility-control' ),
+			);
+		}
+
+		// 6. Page cache vs. crawler enforcement (only relevant when enforcement is on).
+		$enforcement = TAVC_Settings::get_enforcement_settings();
+		if ( ( $enforcement['enforce_blocks'] || $enforcement['rate_limit'] ) && defined( 'WP_CACHE' ) && WP_CACHE ) {
+			$status['page_cache'] = array(
+				'status'         => 'warning',
+				'title'          => __( 'Page Cache Bypasses Crawler Enforcement', 'tbsh-ai-visibility-control' ),
+				'desc'           => __( 'A page cache is active. Pages served from the cache (or a CDN) never reach WordPress, so those crawler requests cannot be refused, rate limited or counted.', 'tbsh-ai-visibility-control' ),
+				'recommendation' => __( 'Also block AI crawlers by User-Agent in your cache plugin, CDN or web server.', 'tbsh-ai-visibility-control' ),
 			);
 		}
 
@@ -839,6 +911,11 @@ class TAVC_Admin {
 				return array(
 					'url'   => admin_url( 'options-reading.php' ),
 					'label' => __( 'Open Reading Settings', 'tbsh-ai-visibility-control' ),
+				);
+			case 'page_cache':
+				return array(
+					'url'   => self::get_page_url( array( 'tab' => 'bots' ) ),
+					'label' => __( 'Open Crawler Settings', 'tbsh-ai-visibility-control' ),
 				);
 			default:
 				return null;

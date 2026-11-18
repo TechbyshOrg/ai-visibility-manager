@@ -197,8 +197,9 @@ class TAVC_Site_Health {
 		}
 
 		$llms     = TAVC_Settings::get_llms_settings();
-		$tracking = TAVC_Settings::get_tracking_settings();
-		$signals  = array();
+		$tracking    = TAVC_Settings::get_tracking_settings();
+		$enforcement = TAVC_Settings::get_enforcement_settings();
+		$signals     = array();
 		foreach ( TAVC_Settings::get_content_signals() as $key => $value ) {
 			if ( '' !== $value ) {
 				$signals[] = $key . '=' . $value;
@@ -218,6 +219,14 @@ class TAVC_Site_Health {
 				'blocked_crawlers' => array(
 					'label' => __( 'Blocked AI crawlers', 'tbsh-ai-visibility-control' ),
 					'value' => empty( $blocked ) ? __( 'None', 'tbsh-ai-visibility-control' ) : implode( ', ', $blocked ),
+				),
+				'enforce_blocks'   => array(
+					'label' => __( 'Refuse blocked crawlers (403)', 'tbsh-ai-visibility-control' ),
+					'value' => $enforcement['enforce_blocks'] ? $yes : $no,
+				),
+				'rate_limit'       => array(
+					'label' => __( 'Crawl rate limit (requests per minute per crawler)', 'tbsh-ai-visibility-control' ),
+					'value' => $enforcement['rate_limit'] ? $enforcement['rate_limit_per_minute'] : $no,
 				),
 				'custom_rules'     => array(
 					'label' => __( 'Custom robots.txt rule groups', 'tbsh-ai-visibility-control' ),
@@ -252,8 +261,8 @@ class TAVC_Site_Health {
 					'value' => $tracking['referral_retention_days'] . ' / ' . $tracking['crawler_retention_days'],
 				),
 				'digest'           => array(
-					'label' => __( 'Weekly summary email', 'tbsh-ai-visibility-control' ),
-					'value' => $tracking['digest_enabled'] ? $yes : $no,
+					'label' => __( 'Summary email', 'tbsh-ai-visibility-control' ),
+					'value' => $tracking['digest_enabled'] ? $tracking['digest_frequency'] : $no,
 				),
 			),
 		);
