@@ -42,6 +42,13 @@ class TAVC_Deactivator {
 		delete_transient( 'tavc_recent_referrals' );
 		delete_transient( 'tavc_beacon_rate' );
 		delete_transient( 'tavc_beacon_hourly' );
+		delete_transient( 'tavc_health_llms_txt' );
+		delete_transient( 'tavc_health_robots' );
+
+		// Cached WooCommerce reports for the current ranges (older keys expire after 15 minutes).
+		if ( class_exists( 'TAVC_WooCommerce' ) ) {
+			TAVC_WooCommerce::clear_report_cache();
+		}
 
 		// Crawl rate limit counters (one per crawler, expire after two minutes anyway).
 		if ( class_exists( 'TAVC_Bots' ) && class_exists( 'TAVC_Enforcer' ) ) {
