@@ -53,7 +53,7 @@ $tavc_tool_url = function ( $tool ) {
 				<?php esc_html_e( 'Cache-compatible referral tracking', 'tbsh-ai-visibility-control' ); ?>
 			</label>
 			<p class="tavc-field-help" id="tavc_beacon_help">
-				<?php esc_html_e( 'Turn on if your site uses a page cache or CDN, which hides visits from WordPress. Adds a small script (under 1 KB) to your public pages that reports AI visits only. No cookies are used. While this is on, visits are recorded by the script instead of the server, so they are not counted twice.', 'tbsh-ai-visibility-control' ); ?>
+				<?php esc_html_e( 'Turn on if your site uses a page cache or CDN, which hides visits from WordPress. Adds a small script (under 2 KB) to your public pages that reports AI visits only. No cookies are used. While this is on, visits are recorded by the script instead of the server, so they are not counted twice.', 'tbsh-ai-visibility-control' ); ?>
 			</p>
 		</fieldset>
 

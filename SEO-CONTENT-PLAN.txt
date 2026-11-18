@@ -1,0 +1,194 @@
+AI VISIBILITY CONTROL - SEO & CONTENT PLAN
+==========================================
+Prepared: November 2026, for version 1.3.0. Not shipped with the plugin
+(excluded in .distignore and in the release-zip workflow).
+
+Demand and competition levels are ESTIMATES inferred from WordPress.org
+tag sizes, competitor install counts and result counts. WordPress.org does
+not publish search volumes.
+
+
+1. STARTING POINT (WordPress.org Plugins API, November 2026)
+-------------------------------------------------------------
+- Live listing: version 1.2.0, 0 active installs, 0 ratings.
+- Not in the top 40 results for: "llms.txt", "block ai crawlers",
+  "ai crawler", "ai bots", "gptbot", "ai traffic", "robots.txt ai".
+- Old tags: crawler, llms-txt, privacy, robots-txt, seo.
+
+
+2. KEYWORDS
+-----------
+Primary keyword: block AI crawlers            (demand Medium-High, competition Medium)
+
+Secondary keywords:
+- llms.txt generator                           (High / High)
+- track ChatGPT traffic / AI traffic           (Medium / Low)
+- block GPTBot                                 (Medium / Low-Medium)
+- robots.txt for AI bots                       (Medium / Medium)
+
+Problem keywords: block AI bots, stop AI scraping my content, opt out of AI
+training, appear in ChatGPT answers, track ChatGPT traffic.
+Solution keywords: AI crawler blocker, llms.txt generator, robots.txt AI,
+AI traffic analytics, AI visibility plugin.
+Feature keywords: block GPTBot, block ClaudeBot, Google-Extended,
+OAI-SearchBot, llms-full.txt, AI referral tracking, content signals.
+
+Long-tail questions (people and AI assistants):
+- How do I block GPTBot in WordPress?
+- How do I stop AI from training on my website?
+- Can I block AI training but still appear in ChatGPT search?
+- What is llms.txt and does my WordPress site need it?
+- How do I add llms.txt to WordPress?
+- How do I create llms-full.txt in WordPress?
+- How do I track ChatGPT traffic in WordPress?
+- How do I see visits from Perplexity in WordPress?
+- Why does ChatGPT traffic show as direct in Google Analytics?
+- Which AI bots crawl my website?
+- Does blocking Google-Extended affect Google rankings?
+- Do AI crawlers respect robots.txt?
+- What is the difference between GPTBot and OAI-SearchBot?
+- How do I see WooCommerce sales from ChatGPT?
+- How do I exclude a page from llms.txt?
+- Which robots.txt rules block AI bots?
+- What is the Content-Signal robots.txt line?
+- Which WordPress plugin can manage AI crawlers?
+- How do I track utm_source=chatgpt.com visits?
+- Will an AI crawler blocker slow down my site?
+
+Search intent:
+- Problem searchers want a quick, safe fix -> one-click preset and
+  reassurance about Google rankings.
+- Solution searchers compare plugins -> what it does, what it does not do.
+- Feature searchers are technical -> exact bot names, behaviour and limits.
+
+
+3. TAGS (max 5; plugins per tag in brackets)
+--------------------------------------------
+ai-crawlers (62)  - core feature, used by Better Robots.txt
+llms-txt    (286) - biggest relevant audience
+robots-txt  (109) - how blocking works, strong intent
+gptbot      (32)  - most searched bot name, small field
+ai-traffic  (11)  - real differentiator, almost no competition
+Dropped: seo (Yoast/Rank Math territory), privacy, crawler (too generic).
+
+
+4. COMPETITORS
+--------------
+VigIA - AI Visibility, Analytics & Control (2,000 installs, 100% from 19)
+  Tags: ai, analytics, claude, gpt, llms. ~2,000 words, video, Use Cases,
+  Supported AI Crawlers, Privacy, 19 FAQs, 13 screenshots.
+  Strengths: 60+ crawlers monitored, visibility score, MCP.
+Better Robots.txt - AI-Ready Crawl Control (5,000 installs, 90% from 102)
+  Tags: ai-crawlers, bot-blocker, llms-txt, robots-txt, seo. Video,
+  "What it is / What it is not", presets, editions, use cases.
+Website LLMs.txt (50,000 installs, 94% from 12)
+  Tags: ai, llm, rankmath, seo, yoast. Short (~300 words), How it works,
+  Use cases, 13 FAQs, no screenshots. Strength: SEO plugin integration.
+Block AI Crawlers (2,000 installs, 88% from 8)
+  Tags: ai, chatgpt, crawlers, robots-txt. ~250 words, Limitations, 7 FAQs.
+A360 Insights - Track AI Traffic (10 installs)
+  Tags: ai-analytics, ai-referrals, ai-traffic, chatgpt, privacy. Video,
+  "Ideal for", "Can I track ChatGPT traffic?" FAQ, 20 screenshots.
+
+Content gaps now covered in readme.txt: use cases ("Perfect for"), "What
+this plugin does not do", Google ranking FAQ, "Does llms.txt guarantee
+visibility?" FAQ, multisite FAQ, "Can I track ChatGPT traffic?" FAQ,
+supported crawlers section, "How it works in 3 steps".
+
+Differentiators to keep repeating:
+- Only plugin combining crawler control, llms.txt + llms-full.txt, AI
+  traffic and WooCommerce sales by AI source.
+- "Block AI training, allow AI search" in one click, crawlers grouped by
+  purpose.
+- 100% local: no account, no API key, no cookies, no IP addresses stored.
+- UTM detection for ChatGPT visits that look like "Direct" elsewhere, and
+  tracking that works with page caches.
+
+
+5. BLOG AND DOCS TOPICS
+-----------------------
+1.  How to Block GPTBot in WordPress (and Keep ChatGPT Search)
+    Keyword: block gptbot wordpress | Intent: how-to
+    Outline: what GPTBot is; GPTBot vs OAI-SearchBot; the one-click preset;
+    checking robots.txt.
+2.  llms.txt for WordPress: What It Is and How to Add It
+    Keyword: llms.txt wordpress | Intent: informational + how-to
+    Outline: definition; example file; generate it automatically; what it
+    does not guarantee.
+3.  GPTBot vs OAI-SearchBot vs ChatGPT-User: What Each One Does
+    Keyword: gptbot vs oai-searchbot | Intent: comparison
+    Outline: table of OpenAI and Anthropic crawlers; which to block; why.
+4.  How to Track ChatGPT Traffic in WordPress
+    Keyword: track chatgpt traffic wordpress | Intent: how-to
+    Outline: referrer vs utm_source; setting up AI Traffic; reading the report.
+5.  Why ChatGPT Traffic Shows as "Direct" in Analytics (and How to Fix It)
+    Keyword: chatgpt traffic direct | Intent: problem-solving
+    Outline: stripped referrers; utm_source=chatgpt.com; server-side
+    detection; caching.
+6.  Do AI Crawlers Respect robots.txt?
+    Keyword: do ai crawlers respect robots.txt | Intent: informational
+    Outline: robots.txt is a request; user-requested fetchers; what to do
+    for private content.
+7.  See WooCommerce Sales from ChatGPT and Perplexity
+    Keyword: woocommerce chatgpt sales | Intent: how-to
+    Outline: Order Attribution; AI source on orders; revenue report.
+8.  llms-full.txt: Should Your Site Publish It?
+    Keyword: llms-full.txt | Intent: decision
+    Outline: what it contains; size limits; membership-content warning.
+9.  Content Signals in robots.txt Explained
+    Keyword: content-signal robots.txt | Intent: informational
+    Outline: search / ai-input / ai-train; voluntary; how to add it.
+10. Which AI Bots Crawl My WordPress Site?
+    Keyword: which ai bots crawl my site | Intent: diagnostic
+    Outline: crawler activity log; reading user agents; cache caveat.
+11. Does Blocking Google-Extended Hurt SEO?
+    Keyword: google-extended seo | Intent: reassurance
+    Outline: Googlebot vs Google-Extended; what changes; what does not.
+12. AI Crawler Presets: Which One Should You Choose?
+    Keyword: ai crawler settings wordpress | Intent: decision
+    Outline: allow all, block training, block all; who each suits.
+
+
+6. SCREENSHOTS TO RETAKE (replace .wordpress-org/screenshot-1..7.png)
+--------------------------------------------------------------------
+The current images show the interface from before 1.3.0. Capture at about
+1900 x 900 px with realistic sample data; the captions in readme.txt
+already describe these shots.
+1. Overview tab: Get started checklist, status tiles, health check.
+2. AI Crawlers tab: quick setup with "Block AI training, allow AI search"
+   selected, Allowed/Blocked labels visible.
+3. AI Crawlers tab: AI Crawler Activity card with a few crawlers and paths.
+4. llms.txt tab: file details, preview and settings form.
+5. AI Traffic tab: 30-day chart, top AI platforms, most visited pages.
+6. AI Traffic tab: WooCommerce Orders from AI card (WooCommerce active).
+7. Settings & Tools tab: tracking settings, Maintenance and Danger Zone.
+
+
+7. BANNER AND ICON MESSAGE
+--------------------------
+Banner (1544x500 and 772x250), headline: "Block AI training. Stay in AI search."
+Sub-line: "llms.txt and AI traffic reports for WordPress"
+Keep text large and to the left third free of small details; the directory
+overlays the plugin name at the bottom left.
+Icon: keep the eye symbol; avoid text in the icon.
+
+
+8. STRUCTURED DATA (website)
+---------------------------
+docs/support.html now contains SoftwareApplication and FAQPage JSON-LD that
+matches the visible FAQ. Publish it at:
+https://www.techbysh.com/docs/tbsh-ai-visibility-control.html
+Do not add aggregateRating until the plugin has real reviews.
+
+
+9. FOLLOW-UP CHECKLIST
+----------------------
+- Ship readme.txt with the 1.3.0 release (Stable tag 1.3.0 must exist in
+  SVN tags/ before trunk points to it).
+- Retake the 7 screenshots and update the banner text.
+- Publish the docs page; answer every support thread; ask satisfied users
+  for a review after they have seen their first AI traffic report.
+- Recheck rankings for: block ai crawlers, llms.txt, gptbot, ai traffic,
+  robots.txt ai - 2 and 4 weeks after release.
+- Track: search position, active installs, downloads per day, rating and
+  review count, support resolution rate, docs page traffic.

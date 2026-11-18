@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Visibility Control - Documentation & Support Guide</title>
+    <title>AI Visibility Control Documentation: Block AI Crawlers, llms.txt & AI Traffic</title>
+    <meta name="description" content="How to block AI training crawlers like GPTBot, stay visible in AI search, publish llms.txt, and track ChatGPT traffic and WooCommerce sales in WordPress.">
+    <link rel="canonical" href="https://www.techbysh.com/docs/tbsh-ai-visibility-control.html">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="AI Visibility Control Documentation: Block AI Crawlers, llms.txt & AI Traffic">
+    <meta property="og:description" content="How to block AI training crawlers like GPTBot, stay visible in AI search, publish llms.txt, and track ChatGPT traffic and WooCommerce sales in WordPress.">
+    <meta property="og:url" content="https://www.techbysh.com/docs/tbsh-ai-visibility-control.html">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -261,6 +267,94 @@
             }
         }
     </style>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "AI Visibility Control",
+  "description": "Free WordPress plugin to block AI training crawlers, stay visible in AI search, publish llms.txt, and see the visits and WooCommerce sales AI assistants send.",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "WordPress 6.2 or later",
+  "softwareVersion": "1.3.0",
+  "url": "https://wordpress.org/plugins/tbsh-ai-visibility-control/",
+  "downloadUrl": "https://downloads.wordpress.org/plugin/tbsh-ai-visibility-control.zip",
+  "license": "https://www.gnu.org/licenses/gpl-2.0.html",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "Techbysh",
+    "url": "https://techbysh.com"
+  }
+}
+    </script>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Can I block AI training but still appear in ChatGPT and other AI search answers?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. On the AI Crawlers tab, choose \"Block AI training, allow AI search\" and click Save Crawler Settings. This blocks training crawlers such as GPTBot, ClaudeBot, Google-Extended and CCBot, and keeps search crawlers such as OAI-SearchBot, Claude-SearchBot and PerplexityBot allowed, so AI assistants can still find and cite your pages."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Will blocking AI crawlers hurt my Google rankings?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Google Search uses Googlebot, which AI Visibility Control never blocks. Google-Extended is a separate setting that only tells Google not to use your content for Gemini training and grounding; Google states it does not affect Search."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do AI crawlers have to obey robots.txt?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. robots.txt is a request, not a lock. Major AI companies say their crawlers follow it, but some state that fetchers acting for a user (such as ChatGPT-User or Perplexity-User) may not. Protect private content with a login or server rules, not robots.txt alone."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is llms.txt, and does it guarantee AI visibility?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "llms.txt is a plain-text file at yoursite.com/llms.txt that gives AI tools a short, clean list of your content. AI Visibility Control creates and updates it for you. It makes your content easier for AI tools to read, but it does not guarantee that ChatGPT, Perplexity or any other assistant will show or cite your site."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I track ChatGPT traffic in WordPress?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. AI Visibility Control logs visits from ChatGPT, Perplexity, Claude, Gemini, Copilot, Grok, Meta AI, DeepSeek, Mistral and other AI assistants. It reads the referrer and also recognises tags such as utm_source=chatgpt.com, which catches ChatGPT visits that other analytics tools often report as \"Direct\"."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I see WooCommerce sales from ChatGPT and other AI assistants?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, with WooCommerce 8.5 or later and WooCommerce Order Attribution turned on. Orders whose visit came from an AI assistant are tagged with the source, and the AI Traffic tab shows paid orders and revenue by AI platform."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it store personal data, use cookies or need an account?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No account, no API key and no cookies. AI Visibility Control does not store IP addresses: a one-way hash is kept for a few minutes to avoid counting the same visit twice. Logs stay in your own WordPress database."
+      }
+    }
+  ]
+}
+    </script>
 </head>
 <body>
 
@@ -268,229 +362,319 @@
     <!-- Sidebar Navigation -->
     <aside>
         <div class="logo">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
             AI Visibility Control
         </div>
-        <ul class="menu-list">
-            <li class="menu-item"><a href="#introduction" class="menu-link active">Introduction</a></li>
-            <li class="menu-item"><a href="#installation" class="menu-link">Installation</a></li>
-            <li class="menu-item"><a href="#dashboard" class="menu-link">Dashboard Overview</a></li>
-            <li class="menu-item"><a href="#bot-manager" class="menu-link">AI Bot Blocker</a></li>
-            <li class="menu-item"><a href="#llms-txt" class="menu-link">llms.txt Generator</a></li>
-            <li class="menu-item"><a href="#referrals" class="menu-link">Referrals Analytics</a></li>
-            <li class="menu-item"><a href="#troubleshooting" class="menu-link">Troubleshooting</a></li>
-            <li class="menu-item"><a href="#privacy" class="menu-link">GDPR & Compliance</a></li>
-            <li class="menu-item"><a href="#developers" class="menu-link">Developer Hooks</a></li>
-        </ul>
+        <nav aria-label="Documentation sections">
+            <ul class="menu-list">
+                <li class="menu-item"><a href="#introduction" class="menu-link active">Introduction</a></li>
+                <li class="menu-item"><a href="#installation" class="menu-link">Installation &amp; Quick Start</a></li>
+                <li class="menu-item"><a href="#overview" class="menu-link">Overview</a></li>
+                <li class="menu-item"><a href="#ai-crawlers" class="menu-link">Block AI Crawlers</a></li>
+                <li class="menu-item"><a href="#llms-txt" class="menu-link">llms.txt &amp; llms-full.txt</a></li>
+                <li class="menu-item"><a href="#ai-traffic" class="menu-link">AI Traffic &amp; WooCommerce Sales</a></li>
+                <li class="menu-item"><a href="#settings" class="menu-link">Settings &amp; Tools</a></li>
+                <li class="menu-item"><a href="#troubleshooting" class="menu-link">Troubleshooting</a></li>
+                <li class="menu-item"><a href="#privacy" class="menu-link">Privacy</a></li>
+                <li class="menu-item"><a href="#faq" class="menu-link">FAQ</a></li>
+                <li class="menu-item"><a href="#developers" class="menu-link">For Developers</a></li>
+            </ul>
+        </nav>
     </aside>
 
     <!-- Main Content Panel -->
     <main>
         <header>
             <h1>AI Visibility Control Documentation</h1>
-            <p class="subtitle">Complete technical reference and installation guide for controlling search crawlers and Large Language Models (LLMs).</p>
+            <p class="subtitle">How to block AI training crawlers, stay visible in AI search, publish llms.txt, and see the visits and sales AI assistants send to your WordPress site.</p>
         </header>
 
-        <!-- Introduction Section -->
+        <!-- Introduction -->
         <section id="introduction">
             <h2>1. Introduction</h2>
-            <p>AI Visibility Control is a WordPress plugin designed to help webmasters manage how Artificial Intelligence bots, search LLMs, and conversational engines index their sites. In the modern web environment, new crawlers scan sites to feed training datasets and compile references for conversational search boxes (like ChatGPT Search or Perplexity).</p>
-            
+            <p>AI Visibility Control is a free WordPress plugin that lets you decide which AI crawlers can read your site, publishes an <code>llms.txt</code> file for AI tools, and shows the visits and WooCommerce sales that ChatGPT, Perplexity, Claude and other AI assistants send you. It runs entirely on your site: no account, no API key and no cookies.</p>
+
             <div class="alert alert-info">
-                <strong>Why this matters:</strong> Standard robots.txt rules do not provide granular control over the latest AI bots, nor do they track referred conversational traffic. This plugin bridges that gap in a lightweight, self-contained way.
+                <strong>Why it matters:</strong> AI companies use different crawlers for different jobs. GPTBot collects content for training, while OAI-SearchBot indexes pages for ChatGPT search. With this plugin you can block training and still be found in AI answers.
             </div>
 
-            <p>The plugin operates on three primary pillars:</p>
+            <p>The plugin has three parts:</p>
             <ul>
-                <li><strong>Dynamic Bot Control:</strong> Filter robots.txt dynamically to disallow specific crawler tokens.</li>
-                <li><strong>Markdown Indexing:</strong> Generate dynamic, cached <code>llms.txt</code> standards.</li>
-                <li><strong>Traffic Monitoring:</strong> Safe local logging of referrer agents without bloating DB tables.</li>
+                <li><strong>AI crawler control:</strong> choose which of 19 AI crawlers may read your site. The plugin adds the matching rules to your robots.txt file.</li>
+                <li><strong>llms.txt:</strong> an automatic, up-to-date list of your content for AI tools, with an optional full-text <code>llms-full.txt</code>.</li>
+                <li><strong>AI traffic:</strong> reports of the visitors and WooCommerce orders that AI assistants send you, and of the AI crawlers that read your site.</li>
             </ul>
+            <p><strong>Requirements:</strong> WordPress 6.2 or later and PHP 7.4 or later. WooCommerce 8.5 or later for AI sales reports.</p>
         </section>
 
-        <!-- Installation Section -->
+        <!-- Installation -->
         <section id="installation">
-            <h2>2. Installation & Quick Start</h2>
-            <p>To install the plugin manually or through the WordPress admin panel, follow these steps:</p>
+            <h2>2. Installation &amp; Quick Start</h2>
             <ol>
-                <li>Download the plugin <code>.zip</code> package from the official directory.</li>
-                <li>In your WordPress dashboard, navigate to <strong>Plugins > Add New</strong> and click <strong>Upload Plugin</strong>.</li>
-                <li>Choose the downloaded file and click <strong>Install Now</strong>.</li>
-                <li>Once installed, click <strong>Activate Plugin</strong>.</li>
-                <li>Go to <strong>Settings > AI Visibility Control</strong> in your admin menu to adjust configurations.</li>
+                <li>In WordPress, go to <strong>Plugins &gt; Add New Plugin</strong>, search for "AI Visibility Control", then click <strong>Install Now</strong> and <strong>Activate</strong>. Or upload the plugin zip under <strong>Plugins &gt; Add New Plugin &gt; Upload Plugin</strong>.</li>
+                <li>Go to <strong>Settings &gt; AI Visibility Control</strong>, or click <strong>Settings</strong> under the plugin name on the Plugins screen.</li>
+                <li>Follow the <strong>Get started</strong> checklist on the Overview tab.</li>
+                <li>On the <strong>AI Crawlers</strong> tab, choose a quick setup (for example "Block AI training, allow AI search") and click <strong>Save Crawler Settings</strong>.</li>
+                <li>On the <strong>llms.txt</strong> tab, check the preview and choose which content is listed. Your file is at <code>yoursite.com/llms.txt</code>.</li>
             </ol>
 
             <div class="alert alert-warning">
-                <strong>Requirement:</strong> The plugin requires Pretty Permalinks (e.g. Post Name) to be enabled under <em>Settings > Permalinks</em>. Dynamic virtual routing for the <code>/llms.txt</code> file will fail if plain query permalinks are active.
+                <strong>Recommended:</strong> use pretty permalinks (for example "Post name" under <em>Settings &gt; Permalinks</em>) so <code>/llms.txt</code> loads correctly on every server.
             </div>
         </section>
 
-        <!-- Dashboard Section -->
-        <section id="dashboard">
-            <h2>3. Overview Dashboard</h2>
-            <p>The Overview panel is divided into three sections to help you monitor your site's discoverability:</p>
-            
+        <!-- Overview -->
+        <section id="overview">
+            <h2>3. Overview</h2>
+            <p>The Overview tab shows where you stand and what to do next.</p>
+
             <div class="card">
-                <h3>A. Diagnostics Widgets</h3>
-                <p>Displays at-a-glance metrics including <strong>Total AI Referrals</strong>, details of the <strong>Last Referral</strong> (e.g., bot name and how long ago it arrived), and reachability indicators for the <code>/llms.txt</code> and <code>/robots.txt</code> files.</p>
+                <h3>Get started checklist</h3>
+                <p>Three steps: choose crawler access, check your llms.txt file, and see AI traffic. Each step has a button that takes you to the right tab. You can hide the checklist once you are done.</p>
             </div>
 
             <div class="card">
-                <h3>B. Automated Health Check</h3>
-                <p>Runs local tests to check settings without calling external APIs. The checks inspect whether:</p>
-                <ul>
-                    <li>Pretty permalinks are active.</li>
-                    <li>The dynamic <code>/llms.txt</code> file is reachable.</li>
-                    <li>The <code>/robots.txt</code> file is reachable and not blocked by physical root files.</li>
-                    <li>Your site visibility settings encourage or discourage search indexing.</li>
-                    <li>The site is in maintenance mode.</li>
-                </ul>
+                <h3>Status tiles</h3>
+                <p>AI visits in the last 30 days (compared with the 30 days before), the last AI visit, whether llms.txt is live, and how many AI crawlers are blocked.</p>
             </div>
 
             <div class="card">
-                <h3>C. Content Discoverability Report</h3>
-                <p>Shows the count of public posts and pages currently indexed for LLM ingestion, count of non-public excluded posts, and the exact timestamp when the transient cache was last rebuilt.</p>
+                <h3>Health check</h3>
+                <p>Checks that pretty permalinks are on, that <code>/llms.txt</code> and <code>/robots.txt</code> can be reached, that search engines are not discouraged, and that the site is not in maintenance mode. Problems are listed first, each with how to fix it. The same checks appear in <em>Tools &gt; Site Health</em>.</p>
             </div>
         </section>
 
-        <!-- Bot Manager Section -->
-        <section id="bot-manager">
-            <h2>4. AI Crawler Bot Blocker</h2>
-            <p>The Bot Control panel lets you check or uncheck blocks for popular AI crawlers. These blocks hook into the WordPress <code>robots_txt</code> filter and append disallow statements safely at the bottom of the output without altering existing rules generated by other plugins.</p>
-            
+        <!-- AI crawlers -->
+        <section id="ai-crawlers">
+            <h2>4. Block AI Crawlers</h2>
+            <p>The AI Crawlers tab lists 19 AI crawlers in three groups. Each one shows an <strong>Allowed</strong> or <strong>Blocked</strong> label. Blocked crawlers get a <code>Disallow: /</code> rule, added at the end of the robots.txt file that WordPress creates, so rules from other plugins stay in place.</p>
+
+            <h3>Quick setup</h3>
+            <ul>
+                <li><strong>Allow all AI crawlers</strong></li>
+                <li><strong>Block AI training, allow AI search</strong>: the most common choice. Your content is not used for training, but AI search tools can still find and cite you.</li>
+                <li><strong>Block all AI crawlers</strong></li>
+                <li><strong>Custom</strong>: switch crawlers on and off one by one.</li>
+            </ul>
+
             <table>
                 <thead>
                     <tr>
-                        <th>Crawler Agent</th>
-                        <th>Associated Platform</th>
-                        <th>Indexing Purpose</th>
+                        <th>Group</th>
+                        <th>Crawlers</th>
+                        <th>What they do</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td><strong>GPTBot</strong></td>
-                        <td>OpenAI</td>
-                        <td>ChatGPT model training and query answering.</td>
+                        <td><strong>AI training</strong></td>
+                        <td>GPTBot, ClaudeBot, Google-Extended, Applebot-Extended, CCBot, Amazonbot, Bytespider, meta-externalagent, AI2Bot</td>
+                        <td>Collect content that may be used to train AI models.</td>
                     </tr>
                     <tr>
-                        <td><strong>ClaudeBot</strong></td>
-                        <td>Anthropic</td>
-                        <td>Claude LLM assistant model datasets.</td>
+                        <td><strong>AI search</strong></td>
+                        <td>OAI-SearchBot, Claude-SearchBot, PerplexityBot, DuckAssistBot, YouBot</td>
+                        <td>Index pages so AI assistants can cite and link to them.</td>
                     </tr>
                     <tr>
-                        <td><strong>PerplexityBot</strong></td>
-                        <td>Perplexity AI</td>
-                        <td>Conversational search box updates.</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Google-Extended</strong></td>
-                        <td>Google</td>
-                        <td>Gemini & Vertex AI models training opt-out.</td>
-                    </tr>
-                    <tr>
-                        <td><strong>CCBot</strong></td>
-                        <td>Common Crawl</td>
-                        <td>Open datasets used by various open-source models.</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Amazonbot</strong></td>
-                        <td>Amazon</td>
-                        <td>Alexa features and ML product training.</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Applebot-Extended</strong></td>
-                        <td>Apple</td>
-                        <td>Apple Intelligence training opt-out.</td>
+                        <td><strong>User-requested fetchers</strong></td>
+                        <td>ChatGPT-User, Claude-User, Perplexity-User, MistralAI-User, meta-externalfetcher</td>
+                        <td>Open a page when a person asks an AI assistant to. Some providers state these may not follow robots.txt.</td>
                     </tr>
                 </tbody>
             </table>
+
+            <div class="card">
+                <h3>AI crawler activity</h3>
+                <p>See which AI crawlers visited in the last 30 days, how many requests each made, when each was last seen, and the most crawled pages. Crawlers are recognised by their User-Agent. Visits served from a page cache or CDN are not counted.</p>
+            </div>
+
+            <div class="card">
+                <h3>Advanced: custom rules, Content Signals and preview</h3>
+                <p><strong>Custom robots.txt rules</strong> block any other crawler, or a crawler from part of your site only. Write a <code>User-agent:</code> line followed by one or more <code>Disallow: /path</code> lines. Invalid lines are rejected and quoted back to you.</p>
+                <p><strong>Content Signals</strong> add a voluntary <code>Content-Signal</code> line (search, ai-input, ai-train) that states how your content may be used. It does not block anything on its own.</p>
+                <p>The <strong>preview</strong> shows the exact rules the plugin adds to robots.txt.</p>
+            </div>
         </section>
 
-        <!-- llms.txt Section -->
+        <!-- llms.txt -->
         <section id="llms-txt">
-            <h2>5. Dynamic llms.txt Generator</h2>
-            <p>The <code>llms.txt</code> standard provides structured markdown summaries specifically optimized for LLMs. The plugin dynamically generates this output under the URL <code>https://yourdomain.com/llms.txt</code>.</p>
-            
-            <p>The file structure generated matches this format:</p>
+            <h2>5. llms.txt &amp; llms-full.txt</h2>
+            <p><code>llms.txt</code> is a plain-text file at <code>yoursite.com/llms.txt</code> that gives AI tools a short, clean list of your content. The plugin creates it automatically and keeps it up to date.</p>
+
             <pre><code># Site Name
 
 ## About
-Site description details.
+
+Your About text, or your site tagline.
 
 ## Recent Content
-- [Post Title 1](https://yourdomain.com/post-1/)
-- [Page Title 2](https://yourdomain.com/page-2/)
-...</code></pre>
+
+- [Post title](https://yoursite.com/post/)
+- [Page title](https://yoursite.com/page/)</code></pre>
+
+            <h3>Settings on the llms.txt tab</h3>
+            <ul>
+                <li>Content types to list (posts, pages, products and other public types).</li>
+                <li>Your own About text, short descriptions after each link, grouping by content type, and a limit per type.</li>
+                <li>Leave out content marked noindex in Yoast SEO, Rank Math, All in One SEO, SEOPress or The SEO Framework.</li>
+                <li>Exclude a single post or page with the "Exclude from llms.txt" box in the editor.</li>
+            </ul>
+
+            <div class="card">
+                <h3>llms-full.txt (optional)</h3>
+                <p>Turn on <code>/llms-full.txt</code> to publish the full text of your newest content (100 items by default, up to 500) as Markdown, so AI tools can read it in one request. The file is limited to about 2 MB.</p>
+                <p><strong>Check first if you use a membership or paywall plugin:</strong> WordPress reports members-only content as public, so it would be included.</p>
+            </div>
 
             <div class="alert alert-info">
-                <strong>Performance Caching:</strong> To prevent resource usage, the dynamic output is cached using WordPress transients for up to one week. The cache is automatically cleared whenever you publish, edit, or trash posts or pages.
+                <strong>Always up to date:</strong> a saved copy of the file is served so it loads instantly. It is refreshed automatically when you publish, edit or delete content, or when you click <strong>Rebuild llms.txt</strong>.
             </div>
         </section>
 
-        <!-- Referrals Section -->
-        <section id="referrals">
-            <h2>6. AI Referrals Analytics</h2>
-            <p>The plugin tracks incoming visits referred by conversational search engines by parsing the HTTP Referrer header. It captures referrers from ChatGPT, Perplexity, Claude, Gemini, Copilot, and Bard.</p>
-            
-            <h3>Transient Debounce Check</h3>
-            <p>To protect your database from spam and resource usage, the referral logger hashes the visitor's IP address, requested destination URL, and referrer source. It sets a transient key for <strong>5 minutes</strong>. If the same visitor clicks another link or refreshes the page within this window, the visit is debounced and not saved to the database.</p>
-            
-            <p>You can view top referral sources, top pages visited by AI referrals, and download a CSV file of the logged spreadsheet from the Tools panel.</p>
-        </section>
-
-        <!-- Troubleshooting Section -->
-        <section id="troubleshooting">
-            <h2>7. Diagnostics & Troubleshooting</h2>
-            
-            <div class="card">
-                <h3>Problem 1: llms.txt returns a 404 Page Not Found error</h3>
-                <p><strong>Reason:</strong> Your permalink structure is set to "Plain", or WordPress rewrite rules have not flushed correctly.</p>
-                <p><strong>Solution:</strong> Navigate to <em>Settings > Permalinks</em>, change the setting to <em>Post Name</em>, and save. Then go to <em>Settings > AI Visibility Control > Tools</em> and click <strong>Rebuild Cache</strong> to flush rules.</p>
-            </div>
-
-            <div class="card">
-                <h3>Problem 2: robots.txt doesn't show the blocked AI bot rules</h3>
-                <p><strong>Reason:</strong> You have a physical <code>robots.txt</code> file in your site's root directory, which prevents WordPress from generating dynamic virtual rules.</p>
-                <p><strong>Solution:</strong> Connect to your site via FTP or File Manager and delete the physical <code>robots.txt</code> file from the root folder. WordPress will then handle robots.txt requests dynamically.</p>
-            </div>
-        </section>
-
-        <!-- Privacy Section -->
-        <section id="privacy">
-            <h2>8. GDPR & Privacy Compliance</h2>
-            <p>This plugin is built with GDPR and user privacy in mind:</p>
+        <!-- AI traffic -->
+        <section id="ai-traffic">
+            <h2>6. AI Traffic &amp; WooCommerce Sales</h2>
+            <p>The AI Traffic tab shows visits from ChatGPT, Perplexity, Claude, Gemini, Copilot, Grok, Meta AI, DeepSeek, Mistral, You.com, Phind, Poe and Duck.ai.</p>
             <ul>
-                <li>No user tracking data or logs leave your local server.</li>
-                <li>The plugin does not write raw IP addresses to the database.</li>
-                <li>IP addresses are hashed using MD5 during the transient check to prevent duplicate logs and are then discarded.</li>
+                <li><strong>Reports</strong> for the last 7, 30 or 90 days or all time: a daily chart, a comparison with the previous period, the top AI platforms and the most visited pages.</li>
+                <li><strong>Hidden AI traffic:</strong> many AI assistants hide the referrer but tag their links, for example <code>utm_source=chatgpt.com</code>. The plugin recognises these tags too, so ChatGPT visits are not lost as "Direct" traffic.</li>
+                <li><strong>No double counting:</strong> the same visitor opening the same page from the same AI platform within 5 minutes is counted once. AI crawlers are never counted as visitors.</li>
+                <li><strong>Latest 20 visits</strong>, with how each visit was detected (referrer, UTM tag or browser beacon).</li>
+            </ul>
+
+            <div class="card">
+                <h3>WooCommerce sales from AI</h3>
+                <p>With WooCommerce 8.5 or later and WooCommerce Order Attribution turned on, orders whose visit came from an AI assistant are tagged with the AI source. The AI Traffic tab shows paid orders and revenue (after refunds) by AI platform, and the source appears on the order screen. Compatible with High-Performance Order Storage and the block checkout.</p>
+            </div>
+
+            <div class="card">
+                <h3>Sites with a page cache or CDN</h3>
+                <p>Cached pages never reach WordPress, so server-side logging cannot see those visits. Turn on <strong>Cache-compatible referral tracking</strong> under Settings &amp; Tools. It adds a script under 2 KB, with no cookies, that reports only visits coming from AI platforms.</p>
+            </div>
+        </section>
+
+        <!-- Settings -->
+        <section id="settings">
+            <h2>7. Settings &amp; Tools</h2>
+            <ul>
+                <li><strong>Tracking &amp; data settings:</strong> UTM detection, cache-compatible tracking, AI crawler logging, how long logs are kept (forever, 30, 90, 180 days or 1 year), and an optional weekly summary email sent every Monday morning.</li>
+                <li><strong>Maintenance:</strong> Rebuild llms.txt, export all AI visits as a CSV file, and send a test summary email.</li>
+                <li><strong>Danger Zone:</strong> delete AI traffic logs, delete crawler logs, or reset crawler blocks. Each action asks for confirmation and says what will be deleted.</li>
+                <li><strong>When the plugin is deleted:</strong> choose whether all data is removed.</li>
             </ul>
         </section>
 
-        <!-- Developer Section -->
-        <section id="developers">
-            <h2>9. Developer Hooks & Filters</h2>
-            <p>Developers can customize the plugin's behavior using filters:</p>
-            
-            <h3>A. Customize llms.txt output</h3>
-            <p>If you want to alter the Dynamic Markdown content before it is output or cached:</p>
-            <pre><code>add_filter( 'tavc_llms_txt_output', 'custom_llms_txt_content' );
-function custom_llms_txt_content( $output ) {
-    // Append custom legal or about info at the bottom
-    $output .= "\n## Custom Index\n- [Terms](https://yoursite.com/terms/)\n";
-    return $output;
-}</code></pre>
+        <!-- Troubleshooting -->
+        <section id="troubleshooting">
+            <h2>8. Troubleshooting</h2>
 
-            <h3>B. Add custom AI bots to block in robots.txt</h3>
-            <p>To block additional crawlers not listed by default in the free control panel:</p>
-            <pre><code>add_filter( 'tavc_custom_robots_rules', 'add_custom_bots' );
-function add_custom_bots( $rules ) {
-    $rules .= "\nUser-agent: SpecializedBot\nDisallow: /\n";
-    return $rules;
-}</code></pre>
+            <div class="card">
+                <h3>llms.txt shows a "Page not found" error</h3>
+                <p><strong>Reason:</strong> your permalinks are set to "Plain", or WordPress has not refreshed its URL rules yet.</p>
+                <p><strong>Solution:</strong> go to <em>Settings &gt; Permalinks</em>, choose <em>Post name</em> and save. Then click <strong>Rebuild llms.txt</strong> on the llms.txt tab or the Settings &amp; Tools tab.</p>
+            </div>
+
+            <div class="card">
+                <h3>robots.txt does not show the AI crawler rules</h3>
+                <p><strong>Reason:</strong> a physical <code>robots.txt</code> file in your site's root folder is served instead of the one WordPress creates. On sites installed in a subfolder, robots.txt is only read at the domain root.</p>
+                <p><strong>Solution:</strong> delete or rename the physical <code>robots.txt</code> file (using FTP or your host's file manager). The AI Crawlers tab shows a preview of the rules the plugin adds.</p>
+            </div>
+
+            <div class="card">
+                <h3>No AI visits are logged</h3>
+                <p><strong>Reason:</strong> your pages are served from a page cache or CDN, or no AI assistant has sent visitors yet.</p>
+                <p><strong>Solution:</strong> turn on <strong>Cache-compatible referral tracking</strong> under Settings &amp; Tools.</p>
+            </div>
+        </section>
+
+        <!-- Privacy -->
+        <section id="privacy">
+            <h2>9. Privacy</h2>
+            <ul>
+                <li>The plugin sets no cookies and does not store IP addresses. To avoid counting the same visit twice, a one-way hash is kept for a few minutes and then discarded.</li>
+                <li>AI visit logs contain only the date, the AI platform, the page visited and how the visit was detected. Crawler logs contain the crawler, the page and a daily count.</li>
+                <li>All logs stay in your WordPress database. You choose how long they are kept and can export or delete them at any time.</li>
+                <li>Suggested text for your privacy policy is added under <em>Settings &gt; Privacy</em>.</li>
+                <li>The only outgoing request is the optional deactivation feedback, sent only if an administrator clicks "Submit &amp; Deactivate".</li>
+            </ul>
+        </section>
+
+        <!-- FAQ -->
+        <section id="faq">
+            <h2>10. Frequently Asked Questions</h2>
+
+            <div class="card">
+                <h3>Can I block AI training but still appear in ChatGPT and other AI search answers?</h3>
+                <p>Yes. On the AI Crawlers tab, choose "Block AI training, allow AI search" and click Save Crawler Settings. This blocks training crawlers such as GPTBot, ClaudeBot, Google-Extended and CCBot, and keeps search crawlers such as OAI-SearchBot, Claude-SearchBot and PerplexityBot allowed, so AI assistants can still find and cite your pages.</p>
+            </div>
+
+            <div class="card">
+                <h3>Will blocking AI crawlers hurt my Google rankings?</h3>
+                <p>No. Google Search uses Googlebot, which AI Visibility Control never blocks. Google-Extended is a separate setting that only tells Google not to use your content for Gemini training and grounding; Google states it does not affect Search.</p>
+            </div>
+
+            <div class="card">
+                <h3>Do AI crawlers have to obey robots.txt?</h3>
+                <p>No. robots.txt is a request, not a lock. Major AI companies say their crawlers follow it, but some state that fetchers acting for a user (such as ChatGPT-User or Perplexity-User) may not. Protect private content with a login or server rules, not robots.txt alone.</p>
+            </div>
+
+            <div class="card">
+                <h3>What is llms.txt, and does it guarantee AI visibility?</h3>
+                <p>llms.txt is a plain-text file at yoursite.com/llms.txt that gives AI tools a short, clean list of your content. AI Visibility Control creates and updates it for you. It makes your content easier for AI tools to read, but it does not guarantee that ChatGPT, Perplexity or any other assistant will show or cite your site.</p>
+            </div>
+
+            <div class="card">
+                <h3>Can I track ChatGPT traffic in WordPress?</h3>
+                <p>Yes. AI Visibility Control logs visits from ChatGPT, Perplexity, Claude, Gemini, Copilot, Grok, Meta AI, DeepSeek, Mistral and other AI assistants. It reads the referrer and also recognises tags such as utm_source=chatgpt.com, which catches ChatGPT visits that other analytics tools often report as "Direct".</p>
+            </div>
+
+            <div class="card">
+                <h3>Can I see WooCommerce sales from ChatGPT and other AI assistants?</h3>
+                <p>Yes, with WooCommerce 8.5 or later and WooCommerce Order Attribution turned on. Orders whose visit came from an AI assistant are tagged with the source, and the AI Traffic tab shows paid orders and revenue by AI platform.</p>
+            </div>
+
+            <div class="card">
+                <h3>Does it store personal data, use cookies or need an account?</h3>
+                <p>No account, no API key and no cookies. AI Visibility Control does not store IP addresses: a one-way hash is kept for a few minutes to avoid counting the same visit twice. Logs stay in your own WordPress database.</p>
+            </div>
+        </section>
+
+        <!-- Developers -->
+        <section id="developers">
+            <h2>11. For Developers</h2>
+            <p>Filters let you extend the plugin without editing it.</p>
+
+            <h3>Add a crawler to the AI Crawlers tab</h3>
+            <pre><code>add_filter( 'tavc_bot_definitions', function ( $bots ) {
+    $bots['examplebot'] = array(
+        'name'     => 'ExampleBot',      // robots.txt User-agent token
+        'vendor'   => 'Example Inc.',
+        'category' => 'training',        // training, search or user
+        'desc'     => 'Collects content for model training.',
+        'ua'       => 'ExampleBot',      // User-Agent fragment for activity logging
+    );
+    return $bots;
+} );</code></pre>
+
+            <h3>Add lines to llms.txt</h3>
+            <pre><code>add_filter( 'tavc_llms_txt_output', function ( $output ) {
+    $output .= "\n## Policies\n\n- [Terms](https://yoursite.com/terms/)\n";
+    return $output;
+} );</code></pre>
+
+            <h3>Other filters</h3>
+            <ul>
+                <li><code>tavc_ai_referrer_domains</code>, <code>tavc_ai_utm_sources</code>: add AI platforms to traffic detection.</li>
+                <li><code>tavc_llms_txt_post_types</code>, <code>tavc_llms_txt_include_post</code>: choose the content listed in llms.txt and llms-full.txt.</li>
+                <li><code>tavc_llms_full_txt_output</code>, <code>tavc_llms_full_txt_max_bytes</code>: change llms-full.txt content and its size limit.</li>
+                <li><code>tavc_custom_robots_rules</code>: change the crawler rules added to robots.txt.</li>
+                <li><code>tavc_log_crawler_visit</code>, <code>tavc_beacon_hourly_limit</code>, <code>tavc_digest_email</code>, <code>tavc_woocommerce_order_ai_source</code>.</li>
+            </ul>
         </section>
 
         <footer>
-            <p>&copy; 2026 Techbysh. AI Visibility Control is open-source software licensed under GPLv2 or later.</p>
+            <p>&copy; 2026 Techbysh. AI Visibility Control is free software licensed under GPLv2 or later. Questions? <a href="https://wordpress.org/support/plugin/tbsh-ai-visibility-control/">Ask in the support forum</a> or email support@techbysh.com.</p>
         </footer>
     </main>
 </div>

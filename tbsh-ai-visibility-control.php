@@ -12,8 +12,8 @@
  * @package           Tavc
  *
  * @wordpress-plugin
- * Plugin Name:       AI Visibility Control – Dynamic llms.txt & robots.txt Crawler Control
- * Description:       Manage search crawler visibility, block AI bots, generate llms.txt, and log AI search referral traffic.
+ * Plugin Name:       AI Visibility Control – Block AI Crawlers, llms.txt & AI Traffic
+ * Description:       Block AI training crawlers, stay visible in AI search, publish llms.txt, and see the visits and sales AI assistants send to your site.
  * Version:           1.3.0
  * Author:            Techbysh
  * Author URI:        https://techbysh.com
