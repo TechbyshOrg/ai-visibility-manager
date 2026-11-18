@@ -175,7 +175,7 @@ Visits served from a full-page cache or CDN never reach WordPress, so they are n
 
 = Can I see WooCommerce sales from ChatGPT and other AI assistants? =
 
-Yes, with WooCommerce 8.5 or later and WooCommerce Order Attribution turned on. Orders whose visit came from an AI assistant are tagged with the source, and the AI Traffic tab shows paid orders, revenue and average order value by AI platform, the products AI visitors buy most and the pages where they arrived. Only orders placed after you install version 1.3.0 are included.
+Yes, with WooCommerce 8.5 or later and WooCommerce Order Attribution turned on. Orders whose visit came from an AI assistant are tagged with the source, and the AI Traffic tab shows paid orders, revenue and average order value by AI platform, the products AI visitors buy most and the pages where they arrived. Only orders placed after you update to version 1.3.0 or later are included.
 
 = Does it store personal data, use cookies or need an account? =
 
@@ -267,7 +267,7 @@ By default, your logs and settings are kept when you delete the plugin. To remov
 == Upgrade Notice ==
 
 = 1.4.0 =
-Turn blocked AI crawlers away with a 403, rate-limit busy crawlers, Markdown versions of your pages, richer WooCommerce reports, crawler CSV export and monthly summaries. All new options are off until you turn them on.
+Big update from 1.2.0: block AI training while staying in AI search, 21 AI crawlers, optional 403 and rate limits for crawlers, llms.txt controls and .md pages, AI traffic and WooCommerce sales reports. Your settings and logs are kept; new options stay off until you turn them on.
 
 = 1.3.0 =
 Block AI training and stay in AI search with one click, 19 AI crawlers, llms.txt controls, AI traffic reports and WooCommerce sales from AI. Your settings and logs are kept.
