@@ -33,5 +33,4 @@ phpunit.xml.dist
 scratch
 docs
 CLAUDE.md
-SEO-CONTENT-PLAN.txt
 *.log

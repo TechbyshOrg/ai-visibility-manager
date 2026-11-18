@@ -36,7 +36,6 @@ jobs:
             --exclude='scratch' \
             --exclude='docs' \
             --exclude='CLAUDE.md' \
-            --exclude='SEO-CONTENT-PLAN.txt' \
             --exclude='composer.json' \
             --exclude='composer.lock' \
             --exclude='package.json' \

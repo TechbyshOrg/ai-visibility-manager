@@ -180,13 +180,12 @@ By default, your logs and settings are kept when you delete the plugin. To remov
 
 == Screenshots ==
 
-1. Overview: a "Get started" checklist, AI visits in the last 30 days, llms.txt status, and a health check that shows how to fix each problem.
-2. AI Crawlers: quick setup to block AI training and allow AI search, with an "Allowed" or "Blocked" label for each of the 19 crawlers.
-3. AI crawler activity: which AI bots read your site, how often, when they were last seen, and the most crawled pages.
-4. llms.txt: the file address, a live preview, and settings for content types, descriptions, exclusions and llms-full.txt.
-5. AI Traffic: AI visits per day for the last 7, 30 or 90 days, top AI platforms such as ChatGPT and Perplexity, and the most visited pages.
-6. WooCommerce sales from AI: paid orders and revenue by AI platform.
-7. Settings & Tools: tracking options, log retention, weekly summary email, maintenance tools and a separate Danger Zone.
+1. Overview: a "Get started" checklist, AI visits in the last 30 days with the change from the previous period, the last AI visit, llms.txt status, crawlers blocked, and a health check that shows how to fix each problem.
+2. AI Crawlers: quick setup to block AI training and allow AI search, an "Allowed" or "Blocked" label for each of the 19 crawlers, AI crawler activity with the most crawled pages, custom robots.txt rules, Content Signals and a preview of the rules added to robots.txt.
+3. llms.txt: the file address, size and AI crawler fetches, a live preview, and settings for content types, About text, grouping, item limits, noindex content and llms-full.txt.
+4. AI Traffic: AI visits per day, top AI platforms such as ChatGPT and Perplexity, the most visited pages, the latest visits with how each was detected, and WooCommerce paid orders and revenue by AI platform.
+5. Settings & Tools: UTM detection, cache-compatible tracking, crawler logging, log retention and the weekly summary email, plus maintenance tools and a separate Danger Zone.
+6. Status: the AI visibility health check and system details for troubleshooting.
 
 == Changelog ==
 
