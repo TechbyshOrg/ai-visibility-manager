@@ -228,7 +228,7 @@ class TAVC_Bots {
 		/**
 		 * Filters the AI crawler definitions.
 		 *
-		 * Add an entry to make a crawler available on the AI Bots tab. Each entry
+		 * Add an entry to make a crawler available on the AI Crawlers tab. Each entry
 		 * needs 'name' (robots.txt User-agent token) and 'category' (training,
 		 * search or user). 'vendor', 'desc' and 'ua' (User-Agent fragment used for
 		 * crawler visit logging; empty to skip logging) are optional.
@@ -306,7 +306,7 @@ class TAVC_Bots {
 	}
 
 	/**
-	 * Quick presets offered on the AI Bots tab.
+	 * Quick setup presets offered on the AI Crawlers tab.
 	 *
 	 * @since    1.3.0
 	 * @return   array    Preset key => array( 'label', 'block' => category slugs ).

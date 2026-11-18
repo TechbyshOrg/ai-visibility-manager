@@ -1,6 +1,6 @@
 <?php
 /**
- * View for AI Bots Settings tab
+ * View for the AI Crawlers tab
  *
  * @link       https://techbysh.com
  * @since      1.0.0
@@ -31,32 +31,60 @@ $tavc_signal_defs       = TAVC_Settings::get_content_signal_definitions();
 $tavc_bot_manager       = new TAVC_Bot_Manager();
 $tavc_robots_preview    = trim( $tavc_bot_manager->build_rules() );
 $tavc_physical_robots   = file_exists( ABSPATH . 'robots.txt' );
+
+// Which quick-setup option matches the saved switches ("custom" when none does).
+$tavc_current_preset = 'custom';
+foreach ( $tavc_bot_presets as $tavc_preset_key => $tavc_preset ) {
+	$tavc_matches = true;
+	foreach ( $tavc_bots_definition as $tavc_slug => $tavc_bot ) {
+		$tavc_should_block = in_array( $tavc_bot['category'], $tavc_preset['block'], true ) ? 1 : 0;
+		if ( $tavc_blocked_bots[ $tavc_slug ] !== $tavc_should_block ) {
+			$tavc_matches = false;
+			break;
+		}
+	}
+	if ( $tavc_matches ) {
+		$tavc_current_preset = $tavc_preset_key;
+		break;
+	}
+}
+
+// Invalid custom rules from the last save, shown next to the editor.
+$tavc_rule_errors = get_settings_errors( 'tavc_custom_robots_rules' );
 ?>
 
 <div class="tavc-card">
-	<h3 class="tavc-card-title">
-		<span class="dashicons dashicons-buddicons-buddypress-logo"></span>
-		<?php esc_html_e( 'AI Crawler Control Panel', 'tbsh-ai-visibility-control' ); ?>
-	</h3>
+	<h2 class="tavc-card-title">
+		<span aria-hidden="true" class="dashicons dashicons-buddicons-buddypress-logo"></span>
+		<?php esc_html_e( 'Who Can Read Your Site', 'tbsh-ai-visibility-control' ); ?>
+	</h2>
 
-	<p style="margin-bottom: 20px; color: var(--tavc-text-muted); line-height: 1.5;">
-		<?php esc_html_e( 'Use the options below to prevent popular AI models and crawler systems from scraping your content. When enabled, the corresponding disallow rules are dynamically added to your site\'s virtual robots.txt file.', 'tbsh-ai-visibility-control' ); ?>
+	<p class="tavc-intro">
+		<?php esc_html_e( 'Choose which AI crawlers may read your content. Your choices are published as rules in your site\'s robots.txt file when you save.', 'tbsh-ai-visibility-control' ); ?>
 	</p>
 
-	<div class="tavc-preset-bar" role="group" aria-labelledby="tavc-preset-label">
-		<span id="tavc-preset-label" class="tavc-preset-label"><?php esc_html_e( 'Quick presets:', 'tbsh-ai-visibility-control' ); ?></span>
-		<?php foreach ( $tavc_bot_presets as $tavc_preset_key => $tavc_preset ) : ?>
-			<button type="button" class="button tavc-preset-btn" data-preset="<?php echo esc_attr( $tavc_preset_key ); ?>" data-block="<?php echo esc_attr( implode( ',', $tavc_preset['block'] ) ); ?>">
-				<?php echo esc_html( $tavc_preset['label'] ); ?>
-			</button>
-		<?php endforeach; ?>
-	</div>
-	<p class="tavc-preset-status" id="tavc-preset-status" role="status" aria-live="polite" data-message="<?php esc_attr_e( 'Preset applied. Click "Save Crawler Settings" to publish it to robots.txt.', 'tbsh-ai-visibility-control' ); ?>"></p>
-
-	<form method="post" action="options.php">
+	<form method="post" action="options.php" class="tavc-crawler-form">
 		<?php
 		settings_fields( 'tavc_bots_settings_group' );
 		?>
+
+		<?php // The preset radios are a shortcut for the switches below; options.php ignores this field. ?>
+		<fieldset class="tavc-preset-group">
+			<legend class="tavc-field-label"><?php esc_html_e( 'Quick setup', 'tbsh-ai-visibility-control' ); ?></legend>
+			<div class="tavc-preset-options">
+				<?php foreach ( $tavc_bot_presets as $tavc_preset_key => $tavc_preset ) : ?>
+					<label class="tavc-preset-option">
+						<input type="radio" name="tavc_crawler_preset" value="<?php echo esc_attr( $tavc_preset_key ); ?>" data-block="<?php echo esc_attr( implode( ',', $tavc_preset['block'] ) ); ?>" <?php checked( $tavc_current_preset, $tavc_preset_key ); ?>>
+						<?php echo esc_html( $tavc_preset['label'] ); ?>
+					</label>
+				<?php endforeach; ?>
+				<label class="tavc-preset-option">
+					<input type="radio" name="tavc_crawler_preset" value="custom" data-custom="1" <?php checked( $tavc_current_preset, 'custom' ); ?>>
+					<?php esc_html_e( 'Custom (choose below)', 'tbsh-ai-visibility-control' ); ?>
+				</label>
+			</div>
+			<p class="tavc-preset-status" id="tavc-preset-status" role="status" aria-live="polite" data-message="<?php esc_attr_e( 'Switches updated. Click "Save Crawler Settings" to publish the change to robots.txt.', 'tbsh-ai-visibility-control' ); ?>"></p>
+		</fieldset>
 
 		<?php foreach ( $tavc_bot_categories as $tavc_category_key => $tavc_category ) : ?>
 			<?php
@@ -74,10 +102,10 @@ $tavc_physical_robots   = file_exists( ABSPATH . 'robots.txt' );
 				$tavc_blocked_count += $tavc_blocked_bots[ $tavc_slug ];
 			}
 			?>
-			<fieldset class="tavc-bot-group">
+			<fieldset class="tavc-bot-group" data-tavc-group>
 				<legend class="tavc-bot-group-title">
 					<?php echo esc_html( $tavc_category['label'] ); ?>
-					<span class="tavc-bot-group-count">
+					<span class="tavc-bot-group-count" data-tavc-group-count data-total="<?php echo esc_attr( count( $tavc_category_bots ) ); ?>">
 						<?php
 						printf(
 							/* translators: 1: number of blocked crawlers, 2: number of crawlers in the group. */
@@ -131,6 +159,8 @@ $tavc_physical_robots   = file_exists( ABSPATH . 'robots.txt' );
 								<!-- Store option value. Use hidden field to handle unchecked states cleanly -->
 								<input type="hidden" name="tavc_blocked_bots[<?php echo esc_attr( $tavc_slug ); ?>]" value="0">
 								<input type="checkbox" name="tavc_blocked_bots[<?php echo esc_attr( $tavc_slug ); ?>]" id="<?php echo esc_attr( $tavc_input_id ); ?>" value="1" data-category="<?php echo esc_attr( $tavc_bot['category'] ); ?>" aria-describedby="<?php echo esc_attr( $tavc_desc_id ); ?>" <?php checked( $tavc_blocked_bots[ $tavc_slug ], 1 ); ?>>
+								<?php // Visible state; the checkbox itself already announces "checked" to screen readers. ?>
+								<span class="tavc-toggle-state<?php echo $tavc_blocked_bots[ $tavc_slug ] ? ' is-blocked' : ''; ?>" aria-hidden="true"><?php echo $tavc_blocked_bots[ $tavc_slug ] ? esc_html__( 'Blocked', 'tbsh-ai-visibility-control' ) : esc_html__( 'Allowed', 'tbsh-ai-visibility-control' ); ?></span>
 							</div>
 						</div>
 					<?php endforeach; ?>
@@ -138,32 +168,33 @@ $tavc_physical_robots   = file_exists( ABSPATH . 'robots.txt' );
 			</fieldset>
 		<?php endforeach; ?>
 
-		<div style="margin-top: 25px; display: flex; justify-content: flex-start;">
+		<div class="tavc-actions">
 			<?php submit_button( __( 'Save Crawler Settings', 'tbsh-ai-visibility-control' ), 'primary', 'tavc_submit_bots', false ); ?>
 		</div>
 	</form>
 </div>
 
 <div class="tavc-card">
-	<h3 class="tavc-card-title">
-		<span class="dashicons dashicons-visibility"></span>
+	<h2 class="tavc-card-title">
+		<span aria-hidden="true" class="dashicons dashicons-visibility"></span>
 		<?php esc_html_e( 'AI Crawler Activity (Last 30 Days)', 'tbsh-ai-visibility-control' ); ?>
-	</h3>
+	</h2>
 
 	<?php if ( ! $tavc_tracking_settings['crawler_logging'] ) : ?>
 		<p class="tavc-muted-text">
-			<?php esc_html_e( 'AI crawler logging is turned off. Turn on "Log AI crawler visits" under the Tools tab to see which AI crawlers visit your site.', 'tbsh-ai-visibility-control' ); ?>
+			<?php esc_html_e( 'AI crawler logging is turned off. Turn on "Log AI crawler visits" on the Settings & Tools tab to see which AI crawlers visit your site.', 'tbsh-ai-visibility-control' ); ?>
 		</p>
 	<?php elseif ( empty( $tavc_crawler_summary ) ) : ?>
 		<div class="tavc-empty-state">
 			<span class="dashicons dashicons-visibility" aria-hidden="true"></span>
-			<h4><?php esc_html_e( 'No AI crawler visits recorded yet', 'tbsh-ai-visibility-control' ); ?></h4>
+			<h3><?php esc_html_e( 'No AI crawler visits recorded yet', 'tbsh-ai-visibility-control' ); ?></h3>
 			<p><?php esc_html_e( 'Visits from GPTBot, ClaudeBot, PerplexityBot and other AI crawlers will appear here. If your site uses a page cache or CDN, cached visits are not seen by WordPress and will not be counted.', 'tbsh-ai-visibility-control' ); ?></p>
 		</div>
 	<?php else : ?>
 		<div class="tavc-two-column-grid">
 			<div class="tavc-panel">
-				<h4 class="tavc-panel-title"><?php esc_html_e( 'Requests by Crawler', 'tbsh-ai-visibility-control' ); ?></h4>
+				<h3 class="tavc-panel-title"><?php esc_html_e( 'Requests by Crawler', 'tbsh-ai-visibility-control' ); ?></h3>
+				<div class="tavc-table-scroll">
 				<table class="tavc-table">
 					<thead>
 						<tr>
@@ -195,10 +226,12 @@ $tavc_physical_robots   = file_exists( ABSPATH . 'robots.txt' );
 						<?php endforeach; ?>
 					</tbody>
 				</table>
+				</div>
 			</div>
 
 			<div class="tavc-panel">
-				<h4 class="tavc-panel-title"><?php esc_html_e( 'Most Crawled Paths', 'tbsh-ai-visibility-control' ); ?></h4>
+				<h3 class="tavc-panel-title"><?php esc_html_e( 'Most Crawled Paths', 'tbsh-ai-visibility-control' ); ?></h3>
+				<div class="tavc-table-scroll">
 				<table class="tavc-table">
 					<thead>
 						<tr>
@@ -215,6 +248,7 @@ $tavc_physical_robots   = file_exists( ABSPATH . 'robots.txt' );
 						<?php endforeach; ?>
 					</tbody>
 				</table>
+				</div>
 			</div>
 		</div>
 		<p class="tavc-muted-text tavc-small-text">
@@ -223,11 +257,21 @@ $tavc_physical_robots   = file_exists( ABSPATH . 'robots.txt' );
 	<?php endif; ?>
 </div>
 
+<?php
+// Advanced options stay collapsed until they are used (or need attention).
+$tavc_advanced_open = '' !== $tavc_custom_rules_text || '' !== implode( '', $tavc_content_signals ) || ! empty( $tavc_rule_errors );
+?>
+<details class="tavc-advanced"<?php echo $tavc_advanced_open ? ' open' : ''; ?>>
+	<summary class="tavc-advanced-summary">
+		<span class="tavc-advanced-title"><?php esc_html_e( 'Advanced', 'tbsh-ai-visibility-control' ); ?></span>
+		<span class="tavc-advanced-hint"><?php esc_html_e( 'Custom robots.txt rules, Content Signals and a preview of the published rules', 'tbsh-ai-visibility-control' ); ?></span>
+	</summary>
+
 <div class="tavc-card">
-	<h3 class="tavc-card-title">
-		<span class="dashicons dashicons-editor-code"></span>
+	<h2 class="tavc-card-title">
+		<span aria-hidden="true" class="dashicons dashicons-editor-code"></span>
 		<?php esc_html_e( 'Custom robots.txt Rules', 'tbsh-ai-visibility-control' ); ?>
-	</h3>
+	</h2>
 
 	<form method="post" action="options.php">
 		<?php settings_fields( 'tavc_custom_robots_settings_group' ); ?>
@@ -239,21 +283,26 @@ $tavc_physical_robots   = file_exists( ABSPATH . 'robots.txt' );
 			<strong><?php esc_html_e( 'Careful:', 'tbsh-ai-visibility-control' ); ?></strong>
 			<?php esc_html_e( '"User-agent: *" applies to every crawler, including Google and Bing.', 'tbsh-ai-visibility-control' ); ?>
 		</p>
-		<textarea name="tavc_custom_robots_rules" id="tavc_custom_robots_rules" class="tavc-code-textarea" rows="8" spellcheck="false" aria-describedby="tavc_custom_robots_rules_help" placeholder="<?php echo esc_attr( "User-agent: ExampleBot\nDisallow: /private/\nDisallow: /members/" ); ?>"><?php echo esc_textarea( $tavc_custom_rules_text ); ?></textarea>
+		<textarea name="tavc_custom_robots_rules" id="tavc_custom_robots_rules" class="tavc-code-textarea" rows="8" spellcheck="false" aria-describedby="tavc_custom_robots_rules_help<?php echo $tavc_rule_errors ? ' tavc_custom_robots_rules_error' : ''; ?>" placeholder="<?php echo esc_attr( "User-agent: ExampleBot\nDisallow: /private/\nDisallow: /members/" ); ?>"><?php echo esc_textarea( $tavc_custom_rules_text ); ?></textarea>
+		<?php if ( $tavc_rule_errors ) : ?>
+			<p class="tavc-notice-inline tavc-notice-warning tavc-field-error" id="tavc_custom_robots_rules_error">
+				<?php echo esc_html( $tavc_rule_errors[0]['message'] ); ?>
+			</p>
+		<?php endif; ?>
 
-		<div style="margin-top: 15px; display: flex; justify-content: flex-start;">
+		<div class="tavc-actions">
 			<?php submit_button( __( 'Save Custom Rules', 'tbsh-ai-visibility-control' ), 'secondary', 'tavc_submit_custom_rules', false ); ?>
 		</div>
 	</form>
 </div>
 
 <div class="tavc-card">
-	<h3 class="tavc-card-title">
-		<span class="dashicons dashicons-flag"></span>
+	<h2 class="tavc-card-title">
+		<span aria-hidden="true" class="dashicons dashicons-flag"></span>
 		<?php esc_html_e( 'Content Signals', 'tbsh-ai-visibility-control' ); ?>
-	</h3>
+	</h2>
 
-	<p class="tavc-muted-text" style="margin-top: 0; line-height: 1.5;">
+	<p class="tavc-intro">
 		<?php esc_html_e( 'State how you allow your content to be used, with a Content-Signal line in robots.txt. This is a newer, voluntary convention: some crawlers respect it, others ignore it, and search tools may report it as an unknown line. It does not block anything on its own.', 'tbsh-ai-visibility-control' ); ?>
 	</p>
 
@@ -275,22 +324,22 @@ $tavc_physical_robots   = file_exists( ABSPATH . 'robots.txt' );
 			<?php endforeach; ?>
 		</div>
 
-		<div style="margin-top: 15px; display: flex; justify-content: flex-start;">
+		<div class="tavc-actions">
 			<?php submit_button( __( 'Save Content Signals', 'tbsh-ai-visibility-control' ), 'secondary', 'tavc_submit_content_signals', false ); ?>
 		</div>
 	</form>
 </div>
 
 <div class="tavc-card">
-	<h3 class="tavc-card-title">
-		<span class="dashicons dashicons-media-text"></span>
+	<h2 class="tavc-card-title">
+		<span aria-hidden="true" class="dashicons dashicons-media-text"></span>
 		<?php esc_html_e( 'Rules Added to robots.txt', 'tbsh-ai-visibility-control' ); ?>
 		<a href="<?php echo esc_url( home_url( '/robots.txt' ) ); ?>" target="_blank" rel="noopener noreferrer" class="tavc-title-link">
 			<?php esc_html_e( 'View robots.txt', 'tbsh-ai-visibility-control' ); ?>
 			<span class="screen-reader-text"><?php esc_html_e( '(opens in a new tab)', 'tbsh-ai-visibility-control' ); ?></span>
 			<span class="dashicons dashicons-external" aria-hidden="true"></span>
 		</a>
-	</h3>
+	</h2>
 
 	<?php if ( $tavc_physical_robots ) : ?>
 		<p class="tavc-notice-inline tavc-notice-warning">
@@ -304,3 +353,4 @@ $tavc_physical_robots   = file_exists( ABSPATH . 'robots.txt' );
 		<div class="tavc-preview-box" tabindex="0" aria-label="<?php esc_attr_e( 'Rules added to robots.txt', 'tbsh-ai-visibility-control' ); ?>"><?php echo esc_html( $tavc_robots_preview ); ?></div>
 	<?php endif; ?>
 </div>
+</details>

@@ -1,6 +1,6 @@
 <?php
 /**
- * View for AI Referrals tab
+ * View for the AI Traffic tab
  *
  * @link       https://techbysh.com
  * @since      1.0.0
@@ -82,20 +82,20 @@ $tavc_bar_width  = max( 1, $tavc_slot_width * 0.7 );
 ?>
 
 <div class="tavc-card">
-	<h3 class="tavc-card-title">
-		<span class="dashicons dashicons-chart-area"></span>
-		<?php esc_html_e( 'AI Search Referrals Analytics', 'tbsh-ai-visibility-control' ); ?>
-	</h3>
+	<h2 class="tavc-card-title">
+		<span aria-hidden="true" class="dashicons dashicons-chart-area"></span>
+		<?php esc_html_e( 'AI Traffic', 'tbsh-ai-visibility-control' ); ?>
+	</h2>
 
-	<p style="margin-bottom: 25px; color: var(--tavc-text-muted); line-height: 1.5;">
+	<p class="tavc-intro">
 		<?php esc_html_e( 'Monitor how AI search engines like ChatGPT, Claude, and Perplexity refer visitors to your site when answering conversational search queries.', 'tbsh-ai-visibility-control' ); ?>
 	</p>
 
 	<?php if ( empty( $tavc_recent_logs ) ) : ?>
-		<div style="text-align: center; padding: 40px 20px; border: 1px dashed var(--tavc-border); border-radius: 8px; background: var(--tavc-bg);">
-			<span class="dashicons dashicons-chart-line" style="font-size: 48px; width: 48px; height: 48px; color: var(--tavc-text-muted); margin-bottom: 15px;"></span>
-			<h4 style="margin: 0 0 6px 0; font-size: 16px; font-weight: 600;"><?php esc_html_e( 'No AI referral traffic logged yet', 'tbsh-ai-visibility-control' ); ?></h4>
-			<p style="margin: 0; font-size: 13px; color: var(--tavc-text-muted); max-width: 400px; margin: 0 auto;">
+		<div class="tavc-empty-state">
+			<span aria-hidden="true" class="dashicons dashicons-chart-line"></span>
+			<h3><?php esc_html_e( 'No AI referral traffic logged yet', 'tbsh-ai-visibility-control' ); ?></h3>
+			<p>
 				<?php esc_html_e( 'Traffic from ChatGPT, Claude, Perplexity, Gemini, Copilot and other AI assistants will appear here as soon as referrals hit public pages.', 'tbsh-ai-visibility-control' ); ?>
 			</p>
 		</div>
@@ -120,7 +120,7 @@ $tavc_bar_width  = max( 1, $tavc_slot_width * 0.7 );
 		</nav>
 
 		<!-- Period summary -->
-		<div class="tavc-overview-stats" style="margin-bottom: 20px;">
+		<div class="tavc-overview-stats">
 			<div class="tavc-stat-widget">
 				<div class="tavc-stat-val"><?php echo esc_html( number_format_i18n( $tavc_range_cnt ) ); ?></div>
 				<div class="tavc-stat-label">
@@ -190,6 +190,7 @@ $tavc_bar_width  = max( 1, $tavc_slot_width * 0.7 );
 			</div>
 			<details class="tavc-chart-data">
 				<summary><?php esc_html_e( 'Show chart data as a table', 'tbsh-ai-visibility-control' ); ?></summary>
+				<div class="tavc-table-scroll">
 				<table class="tavc-table">
 					<thead>
 						<tr>
@@ -206,22 +207,24 @@ $tavc_bar_width  = max( 1, $tavc_slot_width * 0.7 );
 						<?php endforeach; ?>
 					</tbody>
 				</table>
+				</div>
 			</details>
 		</figure>
 
 		<!-- Analytics Grid (Top Sources & Top Pages) -->
-		<div class="tavc-two-column-grid" style="margin-bottom: 30px;">
+		<div class="tavc-two-column-grid tavc-section">
 			<!-- Top AI Sources Table -->
-			<div style="border: 1px solid var(--tavc-border); border-radius: 8px; padding: 16px; background: #ffffff;">
-				<h4 style="margin: 0 0 12px 0; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
-					<span class="dashicons dashicons-networking" style="color: var(--tavc-primary);"></span>
-					<?php esc_html_e( 'Top AI Referral Sources', 'tbsh-ai-visibility-control' ); ?>
-				</h4>
+			<div class="tavc-panel">
+				<h3 class="tavc-panel-title">
+					<span aria-hidden="true" class="dashicons dashicons-networking"></span>
+					<?php esc_html_e( 'Top AI Platforms', 'tbsh-ai-visibility-control' ); ?>
+				</h3>
+				<div class="tavc-table-scroll">
 				<table class="tavc-table">
 					<thead>
 						<tr>
-							<th><?php esc_html_e( 'Source Bot', 'tbsh-ai-visibility-control' ); ?></th>
-							<th style="text-align: right; width: 30%;"><?php esc_html_e( 'Visits', 'tbsh-ai-visibility-control' ); ?></th>
+							<th><?php esc_html_e( 'AI Platform', 'tbsh-ai-visibility-control' ); ?></th>
+							<th scope="col" class="tavc-num tavc-col-30"><?php esc_html_e( 'Visits', 'tbsh-ai-visibility-control' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -231,24 +234,26 @@ $tavc_bar_width  = max( 1, $tavc_slot_width * 0.7 );
 						<?php foreach ( $tavc_top_sources as $tavc_source ) : ?>
 							<tr>
 								<td><strong><?php echo esc_html( $tavc_source->referrer ); ?></strong></td>
-								<td style="text-align: right; font-weight: 500;"><?php echo esc_html( number_format_i18n( $tavc_source->count ) ); ?></td>
+								<td class="tavc-num"><?php echo esc_html( number_format_i18n( $tavc_source->count ) ); ?></td>
 							</tr>
 						<?php endforeach; ?>
 					</tbody>
 				</table>
+				</div>
 			</div>
 
 			<!-- Top Pages Visited Table -->
-			<div style="border: 1px solid var(--tavc-border); border-radius: 8px; padding: 16px; background: #ffffff;">
-				<h4 style="margin: 0 0 12px 0; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
-					<span class="dashicons dashicons-admin-page" style="color: var(--tavc-primary);"></span>
+			<div class="tavc-panel">
+				<h3 class="tavc-panel-title">
+					<span aria-hidden="true" class="dashicons dashicons-admin-page"></span>
 					<?php esc_html_e( 'Most Visited Pages from AI', 'tbsh-ai-visibility-control' ); ?>
-				</h4>
+				</h3>
+				<div class="tavc-table-scroll">
 				<table class="tavc-table">
 					<thead>
 						<tr>
-							<th><?php esc_html_e( 'Destination Page', 'tbsh-ai-visibility-control' ); ?></th>
-							<th style="text-align: right; width: 30%;"><?php esc_html_e( 'Visits', 'tbsh-ai-visibility-control' ); ?></th>
+							<th><?php esc_html_e( 'Page Visited', 'tbsh-ai-visibility-control' ); ?></th>
+							<th scope="col" class="tavc-num tavc-col-30"><?php esc_html_e( 'Visits', 'tbsh-ai-visibility-control' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -257,50 +262,53 @@ $tavc_bar_width  = max( 1, $tavc_slot_width * 0.7 );
 						<?php endif; ?>
 						<?php foreach ( $tavc_top_pages as $tavc_page ) : ?>
 							<tr>
-								<td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+								<td class="tavc-truncate">
 									<a href="<?php echo esc_url( $tavc_page->target_url ); ?>" target="_blank" rel="noopener noreferrer">
 										<?php
 										$tavc_path = wp_parse_url( $tavc_page->target_url, PHP_URL_PATH );
 										echo esc_html( empty( $tavc_path ) || $tavc_path === '/' ? '/' : $tavc_path );
 										?>
+										<span class="screen-reader-text"><?php esc_html_e( '(opens in a new tab)', 'tbsh-ai-visibility-control' ); ?></span>
 									</a>
 								</td>
-								<td style="text-align: right; font-weight: 500;"><?php echo esc_html( number_format_i18n( $tavc_page->count ) ); ?></td>
+								<td class="tavc-num"><?php echo esc_html( number_format_i18n( $tavc_page->count ) ); ?></td>
 							</tr>
 						<?php endforeach; ?>
 					</tbody>
 				</table>
+				</div>
 			</div>
 		</div>
 
 		<!-- Last 20 Referrals Log List -->
-		<div style="border: 1px solid var(--tavc-border); border-radius: 8px; padding: 16px; background: #ffffff;">
-			<h4 style="margin: 0 0 12px 0; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
-				<span class="dashicons dashicons-list-view" style="color: var(--tavc-primary);"></span>
-				<?php esc_html_e( 'Recent AI Referrals Logs (Last 20)', 'tbsh-ai-visibility-control' ); ?>
-			</h4>
+		<div class="tavc-panel">
+			<h3 class="tavc-panel-title">
+				<span aria-hidden="true" class="dashicons dashicons-list-view"></span>
+				<?php esc_html_e( 'Latest 20 AI Visits', 'tbsh-ai-visibility-control' ); ?>
+			</h3>
 			<div class="tavc-table-scroll">
 				<table class="tavc-table">
 					<thead>
 						<tr>
-							<th style="width: 25%;"><?php esc_html_e( 'Timestamp', 'tbsh-ai-visibility-control' ); ?></th>
-							<th style="width: 20%;"><?php esc_html_e( 'Source Bot', 'tbsh-ai-visibility-control' ); ?></th>
-							<th><?php esc_html_e( 'Target Page', 'tbsh-ai-visibility-control' ); ?></th>
-							<th style="width: 15%;"><?php esc_html_e( 'Detected Via', 'tbsh-ai-visibility-control' ); ?></th>
+							<th scope="col" class="tavc-col-25"><?php esc_html_e( 'Date', 'tbsh-ai-visibility-control' ); ?></th>
+							<th scope="col" class="tavc-col-20"><?php esc_html_e( 'AI Platform', 'tbsh-ai-visibility-control' ); ?></th>
+							<th><?php esc_html_e( 'Page Visited', 'tbsh-ai-visibility-control' ); ?></th>
+							<th scope="col" class="tavc-col-15"><?php esc_html_e( 'Detected Via', 'tbsh-ai-visibility-control' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
 						<?php foreach ( $tavc_recent_logs as $tavc_log ) : ?>
 							<tr>
-								<td style="color: var(--tavc-text-muted);">
+								<td class="tavc-muted-text">
 									<?php echo esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), mysql2date( 'G', $tavc_log->timestamp ) ) ); ?>
 								</td>
 								<td>
-									<span class="tavc-status-tag status-green" style="font-weight: 500;"><?php echo esc_html( $tavc_log->referrer ); ?></span>
+									<span class="tavc-status-tag status-green"><?php echo esc_html( $tavc_log->referrer ); ?></span>
 								</td>
-								<td style="max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+								<td class="tavc-truncate-wide">
 									<a href="<?php echo esc_url( $tavc_log->target_url ); ?>" target="_blank" rel="noopener noreferrer" title="<?php echo esc_url( $tavc_log->target_url ); ?>">
 										<?php echo esc_html( $tavc_log->target_url ); ?>
+										<span class="screen-reader-text"><?php esc_html_e( '(opens in a new tab)', 'tbsh-ai-visibility-control' ); ?></span>
 									</a>
 								</td>
 								<td class="tavc-muted-text"><?php echo esc_html( TAVC_AI_Sources::get_method_label( isset( $tavc_log->method ) ? $tavc_log->method : '' ) ); ?></td>
@@ -315,16 +323,17 @@ $tavc_bar_width  = max( 1, $tavc_slot_width * 0.7 );
 
 <?php if ( null !== $tavc_wc_report ) : ?>
 	<div class="tavc-card">
-		<h3 class="tavc-card-title">
-			<span class="dashicons dashicons-cart"></span>
+		<h2 class="tavc-card-title">
+			<span aria-hidden="true" class="dashicons dashicons-cart"></span>
 			<?php esc_html_e( 'WooCommerce Orders from AI', 'tbsh-ai-visibility-control' ); ?>
-		</h3>
+		</h2>
 
 		<?php if ( empty( $tavc_wc_report['rows'] ) ) : ?>
-			<p class="tavc-muted-text" style="margin-top: 0; line-height: 1.5;">
+			<p class="tavc-intro">
 				<?php esc_html_e( 'No paid orders from AI assistants in this period yet. Orders are matched using WooCommerce Order Attribution, so it must be turned on (WooCommerce > Settings > Advanced > Features). Orders placed before this plugin was updated are not included.', 'tbsh-ai-visibility-control' ); ?>
 			</p>
 		<?php else : ?>
+			<div class="tavc-table-scroll">
 			<table class="tavc-table">
 				<thead>
 					<tr>
@@ -343,6 +352,7 @@ $tavc_bar_width  = max( 1, $tavc_slot_width * 0.7 );
 					<?php endforeach; ?>
 				</tbody>
 			</table>
+			</div>
 			<p class="tavc-muted-text tavc-small-text">
 				<?php
 				if ( $tavc_wc_report['limited'] ) {

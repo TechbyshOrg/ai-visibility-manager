@@ -425,13 +425,38 @@ class TAVC_Settings {
 		$parsed = self::parse_robots_rules_text( $input );
 
 		if ( ! empty( $parsed['errors'] ) ) {
+			// Quote the first few rejected lines so they are easy to find.
+			$lines  = preg_split( '/\r\n|\r|\n/', $input );
+			$quoted = array();
+			foreach ( array_slice( $parsed['errors'], 0, 3 ) as $line_number ) {
+				$text = isset( $lines[ $line_number - 1 ] ) ? trim( $lines[ $line_number - 1 ] ) : '';
+				if ( function_exists( 'mb_strimwidth' ) ) {
+					$text = mb_strimwidth( $text, 0, 60, '...', 'UTF-8' );
+				} elseif ( strlen( $text ) > 60 ) {
+					$text = substr( $text, 0, 57 ) . '...';
+				}
+				$quoted[] = sprintf(
+					/* translators: 1: line number, 2: the rejected line. */
+					__( 'line %1$s ("%2$s")', 'tbsh-ai-visibility-control' ),
+					$line_number,
+					$text
+				);
+			}
+			if ( count( $parsed['errors'] ) > 3 ) {
+				$quoted[] = sprintf(
+					/* translators: %s: number of further rejected lines. */
+					__( 'and %s more', 'tbsh-ai-visibility-control' ),
+					count( $parsed['errors'] ) - 3
+				);
+			}
+
 			self::report_error(
 				'tavc_custom_robots_rules',
 				'tavc_custom_robots_invalid',
 				sprintf(
-					/* translators: %s: comma-separated list of line numbers. */
-					__( 'Some custom robots.txt lines were not saved because they are not valid: line %s. Use "User-agent: Name" followed by one or more "Disallow: /path" lines.', 'tbsh-ai-visibility-control' ),
-					implode( ', ', $parsed['errors'] )
+					/* translators: %s: list of rejected lines, e.g. line 3 ("Allow: /x"). */
+					__( 'Some custom robots.txt lines were not saved because they are not valid: %s. Use "User-agent: Name" followed by one or more "Disallow: /path" lines.', 'tbsh-ai-visibility-control' ),
+					implode( ', ', $quoted )
 				)
 			);
 		}

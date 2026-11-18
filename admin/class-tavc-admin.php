@@ -43,6 +43,14 @@ class TAVC_Admin {
 	private $version;
 
 	/**
+	 * Health checks computed in this request.
+	 *
+	 * @since    1.3.0
+	 * @var      array|null
+	 */
+	private $health_status = null;
+
+	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since    1.0.0
@@ -67,6 +75,28 @@ class TAVC_Admin {
 
 		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/tavc-admin.css', array(), $this->version, 'all' );
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/tavc-admin.js', array(), $this->version, true );
+
+		wp_localize_script(
+			$this->plugin_name,
+			'tavcAdmin',
+			array(
+				'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
+				'healthNonce' => wp_create_nonce( 'tavc_health_check' ),
+				'i18n'        => array(
+					'healthDone'   => __( 'Health check complete.', 'tbsh-ai-visibility-control' ),
+					'healthError'  => __( 'The health check could not be completed. Reload the page to try again.', 'tbsh-ai-visibility-control' ),
+					'allowed'      => __( 'Allowed', 'tbsh-ai-visibility-control' ),
+					'blocked'      => __( 'Blocked', 'tbsh-ai-visibility-control' ),
+					/* translators: 1: number of blocked crawlers, 2: number of crawlers in the group. */
+					'groupCount'   => __( '%1$s of %2$s blocked', 'tbsh-ai-visibility-control' ),
+					'unsaved'      => __( 'Unsaved changes', 'tbsh-ai-visibility-control' ),
+					'stepDone'     => __( 'Done:', 'tbsh-ai-visibility-control' ),
+					/* translators: 1: completed steps, 2: total steps. */
+					'stepsDone'    => __( '%1$s of %2$s done', 'tbsh-ai-visibility-control' ),
+					'confirmOther' => __( 'You have unsaved changes in another section of this page. They will be lost if you save this section now. Continue?', 'tbsh-ai-visibility-control' ),
+				),
+			)
+		);
 	}
 
 	/**
@@ -401,6 +431,11 @@ class TAVC_Admin {
 	 * @return   array    Diagnoses metrics arrays.
 	 */
 	public function get_health_status() {
+		// The Overview and Status tabs both show the checks; compute them once per request.
+		if ( null !== $this->health_status ) {
+			return $this->health_status;
+		}
+
 		$status = array();
 
 		// 1. Permalinks
@@ -444,7 +479,7 @@ class TAVC_Admin {
 				'status'         => 'fail',
 				'title'          => __( 'llms.txt Endpoint Unreachable', 'tbsh-ai-visibility-control' ),
 				'desc'           => __( 'Local request did not return a successful 200 response.', 'tbsh-ai-visibility-control' ),
-				'recommendation' => __( 'Flush rewrites using Rebuild Cache button under Tools tab.', 'tbsh-ai-visibility-control' ),
+				'recommendation' => __( 'Click "Rebuild llms.txt" to refresh the file and its web address.', 'tbsh-ai-visibility-control' ),
 			);
 		}
 
@@ -513,7 +548,250 @@ class TAVC_Admin {
 			);
 		}
 
+		$this->health_status = $status;
+
 		return $status;
+	}
+
+	/**
+	 * Print the health check block: a one-line summary followed by the list.
+	 *
+	 * @since    1.3.0
+	 */
+	public function render_health_section() {
+		if ( ! $this->can_render_health_now() ) {
+			// Loopback checks are not cached: show a placeholder and load them in the background.
+			?>
+			<div class="tavc-health-section" data-tavc-health="section" data-tavc-health-pending aria-busy="true">
+				<p class="tavc-health-loading">
+					<span class="spinner is-active" aria-hidden="true"></span>
+					<?php esc_html_e( 'Checking whether your llms.txt and robots.txt files are reachable...', 'tbsh-ai-visibility-control' ); ?>
+				</p>
+				<noscript>
+					<p><a href="<?php echo esc_url( add_query_arg( array( 'page' => $this->plugin_name, 'tavc_health' => 'now' ), admin_url( 'options-general.php' ) ) ); ?>"><?php esc_html_e( 'Run the check now', 'tbsh-ai-visibility-control' ); ?></a></p>
+				</noscript>
+			</div>
+			<?php
+			return;
+		}
+
+		$status = $this->get_health_status();
+
+		echo '<div class="tavc-health-section" data-tavc-health="section">';
+		$this->render_health_summary( $status );
+		$this->render_health_list( $status );
+		echo '</div>';
+	}
+
+	/**
+	 * Whether health checks can be shown without slow loopback requests.
+	 *
+	 * True when the results are cached, already computed in this request, or
+	 * explicitly requested (no-JavaScript fallback link).
+	 *
+	 * @since    1.3.0
+	 * @return   bool
+	 */
+	private function can_render_health_now() {
+		if ( null !== $this->health_status ) {
+			return true;
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only display switch.
+		if ( isset( $_GET['tavc_health'] ) ) {
+			return true;
+		}
+
+		if ( false === get_transient( 'tavc_health_llms_txt' ) ) {
+			return false;
+		}
+
+		return file_exists( ABSPATH . 'robots.txt' ) || false !== get_transient( 'tavc_health_robots' );
+	}
+
+	/**
+	 * AJAX: run the health checks and return the rendered markup.
+	 *
+	 * @since    1.3.0
+	 */
+	public function ajax_health_check() {
+		check_ajax_referer( 'tavc_health_check', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'You do not have permission to run this check.', 'tbsh-ai-visibility-control' ) ), 403 );
+		}
+
+		$status = $this->get_health_status();
+
+		ob_start();
+		$this->render_health_summary( $status );
+		$this->render_health_list( $status );
+		$section = ob_get_clean();
+
+		ob_start();
+		$this->render_llms_tile();
+		$llms_tile = ob_get_clean();
+
+		wp_send_json_success(
+			array(
+				'section'   => $section,
+				'llms_tile' => $llms_tile,
+			)
+		);
+	}
+
+	/**
+	 * Print the llms.txt status shown on the Overview tile.
+	 *
+	 * @since    1.3.0
+	 */
+	public function render_llms_tile() {
+		if ( ! $this->can_render_health_now() ) {
+			printf(
+				'<span class="tavc-status-tag status-neutral" data-tavc-health="llms-tile">%s</span>',
+				esc_html__( 'Checking...', 'tbsh-ai-visibility-control' )
+			);
+			return;
+		}
+
+		$status = $this->get_health_status();
+
+		if ( isset( $status['llmstxt']['status'] ) && 'pass' === $status['llmstxt']['status'] ) {
+			printf(
+				'<span class="tavc-status-tag status-green"><span class="tavc-pulse" aria-hidden="true"></span> %s</span>',
+				esc_html__( 'Live', 'tbsh-ai-visibility-control' )
+			);
+		} else {
+			printf(
+				'<span class="tavc-status-tag status-red">%s</span>',
+				esc_html__( 'Not reachable', 'tbsh-ai-visibility-control' )
+			);
+		}
+	}
+
+	/**
+	 * Print "All checks passed" or "N checks need attention".
+	 *
+	 * @since    1.3.0
+	 * @param    array    $status    Result of get_health_status().
+	 */
+	public function render_health_summary( $status ) {
+		$failed  = 0;
+		$warning = 0;
+		foreach ( $status as $check ) {
+			if ( 'fail' === $check['status'] ) {
+				$failed++;
+			} elseif ( 'warning' === $check['status'] ) {
+				$warning++;
+			}
+		}
+
+		$issues = $failed + $warning;
+		if ( 0 === $issues ) {
+			$class = 'status-green';
+			$text  = __( 'All checks passed', 'tbsh-ai-visibility-control' );
+		} else {
+			$class = $failed ? 'status-red' : 'status-yellow';
+			/* translators: %s: number of health checks that need attention. */
+			$text = sprintf( _n( '%s check needs attention', '%s checks need attention', $issues, 'tbsh-ai-visibility-control' ), number_format_i18n( $issues ) );
+		}
+
+		printf( '<p class="tavc-health-summary"><span class="tavc-status-tag %1$s">%2$s</span></p>', esc_attr( $class ), esc_html( $text ) );
+	}
+
+	/**
+	 * Print the health check list.
+	 *
+	 * Problems are listed first. Each item carries a screen-reader status
+	 * ("Passed", "Warning", "Problem") so the state never depends on color or
+	 * symbols alone.
+	 *
+	 * @since    1.3.0
+	 * @param    array    $status    Result of get_health_status().
+	 */
+	public function render_health_list( $status ) {
+		$order  = array(
+			'fail'    => 0,
+			'warning' => 1,
+			'pass'    => 2,
+		);
+		$labels = array(
+			'pass'    => __( 'Passed:', 'tbsh-ai-visibility-control' ),
+			'warning' => __( 'Warning:', 'tbsh-ai-visibility-control' ),
+			'fail'    => __( 'Problem:', 'tbsh-ai-visibility-control' ),
+		);
+		$icons  = array(
+			'pass'    => '✓',
+			'warning' => '⚠',
+			'fail'    => '✗',
+		);
+
+		uasort(
+			$status,
+			function ( $a, $b ) use ( $order ) {
+				return $order[ $a['status'] ] - $order[ $b['status'] ];
+			}
+		);
+
+		echo '<ul class="tavc-health-list">';
+		foreach ( $status as $key => $check ) {
+			$state  = isset( $labels[ $check['status'] ] ) ? $check['status'] : 'fail';
+			$action = $this->get_health_action( $key, $state );
+			?>
+			<li class="tavc-health-item health-<?php echo esc_attr( $state ); ?>">
+				<span class="tavc-health-icon" aria-hidden="true"><?php echo esc_html( $icons[ $state ] ); ?></span>
+				<div>
+					<div class="tavc-health-title">
+						<span class="screen-reader-text"><?php echo esc_html( $labels[ $state ] ); ?> </span><?php echo esc_html( $check['title'] ); ?>
+					</div>
+					<div class="tavc-health-desc">
+						<?php echo esc_html( $check['desc'] ); ?>
+						<?php if ( ! empty( $check['recommendation'] ) ) : ?>
+							<br><strong class="tavc-health-label"><?php esc_html_e( 'How to fix:', 'tbsh-ai-visibility-control' ); ?></strong> <?php echo esc_html( $check['recommendation'] ); ?>
+						<?php endif; ?>
+					</div>
+					<?php if ( $action ) : ?>
+						<a href="<?php echo esc_url( $action['url'] ); ?>" class="button button-small tavc-health-action"><?php echo esc_html( $action['label'] ); ?></a>
+					<?php endif; ?>
+				</div>
+			</li>
+			<?php
+		}
+		echo '</ul>';
+	}
+
+	/**
+	 * Button that fixes, or leads to the fix for, a failing health check.
+	 *
+	 * @since    1.3.0
+	 * @param    string    $key      Health check key.
+	 * @param    string    $state    pass, warning or fail.
+	 * @return   array|null          array( 'url', 'label' ) or null.
+	 */
+	private function get_health_action( $key, $state ) {
+		if ( 'pass' === $state ) {
+			return null;
+		}
+
+		switch ( $key ) {
+			case 'permalinks':
+				return array(
+					'url'   => admin_url( 'options-permalink.php' ),
+					'label' => __( 'Open Permalink Settings', 'tbsh-ai-visibility-control' ),
+				);
+			case 'llmstxt':
+				return array(
+					'url'   => wp_nonce_url( admin_url( 'admin-post.php?action=tavc_tool_action&tool=rebuild_cache' ), 'tavc_tool_nonce' ),
+					'label' => __( 'Rebuild llms.txt', 'tbsh-ai-visibility-control' ),
+				);
+			case 'visibility':
+				return array(
+					'url'   => admin_url( 'options-reading.php' ),
+					'label' => __( 'Open Reading Settings', 'tbsh-ai-visibility-control' ),
+				);
+			default:
+				return null;
+		}
 	}
 
 	/**
@@ -662,7 +940,7 @@ class TAVC_Admin {
 	}
 
 	/**
-	 * Range selected on the AI Referrals tab.
+	 * Range selected on the AI Traffic tab.
 	 *
 	 * @since    1.3.0
 	 * @return   string    '7', '30', '90' or 'all' (default, matches the pre-1.3.0 report).

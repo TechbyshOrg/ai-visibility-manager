@@ -45,11 +45,11 @@ if ( ! $tavc_is_cached ) {
 	$tavc_llms_txt_class = new TAVC_LLMS_Txt();
 	// We will call the public generator method
 	$tavc_preview_content = $tavc_llms_txt_class->generate_llms_txt();
-	$tavc_status_label    = __( 'Not Cached (Will cache on next visit)', 'tbsh-ai-visibility-control' );
+	$tavc_status_label    = __( 'Not saved yet (created on the next visit)', 'tbsh-ai-visibility-control' );
 	$tavc_status_class    = 'status-yellow';
 } else {
 	$tavc_preview_content = $tavc_cache_val;
-	$tavc_status_label    = __( 'Cached (Active)', 'tbsh-ai-visibility-control' );
+	$tavc_status_label    = __( 'Saved and served', 'tbsh-ai-visibility-control' );
 	$tavc_status_class    = 'status-green';
 }
 
@@ -57,34 +57,36 @@ $tavc_file_size = strlen( $tavc_preview_content );
 ?>
 
 <div class="tavc-card">
-	<h3 class="tavc-card-title">
-		<span class="dashicons dashicons-media-text"></span>
+	<h2 class="tavc-card-title">
+		<span aria-hidden="true" class="dashicons dashicons-media-text"></span>
 		<?php esc_html_e( 'llms.txt Generator & Settings', 'tbsh-ai-visibility-control' ); ?>
-	</h3>
+	</h2>
 	
-	<p style="margin-bottom: 20px; color: var(--tavc-text-muted); line-height: 1.5;">
+	<p class="tavc-intro">
 		<?php esc_html_e( 'The llms.txt file is a new web standard used to provide structured, lightweight, markdown-formatted content specifically optimized for Large Language Models (LLMs) and AI search agents.', 'tbsh-ai-visibility-control' ); ?>
 	</p>
 	
 	<!-- File Status Board -->
-	<table class="tavc-table" style="margin-bottom: 25px; border: 1px solid var(--tavc-border);">
+	<div class="tavc-table-scroll">
+	<table class="tavc-table tavc-table-bordered">
 		<thead>
 			<tr>
-				<th colspan="2"><?php esc_html_e( 'Endpoint Configurations', 'tbsh-ai-visibility-control' ); ?></th>
+				<th colspan="2"><?php esc_html_e( 'File Details', 'tbsh-ai-visibility-control' ); ?></th>
 			</tr>
 		</thead>
 		<tbody>
 			<tr>
-				<td style="width: 30%;"><strong><?php esc_html_e( 'Endpoint URL', 'tbsh-ai-visibility-control' ); ?></strong></td>
+				<td class="tavc-col-30"><strong><?php esc_html_e( 'Web Address', 'tbsh-ai-visibility-control' ); ?></strong></td>
 				<td>
-					<a href="<?php echo esc_url( $tavc_llms_txt_url ); ?>" target="_blank" rel="noopener noreferrer" style="font-family: monospace; font-size: 13px;">
+					<a href="<?php echo esc_url( $tavc_llms_txt_url ); ?>" target="_blank" rel="noopener noreferrer" class="tavc-mono-link">
 						<?php echo esc_url( $tavc_llms_txt_url ); ?> 
-						<span class="dashicons dashicons-external" style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle;"></span>
+						<span class="screen-reader-text"><?php esc_html_e( '(opens in a new tab)', 'tbsh-ai-visibility-control' ); ?></span>
+						<span aria-hidden="true" class="dashicons dashicons-external tavc-icon-sm"></span>
 					</a>
 				</td>
 			</tr>
 			<tr>
-				<td><strong><?php esc_html_e( 'Cache Status', 'tbsh-ai-visibility-control' ); ?></strong></td>
+				<td><strong><?php esc_html_e( 'Saved Copy', 'tbsh-ai-visibility-control' ); ?></strong></td>
 				<td>
 					<span class="tavc-status-tag <?php echo esc_attr( $tavc_status_class ); ?>">
 						<?php echo esc_html( $tavc_status_label ); ?>
@@ -105,10 +107,10 @@ $tavc_file_size = strlen( $tavc_preview_content );
 				<td><strong><?php esc_html_e( 'llms-full.txt', 'tbsh-ai-visibility-control' ); ?></strong></td>
 				<td>
 					<?php if ( $tavc_llms_settings['full_enabled'] ) : ?>
-						<a href="<?php echo esc_url( $tavc_llms_full_txt_url ); ?>" target="_blank" rel="noopener noreferrer" style="font-family: monospace; font-size: 13px;">
+						<a href="<?php echo esc_url( $tavc_llms_full_txt_url ); ?>" target="_blank" rel="noopener noreferrer" class="tavc-mono-link">
 							<?php echo esc_url( $tavc_llms_full_txt_url ); ?>
 							<span class="screen-reader-text"><?php esc_html_e( '(opens in a new tab)', 'tbsh-ai-visibility-control' ); ?></span>
-							<span class="dashicons dashicons-external" aria-hidden="true" style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle;"></span>
+							<span class="dashicons dashicons-external tavc-icon-sm" aria-hidden="true"></span>
 						</a>
 						<br>
 						<span class="tavc-muted-text tavc-small-text">
@@ -133,29 +135,30 @@ $tavc_file_size = strlen( $tavc_preview_content );
 			</tr>
 		</tbody>
 	</table>
+	</div>
 
 	<!-- Preview Section -->
-	<h4 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: space-between;">
+	<h3 class="tavc-subheading">
 		<span><?php esc_html_e( 'File Content Preview (Markdown)', 'tbsh-ai-visibility-control' ); ?></span>
-		<span style="font-size: 11px; font-weight: normal; color: var(--tavc-text-muted);">
+		<span class="tavc-subheading-note">
 			<?php esc_html_e( 'Lists public content of the selected types.', 'tbsh-ai-visibility-control' ); ?>
 		</span>
-	</h4>
+	</h3>
 
 	<div class="tavc-preview-box" tabindex="0" aria-label="<?php esc_attr_e( 'llms.txt preview', 'tbsh-ai-visibility-control' ); ?>"><?php echo esc_html( $tavc_preview_content ); ?></div>
 
-	<div style="margin-top: 20px; display: flex; gap: 10px;">
+	<div class="tavc-actions">
 		<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=tavc_tool_action&tool=rebuild_cache' ), 'tavc_tool_nonce' ) ); ?>" class="button button-secondary">
-			<?php esc_html_e( 'Rebuild Cache', 'tbsh-ai-visibility-control' ); ?>
+			<?php esc_html_e( 'Rebuild llms.txt', 'tbsh-ai-visibility-control' ); ?>
 		</a>
 	</div>
 </div>
 
 <div class="tavc-card">
-	<h3 class="tavc-card-title">
-		<span class="dashicons dashicons-admin-settings"></span>
+	<h2 class="tavc-card-title">
+		<span aria-hidden="true" class="dashicons dashicons-admin-settings"></span>
 		<?php esc_html_e( 'llms.txt Content Settings', 'tbsh-ai-visibility-control' ); ?>
-	</h3>
+	</h2>
 
 	<form method="post" action="options.php">
 		<?php settings_fields( 'tavc_llms_settings_group' ); ?>
@@ -226,25 +229,26 @@ $tavc_file_size = strlen( $tavc_preview_content );
 			<input type="number" name="tavc_llms_txt_settings[full_max_items]" id="tavc_llms_full_max" class="small-text" min="1" max="500" step="1" value="<?php echo esc_attr( $tavc_llms_settings['full_max_items'] ); ?>">
 		</fieldset>
 
-		<div style="margin-top: 20px; display: flex; justify-content: flex-start;">
+		<div class="tavc-actions">
 			<?php submit_button( __( 'Save llms.txt Settings', 'tbsh-ai-visibility-control' ), 'primary', 'tavc_submit_llms', false ); ?>
 		</div>
 	</form>
 </div>
 
 <div class="tavc-card">
-	<h3 class="tavc-card-title">
-		<span class="dashicons dashicons-hidden"></span>
+	<h2 class="tavc-card-title">
+		<span aria-hidden="true" class="dashicons dashicons-hidden"></span>
 		<?php esc_html_e( 'Excluded Content', 'tbsh-ai-visibility-control' ); ?>
-	</h3>
+	</h2>
 
-	<p class="tavc-muted-text" style="margin-top: 0; line-height: 1.5;">
+	<p class="tavc-intro">
 		<?php esc_html_e( 'To leave a single post or page out of llms.txt, open it in the editor and tick "Exclude from llms.txt" in the AI Visibility box.', 'tbsh-ai-visibility-control' ); ?>
 	</p>
 
 	<?php if ( empty( $tavc_llms_excluded ) ) : ?>
 		<p class="tavc-muted-text"><?php esc_html_e( 'No content is excluded by hand.', 'tbsh-ai-visibility-control' ); ?></p>
 	<?php else : ?>
+		<div class="tavc-table-scroll">
 		<table class="tavc-table">
 			<thead>
 				<tr>
@@ -268,5 +272,6 @@ $tavc_file_size = strlen( $tavc_preview_content );
 				<?php endforeach; ?>
 			</tbody>
 		</table>
+		</div>
 	<?php endif; ?>
 </div>

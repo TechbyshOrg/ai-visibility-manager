@@ -135,7 +135,7 @@ class TAVC_Digest {
 
 		$lines[] = '';
 		$lines[] = __( 'Full report:', 'tbsh-ai-visibility-control' ) . ' ' . admin_url( 'options-general.php?page=tbsh-ai-visibility-control&tab=referrals' );
-		$lines[] = __( 'To stop these emails, turn off the weekly summary under Settings > AI Visibility Control > Tools.', 'tbsh-ai-visibility-control' );
+		$lines[] = __( 'To stop these emails, turn off the weekly summary under Settings > AI Visibility Control > Settings & Tools.', 'tbsh-ai-visibility-control' );
 
 		return array(
 			'subject' => sprintf(

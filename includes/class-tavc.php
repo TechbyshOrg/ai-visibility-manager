@@ -156,6 +156,9 @@ class TAVC {
 
 		// Tools page actions (clear logs, reset settings, rebuild cache, export CSV)
 		add_action( 'admin_post_tavc_tool_action', array( $this->admin, 'handle_tool_actions' ) );
+
+		// Health checks loaded in the background on the settings page (admins only).
+		add_action( 'wp_ajax_tavc_health_check', array( $this->admin, 'ajax_health_check' ) );
 		add_action( 'admin_notices', array( $this->admin, 'display_admin_notices' ) );
 
 		// Plugin action links settings shortcut

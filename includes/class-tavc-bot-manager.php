@@ -75,7 +75,7 @@ class TAVC_Bot_Manager {
 	}
 
 	/**
-	 * "Disallow: /" groups for the crawlers blocked on the AI Bots tab.
+	 * "Disallow: /" groups for the crawlers blocked on the AI Crawlers tab.
 	 *
 	 * @since    1.3.0
 	 * @return   string

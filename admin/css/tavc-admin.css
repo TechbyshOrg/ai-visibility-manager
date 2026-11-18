@@ -1,4 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+/*
+ * AI Visibility Control admin styles.
+ * Uses the WordPress admin system font stack: no external font requests.
+ */
 
 :root {
     --tavc-primary: #6366f1;
@@ -13,13 +16,31 @@
     --tavc-bg: #f8fafc;
     --tavc-card-bg: #ffffff;
     --tavc-text-dark: #0f172a;
-    --tavc-text-muted: #64748b;
+    --tavc-text-muted: #475569;
     --tavc-border: #e2e8f0;
+
+    /* Text-safe variants of the brand colors (WCAG 2.2 AA, at least 4.5:1 on their backgrounds) */
+    --tavc-primary-text: #4f46e5;
+    --tavc-success-text: #065f46;
+    --tavc-warning-text: #92400e;
+    --tavc-danger-text: #b91c1c;
+    --tavc-danger-border: #dc2626;
+
+    /* Switch track when off (at least 3:1 against the row background) */
+    --tavc-toggle-off: #64748b;
+
+    /* Shape and spacing */
+    --tavc-radius-sm: 6px;
+    --tavc-radius: 8px;
+    --tavc-radius-lg: 12px;
+    --tavc-space-section: 24px;
+    --tavc-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
 }
 
 .tavc-wrap {
-    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-    margin: 20px 20px 0 0;
+    font-family: var(--tavc-font);
+    margin-block-start: 20px;
+    margin-inline-end: 20px;
     max-width: 1200px;
     color: var(--tavc-text-dark);
 }
@@ -49,7 +70,6 @@
 }
 
 .tavc-header-content h1 {
-    font-family: 'Outfit', sans-serif;
     font-weight: 700;
     font-size: 28px;
     margin: 0 0 8px 0;
@@ -97,12 +117,12 @@
 }
 
 .tavc-tab-nav:hover {
-    color: var(--tavc-primary);
+    color: var(--tavc-primary-text);
     background: rgba(99, 102, 241, 0.05);
 }
 
 .tavc-tab-nav.active {
-    color: var(--tavc-primary);
+    color: var(--tavc-primary-text);
     background: var(--tavc-primary-light);
     border-color: rgba(99, 102, 241, 0.15);
 }
@@ -111,19 +131,6 @@
     font-size: 18px;
     width: 18px;
     height: 18px;
-}
-
-/* Grid Layout */
-.tavc-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 30px;
-}
-
-@media (max-width: 960px) {
-    .tavc-grid {
-        grid-template-columns: 1fr;
-    }
 }
 
 /* Two Column Grid */
@@ -162,15 +169,11 @@
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     padding: 24px;
     margin-bottom: 25px;
-    transition: transform 0.2s ease;
 }
 
-.tavc-card:hover {
-    transform: translateY(-2px);
-}
-
-.tavc-card-title {
+.tavc-wrap .tavc-card-title {
     font-size: 18px;
+    line-height: 1.4;
     font-weight: 600;
     margin: 0 0 20px 0;
     padding-bottom: 12px;
@@ -228,17 +231,17 @@
 
 .tavc-status-tag.status-green {
     background: var(--tavc-success-light);
-    color: var(--tavc-success);
+    color: var(--tavc-success-text);
 }
 
 .tavc-status-tag.status-yellow {
     background: var(--tavc-warning-light);
-    color: var(--tavc-warning);
+    color: var(--tavc-warning-text);
 }
 
 .tavc-status-tag.status-red {
     background: var(--tavc-danger-light);
-    color: var(--tavc-danger);
+    color: var(--tavc-danger-text);
 }
 
 /* Pulse animation for active indicators */
@@ -296,11 +299,13 @@
 }
 
 .tavc-bot-toggle input[type="checkbox"] {
+    flex: 0 0 auto;
     width: 44px;
-    height: 22px;
-    background: #cbd5e1;
+    height: 24px;
+    margin: 0;
+    background: var(--tavc-toggle-off);
     border: none;
-    border-radius: 11px;
+    border-radius: 12px;
     position: relative;
     cursor: pointer;
     -webkit-appearance: none;
@@ -315,18 +320,23 @@
 .tavc-bot-toggle input[type="checkbox"]::before {
     content: '';
     position: absolute;
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     top: 2px;
-    left: 2px;
+    inset-inline-start: 2px;
     background: #ffffff;
     transition: transform 0.3s;
     margin: 0;
 }
 
 .tavc-bot-toggle input[type="checkbox"]:checked::before {
-    transform: translateX(22px);
+    transform: translateX(20px);
+}
+
+/* Right-to-left admin: the knob slides the other way. */
+.rtl .tavc-bot-toggle input[type="checkbox"]:checked::before {
+    transform: translateX(-20px);
 }
 
 /* Keyboard focus for the toggle switches and tabs */
@@ -338,27 +348,61 @@
 }
 
 /* Bot groups and presets */
-.tavc-preset-bar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 16px;
+.tavc-preset-group {
+    margin: 0 0 20px;
+    padding: 12px 16px 4px;
     background: var(--tavc-bg);
     border: 1px solid var(--tavc-border);
-    border-radius: 8px;
+    border-radius: var(--tavc-radius);
+    min-width: 0;
 }
 
-.tavc-preset-label {
+.tavc-preset-group > legend {
+    float: left;
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.tavc-preset-options {
+    clear: both;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+}
+
+.tavc-preset-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 24px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.tavc-preset-option input[type="radio"] {
+    margin: 0;
+}
+
+/* Unsaved-changes label next to each Save button (filled in by JavaScript) */
+.tavc-unsaved {
+    font-size: 13px;
     font-weight: 600;
-    margin-inline-end: 4px;
+    color: var(--tavc-warning-text);
+}
+
+.tavc-unsaved:not(:empty)::before {
+    content: "\25CF\00a0";
+}
+
+.tavc-field-error {
+    margin: 8px 0 0;
 }
 
 .tavc-preset-status {
     min-height: 1.4em;
     margin: 8px 0 12px;
     font-size: 13px;
-    color: var(--tavc-primary-hover);
+    color: var(--tavc-primary-text);
     font-weight: 500;
 }
 
@@ -432,7 +476,10 @@
     min-width: 0;
 }
 
-.tavc-panel-title {
+.tavc-wrap .tavc-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     margin: 0 0 12px 0;
     font-size: 15px;
     font-weight: 600;
@@ -587,7 +634,7 @@
     color: var(--tavc-text-muted);
 }
 
-.tavc-empty-state h4 {
+.tavc-wrap .tavc-empty-state h3 {
     margin: 10px 0 6px;
     font-size: 15px;
     font-weight: 600;
@@ -725,7 +772,7 @@
 }
 
 .tavc-table th {
-    text-align: left;
+    text-align: start;
     background: var(--tavc-bg);
     color: var(--tavc-text-dark);
     font-weight: 600;
@@ -761,17 +808,17 @@
 }
 
 .tavc-health-item.health-pass {
-    border-left: 4px solid var(--tavc-success);
+    border-inline-start: 4px solid var(--tavc-success);
     background: rgba(16, 185, 129, 0.02);
 }
 
 .tavc-health-item.health-warning {
-    border-left: 4px solid var(--tavc-warning);
+    border-inline-start: 4px solid var(--tavc-warning);
     background: rgba(245, 158, 11, 0.02);
 }
 
 .tavc-health-item.health-fail {
-    border-left: 4px solid var(--tavc-danger);
+    border-inline-start: 4px solid var(--tavc-danger);
     background: rgba(239, 68, 68, 0.02);
 }
 
@@ -790,59 +837,7 @@
     color: var(--tavc-text-muted);
 }
 
-/* Sidebar Box for Premium Upsell */
-.tavc-sidebar-box {
-    background: linear-gradient(135deg, #1e1b4b 0%, #311042 100%);
-    border-radius: 12px;
-    padding: 24px;
-    color: #ffffff;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-    margin-bottom: 25px;
-}
-
-.tavc-sidebar-box h3 {
-    margin: 0 0 10px 0;
-    color: #ffffff;
-    font-size: 18px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.tavc-sidebar-box h3 span {
-    color: #f59e0b;
-}
-
-.tavc-sidebar-box p {
-    font-size: 13px;
-    line-height: 1.5;
-    opacity: 0.85;
-    margin: 0 0 20px 0;
-}
-
-.tavc-pro-feature-list {
-    list-style-type: none;
-    padding: 0;
-    margin: 0 0 20px 0;
-}
-
-.tavc-pro-feature-list li {
-    font-size: 12px;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    opacity: 0.9;
-}
-
-.tavc-pro-feature-list li span.dashicons {
-    color: #10b981;
-    font-size: 14px;
-    width: 14px;
-    height: 14px;
-}
-
+/* Pro beta call-to-action button */
 .tavc-pro-btn {
     display: block;
     text-align: center;
@@ -868,6 +863,8 @@
 }
 
 .tavc-tool-card {
+    display: flex;
+    flex-direction: column;
     border: 1px solid var(--tavc-border);
     border-radius: 8px;
     padding: 16px;
@@ -875,18 +872,22 @@
     background: #fafafa;
 }
 
-.tavc-tool-card h4 {
+.tavc-wrap .tavc-tool-card h3 {
     margin: 0 0 8px 0;
     font-size: 14px;
     font-weight: 600;
 }
 
+/* Descriptions wrap freely (long translations, email addresses); buttons line up at the bottom. */
 .tavc-tool-card p {
     font-size: 12px;
     color: var(--tavc-text-muted);
     margin: 0 0 16px 0;
-    height: 36px;
-    overflow: hidden;
+    overflow-wrap: anywhere;
+}
+
+.tavc-tool-card .button {
+    margin-top: auto;
 }
 
 /* System Status Details */
@@ -907,5 +908,516 @@
     max-height: 300px;
     overflow-y: auto;
     white-space: pre-wrap;
+    border: 1px solid var(--tavc-border);
+}
+
+/* Visible switch state, so "blocked" never depends on color or knob position alone */
+.tavc-bot-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tavc-toggle-state {
+    min-width: 4.5em;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--tavc-success-text);
+}
+
+.tavc-toggle-state.is-blocked {
+    color: var(--tavc-danger-text);
+}
+
+.tavc-health-label {
+    font-weight: 600;
+    color: var(--tavc-text-dark);
+}
+
+ul.tavc-health-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+ul.tavc-health-list > li {
+    margin: 0;
+}
+
+.tavc-wrap .tavc-health-action {
+    margin-top: 8px;
+}
+
+.tavc-text-link {
+    color: var(--tavc-primary-text);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.tavc-text-link:hover,
+.tavc-text-link:focus {
+    text-decoration: underline;
+}
+
+/* ------------------------------------------------------------------
+ * Shared layout helpers (replace former inline styles)
+ * ------------------------------------------------------------------ */
+.tavc-intro {
+    margin: 0 0 20px;
+    color: var(--tavc-text-muted);
+    line-height: 1.5;
+}
+
+.tavc-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.tavc-section {
+    margin-bottom: var(--tavc-space-section);
+}
+
+.tavc-panel-title .dashicons {
+    color: var(--tavc-primary);
+}
+
+.tavc-table td.tavc-num {
+    font-weight: 500;
+}
+
+.tavc-table-bordered {
+    border: 1px solid var(--tavc-border);
+}
+
+.tavc-col-15 { width: 15%; }
+.tavc-col-20 { width: 20%; }
+.tavc-col-25 { width: 25%; }
+.tavc-col-30 { width: 30%; }
+
+.tavc-truncate-wide {
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tavc-mono-link {
+    font-family: monospace;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+.tavc-wrap .dashicons.tavc-icon-sm {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    vertical-align: middle;
+}
+
+.tavc-wrap .dashicons.tavc-icon-md {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    vertical-align: text-top;
+}
+
+.tavc-wrap .tavc-subheading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    margin: 0 0 10px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.tavc-subheading-note {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--tavc-text-muted);
+}
+
+/* ------------------------------------------------------------------
+ * Information architecture (1.3.0): single column, compact Pro box,
+ * Danger Zone, collapsible Advanced section
+ * ------------------------------------------------------------------ */
+.tavc-main-column {
+    container-type: inline-size;
+    container-name: tavc-main;
+    min-width: 0;
+}
+
+.tavc-version-badge {
+    font-size: 14px;
+    font-weight: 400;
+    /* A dark tint keeps white text above 4.5:1 on every part of the header gradient. */
+    background: rgba(15, 23, 42, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    padding: 2px 8px;
+    border-radius: var(--tavc-radius-lg);
+    margin-inline-start: 4px;
+}
+
+.tavc-pro-box {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 24px;
+    margin-bottom: 25px;
+    border-radius: var(--tavc-radius-lg);
+    background: linear-gradient(135deg, #1e1b4b 0%, #311042 100%);
+    color: #ffffff;
+}
+
+.tavc-pro-box-text {
+    flex: 1 1 320px;
+}
+
+.tavc-wrap .tavc-pro-box h2 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 6px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.tavc-pro-box h2 .dashicons {
+    color: #fbbf24;
+}
+
+.tavc-pro-box p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #e2e8f0;
+}
+
+.tavc-pro-box .tavc-pro-btn {
+    flex: 0 0 auto;
+}
+
+.tavc-link-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.tavc-link-list .tavc-text-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tavc-tool-card .button {
+    width: 100%;
+    justify-content: center;
+    white-space: normal;
+}
+
+.tavc-wrap .tavc-button-danger {
+    color: var(--tavc-danger-text);
+    border-color: var(--tavc-danger-border);
+    background: #ffffff;
+}
+
+.tavc-wrap .tavc-button-danger:hover,
+.tavc-wrap .tavc-button-danger:focus {
+    color: #ffffff;
+    border-color: var(--tavc-danger-text);
+    background: var(--tavc-danger-text);
+}
+
+.tavc-danger-zone {
+    border-color: var(--tavc-danger-border);
+}
+
+.tavc-danger-zone .tavc-card-title .dashicons {
+    color: var(--tavc-danger-text);
+}
+
+.tavc-option-box {
+    padding: 16px;
+    border: 1px solid var(--tavc-border);
+    border-radius: var(--tavc-radius);
+    background: var(--tavc-bg);
+}
+
+.tavc-indent {
+    padding-inline-start: 24px;
+    margin-bottom: 0;
+}
+
+.tavc-advanced {
+    margin-bottom: 25px;
+}
+
+.tavc-advanced-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    border: 1px solid var(--tavc-border);
+    border-radius: var(--tavc-radius);
+    background: var(--tavc-card-bg);
+    cursor: pointer;
+    list-style: none;
+}
+
+.tavc-advanced-summary::-webkit-details-marker {
+    display: none;
+}
+
+.tavc-advanced-summary::before {
+    content: "\25B8";
+    color: var(--tavc-primary-text);
+}
+
+.tavc-advanced[open] > .tavc-advanced-summary::before {
+    content: "\25BE";
+}
+
+.tavc-advanced-summary:focus-visible {
+    outline: 2px solid var(--tavc-primary-text);
+    outline-offset: 2px;
+}
+
+.tavc-advanced-title {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.tavc-advanced-hint {
+    font-size: 13px;
+    color: var(--tavc-text-muted);
+}
+
+.tavc-status-table tbody th {
+    width: 40%;
+    font-weight: 500;
+    background: transparent;
+    border-bottom: 1px solid var(--tavc-border);
+}
+
+.tavc-health-summary {
+    margin: 0 0 15px;
+}
+
+.tavc-disabled-reason {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--tavc-text-muted);
+}
+
+.tavc-tool-card .button[disabled] {
+    margin-top: auto;
+}
+
+/* ------------------------------------------------------------------
+ * Overview: Get Started checklist and status tiles
+ * ------------------------------------------------------------------ */
+.tavc-get-started-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.tavc-get-started-head .tavc-card-title {
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+}
+
+.tavc-get-started-progress {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--tavc-text-muted);
+}
+
+.tavc-get-started-hide {
+    flex: 0 0 auto;
+    min-height: 24px;
+    padding: 2px 4px;
+    color: var(--tavc-primary-text);
+}
+
+.tavc-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tavc-step {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0;
+    padding: 12px 16px;
+    border: 1px solid var(--tavc-border);
+    border-radius: var(--tavc-radius);
+    background: #ffffff;
+}
+
+.tavc-step.is-done {
+    background: var(--tavc-bg);
+}
+
+.tavc-step-mark {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: 2px solid var(--tavc-toggle-off);
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.tavc-step.is-done .tavc-step-mark {
+    border-color: var(--tavc-success-text);
+    background: var(--tavc-success-text);
+}
+
+.tavc-step-body {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.tavc-step-title {
+    font-weight: 600;
+}
+
+.tavc-step.is-done .tavc-step-title {
+    color: var(--tavc-text-muted);
+}
+
+.tavc-step-desc {
+    font-size: 13px;
+    color: var(--tavc-text-muted);
+}
+
+.tavc-step-action {
+    flex: 0 0 auto;
+}
+
+.tavc-stat-widget .tavc-stat-val.is-text {
+    font-size: 18px;
+    padding: 7px 0;
+}
+
+.tavc-stat-sub {
+    display: block;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--tavc-text-muted);
+}
+
+.tavc-info-box {
+    margin: 15px 0 0;
+    padding: 15px;
+    border-radius: var(--tavc-radius);
+    background: var(--tavc-bg);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--tavc-text-muted);
+}
+
+.tavc-info-box .dashicons {
+    color: var(--tavc-primary-text);
+    margin-inline-end: 4px;
+}
+
+.tavc-wrap .tavc-table tbody th {
+    font-weight: 500;
+    background: transparent;
+    border-bottom: 1px solid var(--tavc-border);
+}
+
+@media (max-width: 600px) {
+    .tavc-step {
+        flex-wrap: wrap;
+    }
+
+    .tavc-step-action {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* ------------------------------------------------------------------
+ * Responsive: layout follows the content width (admin menu open or
+ * folded), not only the viewport
+ * ------------------------------------------------------------------ */
+@container tavc-main (max-width: 720px) {
+    .tavc-two-column-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.tavc-header-content h1 {
+    flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+    .tavc-wrap {
+        margin-inline-end: 10px;
+    }
+
+    .tavc-header-content h1 {
+        font-size: 22px;
+    }
+
+    .tavc-card {
+        padding: 16px;
+    }
+
+    .tavc-bot-row {
+        flex-wrap: wrap;
+    }
+
+    .tavc-pro-box .tavc-pro-btn {
+        width: 100%;
+    }
+}
+
+/* Health checks loading in the background */
+.tavc-health-loading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    color: var(--tavc-text-muted);
+}
+
+.tavc-health-loading .spinner {
+    float: none;
+    margin: 0;
+}
+
+.tavc-status-tag.status-neutral {
+    background: var(--tavc-bg);
+    color: var(--tavc-text-muted);
     border: 1px solid var(--tavc-border);
 }
