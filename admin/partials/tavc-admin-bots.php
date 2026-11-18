@@ -31,6 +31,10 @@ $tavc_signal_defs       = TAVC_Settings::get_content_signal_definitions();
 $tavc_bot_manager       = new TAVC_Bot_Manager();
 $tavc_robots_preview    = trim( $tavc_bot_manager->build_rules() );
 $tavc_physical_robots   = file_exists( ABSPATH . 'robots.txt' );
+$tavc_subfolder_site    = TAVC_Admin::is_subfolder_install();
+
+// WordPress does not answer /robots.txt in a sub-folder, but ?robots=1 still shows the generated rules.
+$tavc_robots_view_url = $tavc_subfolder_site ? add_query_arg( 'robots', '1', home_url( '/' ) ) : home_url( '/robots.txt' );
 
 // Which quick-setup option matches the saved switches ("custom" when none does).
 $tavc_current_preset = 'custom';
@@ -352,7 +356,7 @@ foreach ( $tavc_crawler_summary as $tavc_activity ) {
 
 <?php
 // Advanced options stay collapsed until they are used (or need attention).
-$tavc_advanced_open = '' !== $tavc_custom_rules_text || '' !== implode( '', $tavc_content_signals ) || ! empty( $tavc_rule_errors );
+$tavc_advanced_open = '' !== $tavc_custom_rules_text || '' !== implode( '', $tavc_content_signals ) || ! empty( $tavc_rule_errors ) || $tavc_subfolder_site || $tavc_physical_robots;
 ?>
 <details class="tavc-advanced"<?php echo $tavc_advanced_open ? ' open' : ''; ?>>
 	<summary class="tavc-advanced-summary">
@@ -423,18 +427,29 @@ $tavc_advanced_open = '' !== $tavc_custom_rules_text || '' !== implode( '', $tav
 	</form>
 </div>
 
-<div class="tavc-card">
+<div class="tavc-card" id="tavc-robots-preview">
 	<h2 class="tavc-card-title">
 		<span aria-hidden="true" class="dashicons dashicons-media-text"></span>
 		<?php esc_html_e( 'Rules Added to robots.txt', 'tbsh-ai-visibility-control' ); ?>
-		<a href="<?php echo esc_url( home_url( '/robots.txt' ) ); ?>" target="_blank" rel="noopener noreferrer" class="tavc-title-link">
-			<?php esc_html_e( 'View robots.txt', 'tbsh-ai-visibility-control' ); ?>
+		<a href="<?php echo esc_url( $tavc_robots_view_url ); ?>" target="_blank" rel="noopener noreferrer" class="tavc-title-link">
+			<?php $tavc_subfolder_site ? esc_html_e( 'View generated rules', 'tbsh-ai-visibility-control' ) : esc_html_e( 'View robots.txt', 'tbsh-ai-visibility-control' ); ?>
 			<span class="screen-reader-text"><?php esc_html_e( '(opens in a new tab)', 'tbsh-ai-visibility-control' ); ?></span>
 			<span class="dashicons dashicons-external" aria-hidden="true"></span>
 		</a>
 	</h2>
 
-	<?php if ( $tavc_physical_robots ) : ?>
+	<?php if ( $tavc_subfolder_site ) : ?>
+		<p class="tavc-notice-inline tavc-notice-warning">
+			<?php
+			printf(
+				/* translators: 1: site folder such as /blog/, 2: robots.txt URL at the domain root. */
+				esc_html__( 'Your site runs in the %1$s folder. Crawlers only read robots.txt at %2$s, which WordPress cannot publish, so copy the rules below into that file (or ask your host to). Turning blocked crawlers away still works without it.', 'tbsh-ai-visibility-control' ),
+				'<code>' . esc_html( trailingslashit( TAVC_Admin::get_site_folder() ) ) . '</code>',
+				'<code>' . esc_html( TAVC_Admin::get_root_robots_url() ) . '</code>'
+			);
+			?>
+		</p>
+	<?php elseif ( $tavc_physical_robots ) : ?>
 		<p class="tavc-notice-inline tavc-notice-warning">
 			<?php esc_html_e( 'A physical robots.txt file exists in your WordPress folder. Web servers serve that file directly, so the rules below are not published until it is removed.', 'tbsh-ai-visibility-control' ); ?>
 		</p>

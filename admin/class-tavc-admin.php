@@ -595,36 +595,49 @@ class TAVC_Admin {
 			);
 		}
 
-		// 3. robots.txt Reachability
-		if ( file_exists( ABSPATH . 'robots.txt' ) ) {
-			$robots_check = 'warning';
+		// 3. robots.txt Reachability. Three different causes need three different fixes.
+		if ( self::is_subfolder_install() ) {
+			// Crawlers only read robots.txt at the domain root, which WordPress does not serve here.
+			$status['robots'] = array(
+				'status'         => 'warning',
+				'title'          => __( 'robots.txt Must Be at the Domain Root', 'tbsh-ai-visibility-control' ),
+				'desc'           => sprintf(
+					/* translators: 1: site folder such as /blog/, 2: robots.txt URL at the domain root. */
+					__( 'Your site runs in the %1$s folder. Crawlers only read robots.txt at the root of the domain (%2$s), and WordPress cannot publish a file there, so the AI crawler rules are not seen by crawlers.', 'tbsh-ai-visibility-control' ),
+					trailingslashit( self::get_site_folder() ),
+					self::get_root_robots_url()
+				),
+				'recommendation' => __( 'Copy the rules shown under AI Crawlers > Advanced > Rules Added to robots.txt into the robots.txt file at your domain root, or ask your host to. Turning blocked crawlers away (on the AI Crawlers tab) works without robots.txt.', 'tbsh-ai-visibility-control' ),
+			);
+		} elseif ( file_exists( ABSPATH . 'robots.txt' ) ) {
+			$status['robots'] = array(
+				'status'         => 'warning',
+				'title'          => __( 'A robots.txt File Replaces the WordPress One', 'tbsh-ai-visibility-control' ),
+				'desc'           => __( 'A physical robots.txt file exists in your WordPress folder. Web servers send that file directly, so the AI crawler rules from this plugin are not published.', 'tbsh-ai-visibility-control' ),
+				'recommendation' => __( 'Delete the physical robots.txt file so WordPress can publish the rules, or copy the rules shown under AI Crawlers > Advanced > Rules Added to robots.txt into that file.', 'tbsh-ai-visibility-control' ),
+			);
 		} else {
 			$robots_check = get_transient( 'tavc_health_robots' );
 			if ( false === $robots_check ) {
-				$response = $this->probe_public_endpoint( home_url( '/robots.txt' ) );
-
-				if ( $this->response_looks_like_plain_text( $response ) ) {
-					$robots_check = 'pass';
-				} else {
-					$robots_check = 'warning';
-				}
+				$response     = $this->probe_public_endpoint( home_url( '/robots.txt' ) );
+				$robots_check = $this->response_looks_like_plain_text( $response ) ? 'pass' : 'warning';
 				set_transient( 'tavc_health_robots', $robots_check, HOUR_IN_SECONDS );
 			}
-		}
 
-		if ( $robots_check === 'pass' ) {
-			$status['robots'] = array(
-				'status' => 'pass',
-				'title'  => __( 'robots.txt Reachable', 'tbsh-ai-visibility-control' ),
-				'desc'   => __( 'The robots.txt file is loaded correctly by client crawlers.', 'tbsh-ai-visibility-control' ),
-			);
-		} else {
-			$status['robots'] = array(
-				'status'         => 'warning',
-				'title'          => __( 'robots.txt Unreachable', 'tbsh-ai-visibility-control' ),
-				'desc'           => __( 'Dynamic file could not be fetched or standard physical robots.txt block is present.', 'tbsh-ai-visibility-control' ),
-				'recommendation' => __( 'Verify that no physical robots.txt file exists in root directory.', 'tbsh-ai-visibility-control' ),
-			);
+			if ( 'pass' === $robots_check ) {
+				$status['robots'] = array(
+					'status' => 'pass',
+					'title'  => __( 'robots.txt Reachable', 'tbsh-ai-visibility-control' ),
+					'desc'   => __( 'The robots.txt file is loaded correctly by client crawlers.', 'tbsh-ai-visibility-control' ),
+				);
+			} else {
+				$status['robots'] = array(
+					'status'         => 'warning',
+					'title'          => __( 'robots.txt Unreachable', 'tbsh-ai-visibility-control' ),
+					'desc'           => __( 'Your site did not return a plain-text robots.txt file when it was checked.', 'tbsh-ai-visibility-control' ),
+					'recommendation' => __( 'Open your robots.txt address in a browser. If it shows an error or a web page, check your permalink settings and any security or caching plugin that handles robots.txt.', 'tbsh-ai-visibility-control' ),
+				);
+			}
 		}
 
 		// 4. Search visibility
@@ -729,7 +742,8 @@ class TAVC_Admin {
 			return false;
 		}
 
-		return file_exists( ABSPATH . 'robots.txt' ) || false !== get_transient( 'tavc_health_robots' );
+		// The robots.txt check only needs a request when neither a sub-folder nor a physical file decides it.
+		return self::is_subfolder_install() || file_exists( ABSPATH . 'robots.txt' ) || false !== get_transient( 'tavc_health_robots' );
 	}
 
 	/**
@@ -912,6 +926,11 @@ class TAVC_Admin {
 					'url'   => admin_url( 'options-reading.php' ),
 					'label' => __( 'Open Reading Settings', 'tbsh-ai-visibility-control' ),
 				);
+			case 'robots':
+				return array(
+					'url'   => self::get_page_url( array( 'tab' => 'bots' ) ) . '#tavc-robots-preview',
+					'label' => __( 'View the Rules', 'tbsh-ai-visibility-control' ),
+				);
 			case 'page_cache':
 				return array(
 					'url'   => self::get_page_url( array( 'tab' => 'bots' ) ),
@@ -920,6 +939,46 @@ class TAVC_Admin {
 			default:
 				return null;
 		}
+	}
+
+	/**
+	 * Folder the site lives in, relative to the domain, without a trailing slash.
+	 *
+	 * @since    1.4.0
+	 * @return   string    For example "/blog", or '' when the site is at the domain root.
+	 */
+	public static function get_site_folder() {
+		$path = wp_parse_url( home_url( '/' ), PHP_URL_PATH );
+
+		return is_string( $path ) ? untrailingslashit( $path ) : '';
+	}
+
+	/**
+	 * Whether the site lives in a sub-folder of its domain (including the
+	 * sub-sites of a sub-directory multisite network). Crawlers only read
+	 * robots.txt at the domain root, which WordPress cannot serve then.
+	 *
+	 * @since    1.4.0
+	 * @return   bool
+	 */
+	public static function is_subfolder_install() {
+		return '' !== self::get_site_folder();
+	}
+
+	/**
+	 * robots.txt address at the root of the site's domain.
+	 *
+	 * @since    1.4.0
+	 * @return   string
+	 */
+	public static function get_root_robots_url() {
+		$parts = wp_parse_url( home_url( '/' ) );
+		$url   = ( isset( $parts['scheme'] ) ? $parts['scheme'] : 'https' ) . '://' . ( isset( $parts['host'] ) ? $parts['host'] : '' );
+		if ( ! empty( $parts['port'] ) ) {
+			$url .= ':' . $parts['port'];
+		}
+
+		return $url . '/robots.txt';
 	}
 
 	/**

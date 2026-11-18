@@ -593,8 +593,9 @@ Your About text, or your site tagline.
 
             <div class="card">
                 <h3>robots.txt does not show the AI crawler rules</h3>
-                <p><strong>Reason:</strong> a physical <code>robots.txt</code> file in your site's root folder is served instead of the one WordPress creates. On sites installed in a subfolder, robots.txt is only read at the domain root.</p>
-                <p><strong>Solution:</strong> delete or rename the physical <code>robots.txt</code> file (using FTP or your host's file manager). The AI Crawlers tab shows a preview of the rules the plugin adds.</p>
+                <p><strong>Reason 1:</strong> a physical <code>robots.txt</code> file in your WordPress folder is served instead of the one WordPress creates.<br><strong>Solution:</strong> delete or rename that file (using FTP or your host's file manager), or copy the plugin's rules into it.</p>
+                <p><strong>Reason 2:</strong> your site is installed in a sub-folder, for example <code>example.com/blog/</code>. Crawlers only read robots.txt at the domain root (<code>example.com/robots.txt</code>), and WordPress cannot publish a file there.<br><strong>Solution:</strong> copy the rules shown under AI Crawlers &gt; Advanced &gt; Rules Added to robots.txt into the robots.txt file at your domain root, or ask your host to. Turning blocked crawlers away works without robots.txt.</p>
+                <p>The health check on the Overview and Status tabs tells you which case applies.</p>
             </div>
 
             <div class="card">

@@ -183,7 +183,7 @@ No account, no API key and no cookies. AI Visibility Control does not store IP a
 
 = Will it slow down my site, and does it change my existing robots.txt? =
 
-No to both. The plugin loads nothing on your public pages unless you turn on cache-compatible tracking, serves llms.txt from a saved copy, and stores crawler visits as one small counter per crawler, page and day. Turning crawlers away happens early, before your theme loads, so refused requests cost less than a normal page view. It only adds rules at the end of the robots.txt that WordPress creates, so rules from your SEO plugin stay in place. A physical robots.txt file on your server takes priority over WordPress and must be removed for the rules to appear.
+No to both. The plugin loads nothing on your public pages unless you turn on cache-compatible tracking, serves llms.txt from a saved copy, and stores crawler visits as one small counter per crawler, page and day. Turning crawlers away happens early, before your theme loads, so refused requests cost less than a normal page view. It only adds rules at the end of the robots.txt that WordPress creates, so rules from your SEO plugin stay in place. A physical robots.txt file on your server takes priority over WordPress and must be removed for the rules to appear. If your site is installed in a sub-folder (for example example.com/blog/), crawlers only read robots.txt at the domain root, so copy the rules shown on the AI Crawlers tab into that file; the health check tells you when this applies.
 
 = Does it work on multisite, and is it translation-ready? =
 
@@ -215,6 +215,7 @@ By default, your logs and settings are kept when you delete the plugin. To remov
 * New: FacebookBot (Meta) and omgili (Webz.io) training crawlers (21 in total).
 * New: The Status health check warns when a page cache stops blocked crawlers from being turned away.
 * Fix: The selected period (7, 30 or 90 days) is highlighted again on the AI Traffic tab.
+* Fix: Sites installed in a sub-folder get a clear robots.txt health message (crawlers only read robots.txt at the domain root) instead of advice to delete a physical file, and the AI Crawlers tab links to the generated rules instead of a missing page.
 
 = 1.3.0 =
 * New: 12 more AI crawlers (19 in total), grouped into training, AI search and user-requested fetchers.
