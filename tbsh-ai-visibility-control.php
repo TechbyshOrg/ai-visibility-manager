@@ -14,7 +14,7 @@
  * @wordpress-plugin
  * Plugin Name:       AI Visibility Control – Dynamic llms.txt & robots.txt Crawler Control
  * Description:       Manage search crawler visibility, block AI bots, generate llms.txt, and log AI search referral traffic.
- * Version:           1.2.0
+ * Version:           1.3.0
  * Author:            Techbysh
  * Author URI:        https://techbysh.com
  * License:           GPL-2.0-or-later
@@ -30,7 +30,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! defined( 'TAVC_VERSION' ) ) {
-	define( 'TAVC_VERSION', '1.2.0' );
+	define( 'TAVC_VERSION', '1.3.0' );
 }
 
 /**
@@ -53,6 +53,20 @@ function tavc_deactivate() {
 
 register_activation_hook( __FILE__, 'tavc_activate' );
 register_deactivation_hook( __FILE__, 'tavc_deactivate' );
+
+/**
+ * Declare compatibility with WooCommerce High-Performance Order Storage and
+ * the block-based cart and checkout.
+ *
+ * @since    1.3.0
+ */
+function tavc_declare_woocommerce_compatibility() {
+	if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
+		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'cart_checkout_blocks', __FILE__, true );
+	}
+}
+add_action( 'before_woocommerce_init', 'tavc_declare_woocommerce_compatibility' );
 
 /**
  * Core class to start the plugin.

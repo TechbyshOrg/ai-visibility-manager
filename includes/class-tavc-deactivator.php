@@ -38,6 +38,13 @@ class TAVC_Deactivator {
 
 		// Clear transients
 		delete_transient( 'tavc_llms_txt_cache' );
+		delete_transient( 'tavc_llms_full_txt_cache' );
 		delete_transient( 'tavc_recent_referrals' );
+		delete_transient( 'tavc_beacon_rate' );
+		delete_transient( 'tavc_beacon_hourly' );
+
+		// Stop scheduled log clean-up and summary emails; they are rescheduled on activation.
+		wp_clear_scheduled_hook( 'tavc_daily_maintenance' );
+		wp_clear_scheduled_hook( 'tavc_weekly_digest' );
 	}
 }

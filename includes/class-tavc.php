@@ -63,7 +63,10 @@ class TAVC {
 	private $llms_txt;
 	private $bot_manager;
 	private $referral_logger;
+	private $crawler_logger;
+	private $woocommerce;
 	private $admin;
+	private $site_health;
 
 	/**
 	 * Returns the single instance of the class.
@@ -112,17 +115,31 @@ class TAVC {
 	 * @since    1.0.0
 	 */
 	private function load_dependencies() {
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-tavc-db.php';
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-tavc-llms-txt.php';
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-tavc-bot-manager.php';
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-tavc-referral-logger.php';
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-tavc-admin.php';
+		$plugin_dir = plugin_dir_path( dirname( __FILE__ ) );
+
+		require_once $plugin_dir . 'includes/class-tavc-bots.php';
+		require_once $plugin_dir . 'includes/class-tavc-ai-sources.php';
+		require_once $plugin_dir . 'includes/class-tavc-settings.php';
+		require_once $plugin_dir . 'includes/class-tavc-db.php';
+		require_once $plugin_dir . 'includes/class-tavc-markdown.php';
+		require_once $plugin_dir . 'includes/class-tavc-llms-txt.php';
+		require_once $plugin_dir . 'includes/class-tavc-bot-manager.php';
+		require_once $plugin_dir . 'includes/class-tavc-referral-logger.php';
+		require_once $plugin_dir . 'includes/class-tavc-crawler-logger.php';
+		require_once $plugin_dir . 'includes/class-tavc-digest.php';
+		require_once $plugin_dir . 'includes/class-tavc-cron.php';
+		require_once $plugin_dir . 'includes/class-tavc-woocommerce.php';
+		require_once $plugin_dir . 'admin/class-tavc-admin.php';
+		require_once $plugin_dir . 'admin/class-tavc-site-health.php';
 
 		// Instantiate helper and functionality classes
 		$this->llms_txt        = new TAVC_LLMS_Txt();
 		$this->bot_manager     = new TAVC_Bot_Manager();
 		$this->referral_logger = new TAVC_Referral_Logger();
+		$this->crawler_logger  = new TAVC_Crawler_Logger();
+		$this->woocommerce     = new TAVC_WooCommerce();
 		$this->admin           = new TAVC_Admin( $this->get_plugin_name(), $this->get_version() );
+		$this->site_health     = new TAVC_Site_Health( $this->admin );
 	}
 
 	/**
@@ -144,6 +161,17 @@ class TAVC {
 		// Plugin action links settings shortcut
 		$plugin_basename = plugin_basename( plugin_dir_path( dirname( __FILE__ ) ) . 'tbsh-ai-visibility-control.php' );
 		add_filter( 'plugin_action_links_' . $plugin_basename, array( $this->admin, 'add_action_links' ) );
+
+		// Per-post "Exclude from llms.txt" box in the post editor.
+		add_action( 'add_meta_boxes', array( $this->admin, 'register_meta_boxes' ) );
+		add_action( 'save_post', array( $this->admin, 'save_llms_meta_box' ), 10, 2 );
+
+		// Privacy policy guide text.
+		add_action( 'admin_init', array( $this->admin, 'add_privacy_policy_content' ) );
+
+		// Tools > Site Health integration.
+		add_filter( 'site_status_tests', array( $this->site_health, 'add_tests' ) );
+		add_filter( 'debug_information', array( $this->site_health, 'add_debug_information' ) );
 	}
 
 	/**
@@ -157,17 +185,39 @@ class TAVC {
 		add_action( 'init', array( $this->llms_txt, 'register_rewrite_rule' ) );
 		add_filter( 'query_vars', array( $this->llms_txt, 'add_query_vars' ) );
 		add_action( 'template_redirect', array( $this->llms_txt, 'render_llms_txt' ) );
+		add_filter( 'redirect_canonical', array( $this->llms_txt, 'prevent_canonical_redirect' ) );
 
 		// Clear cache on content updates
 		add_action( 'save_post', array( $this->llms_txt, 'clear_llms_txt_cache' ) );
 		add_action( 'deleted_post', array( $this->llms_txt, 'clear_llms_txt_cache' ) );
 		add_action( 'trashed_post', array( $this->llms_txt, 'clear_llms_txt_cache' ) );
 
+		// Clear cache when the llms.txt settings change
+		add_action( 'add_option_tavc_llms_txt_settings', array( $this->llms_txt, 'clear_cache_on_settings_change' ) );
+		add_action( 'update_option_tavc_llms_txt_settings', array( $this->llms_txt, 'clear_cache_on_settings_change' ) );
+
 		// robots.txt manager
 		add_filter( 'robots_txt', array( $this->bot_manager, 'add_robots_txt_rules' ), 100, 2 );
 
+		// AI crawler visits: priority 1 so /llms.txt and robots.txt requests are counted before they are served.
+		add_action( 'template_redirect', array( $this->crawler_logger, 'log_crawler_visit' ), 1 );
+
 		// referral logger
 		add_action( 'template_redirect', array( $this->referral_logger, 'log_incoming_referral' ) );
+
+		// Cache-compatible referral tracking (opt-in)
+		add_action( 'wp_enqueue_scripts', array( $this->referral_logger, 'enqueue_tracker' ) );
+		add_action( 'rest_api_init', array( $this->referral_logger, 'register_rest_routes' ) );
+
+		// Scheduled tasks: log retention and weekly summary email
+		add_action( TAVC_Cron::DAILY_HOOK, array( 'TAVC_Cron', 'run_daily_maintenance' ) );
+		add_action( TAVC_Cron::DIGEST_HOOK, array( 'TAVC_Cron', 'run_weekly_digest' ) );
+		add_action( 'add_option_tavc_tracking_settings', array( 'TAVC_Cron', 'sync_digest_schedule' ) );
+		add_action( 'update_option_tavc_tracking_settings', array( 'TAVC_Cron', 'sync_digest_schedule' ) );
+
+		// WooCommerce: attribute orders to AI platforms
+		add_action( 'woocommerce_order_save_attribution_data', array( $this->woocommerce, 'save_order_ai_source' ), 20, 2 );
+		add_action( 'woocommerce_admin_order_data_after_order_details', array( $this->woocommerce, 'render_order_ai_source' ) );
 	}
 
 	/**
@@ -190,10 +240,19 @@ class TAVC {
 		}
 
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-tavc-activator.php';
-		TAVC_Activator::activate();
+
+		// This runs at init priority 1, before other plugins register their
+		// rewrite rules, so flushing now would drop their rules. Flush once
+		// every plugin has finished registering.
+		TAVC_Activator::activate( false );
+		add_action( 'wp_loaded', 'flush_rewrite_rules' );
 
 		delete_transient( 'tavc_health_llms_txt' );
 		delete_transient( 'tavc_health_robots' );
+
+		// The llms.txt output format improved; rebuild it on the next request.
+		delete_transient( TAVC_LLMS_Txt::CACHE_KEY );
+		delete_transient( TAVC_LLMS_Txt::FULL_CACHE_KEY );
 	}
 
 	/**

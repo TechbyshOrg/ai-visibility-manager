@@ -65,4 +65,25 @@ document.addEventListener('DOMContentLoaded', function() {
 	if (activeTab) {
 		activateTab(activeTab, true);
 	}
+
+	// AI Bots tab: quick presets only change the toggles; the user still saves the form.
+	const presetStatus = document.getElementById('tavc-preset-status');
+
+	document.querySelectorAll('.tavc-preset-btn').forEach(function(button) {
+		button.addEventListener('click', function() {
+			const blocked = (this.getAttribute('data-block') || '').split(',').filter(Boolean);
+
+			document.querySelectorAll('.tavc-bot-toggle input[type="checkbox"][data-category]').forEach(function(checkbox) {
+				checkbox.checked = blocked.indexOf(checkbox.getAttribute('data-category')) !== -1;
+			});
+
+			if (presetStatus) {
+				// Clear first so screen readers announce repeated presets.
+				presetStatus.textContent = '';
+				window.setTimeout(function() {
+					presetStatus.textContent = presetStatus.getAttribute('data-message') || '';
+				}, 50);
+			}
+		});
+	});
 });

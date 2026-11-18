@@ -111,12 +111,54 @@ class TAVC_Admin {
 			'tavc_delete_on_uninstall',
 			array( $this, 'sanitize_delete_on_uninstall' )
 		);
+
+		// Each form saves its own group so saving one never resets another.
+		register_setting(
+			'tavc_custom_robots_settings_group',
+			'tavc_custom_robots_rules',
+			array(
+				'type'              => 'array',
+				'sanitize_callback' => array( 'TAVC_Settings', 'sanitize_custom_robots_rules' ),
+				'default'           => array(),
+			)
+		);
+
+		register_setting(
+			'tavc_content_signals_settings_group',
+			'tavc_content_signals',
+			array(
+				'type'              => 'array',
+				'sanitize_callback' => array( 'TAVC_Settings', 'sanitize_content_signals' ),
+				'default'           => array(),
+			)
+		);
+
+		register_setting(
+			'tavc_llms_settings_group',
+			'tavc_llms_txt_settings',
+			array(
+				'type'              => 'array',
+				'sanitize_callback' => array( 'TAVC_Settings', 'sanitize_llms_settings' ),
+				'default'           => array(),
+			)
+		);
+
+		register_setting(
+			'tavc_tracking_settings_group',
+			'tavc_tracking_settings',
+			array(
+				'type'              => 'array',
+				'sanitize_callback' => array( 'TAVC_Settings', 'sanitize_tracking_settings' ),
+				'default'           => array(),
+			)
+		);
 	}
 
 	/**
 	 * Sanitize blocked bots setting input array.
 	 *
 	 * @since    1.0.0
+	 * @since    1.3.0 Only known crawler slugs are stored.
 	 * @param    array    $input    Incoming array of bots values.
 	 * @return   array              Sanitized options array.
 	 */
@@ -126,10 +168,13 @@ class TAVC_Admin {
 			return is_array( $existing ) ? $existing : array();
 		}
 
-		$sanitized = array();
+		$sanitized = TAVC_Bots::get_default_settings();
 
 		foreach ( $input as $bot_slug => $value ) {
-			$sanitized[ sanitize_key( $bot_slug ) ] = intval( $value ) === 1 ? 1 : 0;
+			$bot_slug = sanitize_key( $bot_slug );
+			if ( array_key_exists( $bot_slug, $sanitized ) ) {
+				$sanitized[ $bot_slug ] = intval( $value ) === 1 ? 1 : 0;
+			}
 		}
 
 		return $sanitized;
@@ -201,10 +246,10 @@ class TAVC_Admin {
 				$llms_txt->register_rewrite_rule();
 				flush_rewrite_rules();
 				$llms_txt->clear_llms_txt_cache();
-				
-				// Generate immediately to prime the cache
+
+				// Generate immediately to prime the cache (llms-full.txt is rebuilt on its next request)
 				$content = $llms_txt->generate_llms_txt();
-				set_transient( 'tavc_llms_txt_cache', $content, WEEK_IN_SECONDS );
+				set_transient( TAVC_LLMS_Txt::CACHE_KEY, $content, WEEK_IN_SECONDS );
 				update_option( 'tavc_llms_txt_last_rebuild', current_time( 'timestamp' ), 'no' );
 
 				// Delete health checks transients so they rebuild
@@ -222,19 +267,20 @@ class TAVC_Admin {
 				break;
 
 			case 'reset_settings':
-				$default_bots = array(
-					'gptbot'            => 0,
-					'claudebot'         => 0,
-					'perplexitybot'     => 0,
-					'google-extended'   => 0,
-					'ccbot'             => 0,
-					'amazonbot'         => 0,
-					'applebot-extended' => 0,
-				);
-				update_option( 'tavc_blocked_bots', $default_bots );
-				
+				update_option( 'tavc_blocked_bots', TAVC_Bots::get_default_settings() );
+
 				$msg = 'settings_reset';
 				$tab = 'bots';
+				break;
+
+			case 'clear_crawler_logs':
+				TAVC_DB::clear_crawler_logs();
+				$msg = 'crawler_logs_cleared';
+				$tab = 'bots';
+				break;
+
+			case 'send_digest':
+				$msg = TAVC_Digest::send() ? 'digest_sent' : 'digest_failed';
 				break;
 
 			case 'export_csv':
@@ -276,7 +322,8 @@ class TAVC_Admin {
 		fputcsv( $output, array(
 			__( 'Timestamp', 'tbsh-ai-visibility-control' ),
 			__( 'Source AI Bot', 'tbsh-ai-visibility-control' ),
-			__( 'Destination Page URL', 'tbsh-ai-visibility-control' )
+			__( 'Destination Page URL', 'tbsh-ai-visibility-control' ),
+			__( 'Detected Via', 'tbsh-ai-visibility-control' )
 		) );
 
 		// Data rows
@@ -284,8 +331,9 @@ class TAVC_Admin {
 		foreach ( $logs as $log ) {
 			fputcsv( $output, array(
 				$log->timestamp,
-				$log->referrer,
-				$log->target_url
+				self::csv_safe( $log->referrer ),
+				self::csv_safe( $log->target_url ),
+				TAVC_AI_Sources::get_method_label( isset( $log->method ) ? $log->method : '' )
 			) );
 		}
 
@@ -324,6 +372,20 @@ class TAVC_Admin {
 				break;
 			case 'settings_reset':
 				$message = __( 'AI Bot Manager rules have been reset to defaults.', 'tbsh-ai-visibility-control' );
+				break;
+			case 'crawler_logs_cleared':
+				$message = __( 'AI crawler visit logs have been deleted successfully.', 'tbsh-ai-visibility-control' );
+				break;
+			case 'digest_sent':
+				$message = sprintf(
+					/* translators: %s: email address. */
+					__( 'A test summary email was sent to %s.', 'tbsh-ai-visibility-control' ),
+					TAVC_Settings::get_digest_recipient()
+				);
+				break;
+			case 'digest_failed':
+				$class   = 'notice notice-error is-dismissible';
+				$message = __( 'The summary email could not be sent. Check that your site can send email, for example with an SMTP plugin.', 'tbsh-ai-visibility-control' );
 				break;
 			default:
 				return;
@@ -468,6 +530,9 @@ class TAVC_Admin {
 				'timeout'             => 5,
 				'redirection'         => 2,
 				'limit_response_size' => 65536,
+				// Same as WordPress core loopback checks: self-signed certificates on
+				// local and staging sites must not report the endpoint as unreachable.
+				'sslverify'           => apply_filters( 'https_local_ssl_verify', false ), // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- core hook.
 			)
 		);
 	}
@@ -531,6 +596,175 @@ class TAVC_Admin {
 			'excluded_count' => $excluded_count,
 			'last_rebuild'   => intval( $last_rebuild ),
 		);
+	}
+
+	/**
+	 * Prevent spreadsheet formula injection in exported CSV cells.
+	 *
+	 * @since    1.3.0
+	 * @param    string    $value    Cell value.
+	 * @return   string
+	 */
+	private static function csv_safe( $value ) {
+		$value = (string) $value;
+		if ( '' !== $value && in_array( $value[0], array( '=', '+', '-', '@', "\t", "\r" ), true ) ) {
+			return "'" . $value;
+		}
+
+		return $value;
+	}
+
+	/**
+	 * One-line summary of crawler fetches for a file, e.g. "12 (GPTBot 8, ClaudeBot 4)".
+	 *
+	 * @since    1.3.0
+	 * @param    array    $fetches        Crawler slug => hits.
+	 * @param    array    $definitions    Crawler definitions.
+	 * @return   string
+	 */
+	public function format_fetch_summary( $fetches, $definitions ) {
+		$settings = TAVC_Settings::get_tracking_settings();
+		if ( empty( $settings['crawler_logging'] ) ) {
+			return __( 'Crawler logging is off.', 'tbsh-ai-visibility-control' );
+		}
+
+		if ( empty( $fetches ) ) {
+			return __( 'Not fetched by a known AI crawler yet.', 'tbsh-ai-visibility-control' );
+		}
+
+		$parts = array();
+		foreach ( array_slice( $fetches, 0, 4, true ) as $slug => $hits ) {
+			$name    = isset( $definitions[ $slug ] ) ? $definitions[ $slug ]['name'] : $slug;
+			$parts[] = $name . ' ' . number_format_i18n( $hits );
+		}
+
+		return sprintf(
+			/* translators: 1: total number of fetches, 2: list such as "GPTBot 8, ClaudeBot 4". */
+			__( '%1$s fetches (%2$s)', 'tbsh-ai-visibility-control' ),
+			number_format_i18n( array_sum( $fetches ) ),
+			implode( ', ', $parts )
+		);
+	}
+
+	/**
+	 * Referral report ranges.
+	 *
+	 * @since    1.3.0
+	 * @return   array    Range key => label.
+	 */
+	public function get_referral_ranges() {
+		return array(
+			'7'   => __( 'Last 7 days', 'tbsh-ai-visibility-control' ),
+			'30'  => __( 'Last 30 days', 'tbsh-ai-visibility-control' ),
+			'90'  => __( 'Last 90 days', 'tbsh-ai-visibility-control' ),
+			'all' => __( 'All time', 'tbsh-ai-visibility-control' ),
+		);
+	}
+
+	/**
+	 * Range selected on the AI Referrals tab.
+	 *
+	 * @since    1.3.0
+	 * @return   string    '7', '30', '90' or 'all' (default, matches the pre-1.3.0 report).
+	 */
+	public function get_active_referral_range() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$range = isset( $_GET['tavc_range'] ) ? sanitize_key( wp_unslash( $_GET['tavc_range'] ) ) : 'all';
+
+		return array_key_exists( $range, $this->get_referral_ranges() ) ? $range : 'all';
+	}
+
+	/**
+	 * Register the "Exclude from llms.txt" box for the content types listed in llms.txt.
+	 *
+	 * @since    1.3.0
+	 */
+	public function register_meta_boxes() {
+		$settings = TAVC_Settings::get_llms_settings();
+
+		add_meta_box(
+			'tavc-llms-visibility',
+			__( 'AI Visibility', 'tbsh-ai-visibility-control' ),
+			array( $this, 'render_llms_meta_box' ),
+			$settings['post_types'],
+			'side',
+			'low'
+		);
+	}
+
+	/**
+	 * Render the "Exclude from llms.txt" box.
+	 *
+	 * @since    1.3.0
+	 * @param    WP_Post    $post    Current post.
+	 */
+	public function render_llms_meta_box( $post ) {
+		$excluded = '1' === (string) get_post_meta( $post->ID, TAVC_LLMS_Txt::EXCLUDE_META_KEY, true );
+
+		wp_nonce_field( 'tavc_llms_meta_box', 'tavc_llms_meta_nonce' );
+		?>
+		<p>
+			<label for="tavc_llms_exclude">
+				<input type="checkbox" name="tavc_llms_exclude" id="tavc_llms_exclude" value="1" <?php checked( $excluded ); ?> aria-describedby="tavc_llms_exclude_help">
+				<?php esc_html_e( 'Exclude from llms.txt', 'tbsh-ai-visibility-control' ); ?>
+			</label>
+		</p>
+		<p class="description" id="tavc_llms_exclude_help">
+			<?php esc_html_e( 'Leaves this content out of llms.txt and llms-full.txt. It does not block search engines or AI crawlers.', 'tbsh-ai-visibility-control' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Save the "Exclude from llms.txt" box.
+	 *
+	 * @since    1.3.0
+	 * @param    int        $post_id    Post ID.
+	 * @param    WP_Post    $post       Post object.
+	 */
+	public function save_llms_meta_box( $post_id, $post = null ) {
+		// Only handle saves that come from the editor form containing the box.
+		if ( ! isset( $_POST['tavc_llms_meta_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['tavc_llms_meta_nonce'] ) ), 'tavc_llms_meta_box' ) ) {
+			return;
+		}
+
+		if ( ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) || wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
+			return;
+		}
+
+		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			return;
+		}
+
+		if ( ! empty( $_POST['tavc_llms_exclude'] ) ) {
+			update_post_meta( $post_id, TAVC_LLMS_Txt::EXCLUDE_META_KEY, '1' );
+		} else {
+			delete_post_meta( $post_id, TAVC_LLMS_Txt::EXCLUDE_META_KEY );
+		}
+
+		// The flag can change after the core save_post cache clear has already run.
+		delete_transient( TAVC_LLMS_Txt::CACHE_KEY );
+		delete_transient( TAVC_LLMS_Txt::FULL_CACHE_KEY );
+	}
+
+	/**
+	 * Suggest privacy policy text under Settings > Privacy.
+	 *
+	 * @since    1.3.0
+	 */
+	public function add_privacy_policy_content() {
+		if ( ! function_exists( 'wp_add_privacy_policy_content' ) ) {
+			return;
+		}
+
+		$content  = '<p class="privacy-policy-tutorial">' . esc_html__( 'AI Visibility Control does not store personal data. Suggested text:', 'tbsh-ai-visibility-control' ) . '</p>';
+		$content .= '<p>' . esc_html__( 'When you arrive on this website from an AI assistant such as ChatGPT, Claude or Perplexity, we record the time of the visit, the name of the AI assistant and the page you visited. We do not store your IP address: it is used in hashed form for up to five minutes to avoid counting the same visit twice, and is then discarded. No cookies are set for this purpose.', 'tbsh-ai-visibility-control' ) . '</p>';
+
+		if ( TAVC_WooCommerce::is_available() ) {
+			$content .= '<p>' . esc_html__( 'If you place an order after arriving from an AI assistant, the name of that assistant is saved with your order.', 'tbsh-ai-visibility-control' ) . '</p>';
+		}
+
+		wp_add_privacy_policy_content( __( 'AI Visibility Control', 'tbsh-ai-visibility-control' ), wp_kses_post( $content ) );
 	}
 
 	/**

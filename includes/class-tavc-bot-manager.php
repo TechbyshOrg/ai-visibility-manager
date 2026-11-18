@@ -38,42 +38,113 @@ class TAVC_Bot_Manager {
 	public function add_robots_txt_rules( $output, $public ) {
 		// If the site is not public, WordPress blocks all bots by default.
 		// However, we still append selected blocks for completeness.
-		
-		$blocked_bots = get_option( 'tavc_blocked_bots', array() );
-		if ( empty( $blocked_bots ) || ! is_array( $blocked_bots ) ) {
-			return $output;
+		$rules = $this->build_rules();
+
+		if ( '' !== $rules ) {
+			$output .= "\n# " . __( 'AI Visibility Control Rules', 'tbsh-ai-visibility-control' ) . "\n" . $rules;
 		}
 
-		// Map stored slugs to official User-Agent names
-		$bot_mapping = array(
-			'gptbot'            => 'GPTBot',
-			'claudebot'         => 'ClaudeBot',
-			'perplexitybot'     => 'PerplexityBot',
-			'google-extended'   => 'Google-Extended',
-			'ccbot'             => 'CCBot',
-			'amazonbot'         => 'Amazonbot',
-			'applebot-extended' => 'Applebot-Extended',
-		);
+		return $output;
+	}
 
-		$rules = '';
+	/**
+	 * Build every rule this plugin adds to robots.txt.
+	 *
+	 * @since    1.3.0
+	 * @return   string    Rules text, or an empty string when nothing is configured.
+	 */
+	public function build_rules() {
+		$rules = $this->build_crawler_rules();
 
-		foreach ( $bot_mapping as $slug => $user_agent ) {
-			if ( ! empty( $blocked_bots[ $slug ] ) ) {
-				$rules .= "\n";
-				$rules .= "User-agent: " . $user_agent . "\n";
-				$rules .= "Disallow: /\n";
-			}
-		}
-
+		/**
+		 * Filters the Disallow rules generated for blocked AI crawlers.
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param string $rules Rules text, one "User-agent / Disallow: /" group per blocked crawler.
+		 */
 		$filtered_rules = apply_filters( 'tavc_custom_robots_rules', $rules );
 		if ( is_string( $filtered_rules ) ) {
 			$rules = $filtered_rules;
 		}
 
-		if ( ! empty( $rules ) ) {
-			$output .= "\n# " . __( 'AI Visibility Control Rules', 'tbsh-ai-visibility-control' ) . "\n" . $rules;
+		$rules .= $this->build_custom_rules();
+		$rules .= $this->build_content_signal_rules();
+
+		return $rules;
+	}
+
+	/**
+	 * "Disallow: /" groups for the crawlers blocked on the AI Bots tab.
+	 *
+	 * @since    1.3.0
+	 * @return   string
+	 */
+	private function build_crawler_rules() {
+		$blocked_bots = get_option( 'tavc_blocked_bots', array() );
+		if ( empty( $blocked_bots ) || ! is_array( $blocked_bots ) ) {
+			return '';
 		}
 
-		return $output;
+		$rules = '';
+
+		foreach ( TAVC_Bots::get_definitions() as $slug => $bot ) {
+			if ( ! empty( $blocked_bots[ $slug ] ) ) {
+				$rules .= "\n";
+				$rules .= 'User-agent: ' . $bot['name'] . "\n";
+				$rules .= "Disallow: /\n";
+			}
+		}
+
+		return $rules;
+	}
+
+	/**
+	 * Groups entered in the Custom robots.txt Rules editor.
+	 *
+	 * @since    1.3.0
+	 * @return   string
+	 */
+	private function build_custom_rules() {
+		$rules = '';
+
+		foreach ( TAVC_Settings::get_custom_robots_rules() as $group ) {
+			$rules .= "\n";
+			foreach ( $group['agents'] as $agent ) {
+				$rules .= 'User-agent: ' . $agent . "\n";
+			}
+			foreach ( $group['paths'] as $path ) {
+				$rules .= 'Disallow: ' . $path . "\n";
+			}
+		}
+
+		return $rules;
+	}
+
+	/**
+	 * Content-Signal line for all crawlers.
+	 *
+	 * An empty "Disallow:" keeps the group valid without adding an Allow rule,
+	 * so it can never override WordPress's own rules, even on non-public sites.
+	 *
+	 * @since    1.3.0
+	 * @return   string
+	 */
+	private function build_content_signal_rules() {
+		$values      = TAVC_Settings::get_content_signals();
+		$definitions = TAVC_Settings::get_content_signal_definitions();
+		$parts       = array();
+
+		foreach ( $definitions as $key => $definition ) {
+			if ( '' !== $values[ $key ] ) {
+				$parts[] = $definition['token'] . '=' . $values[ $key ];
+			}
+		}
+
+		if ( empty( $parts ) ) {
+			return '';
+		}
+
+		return "\nUser-agent: *\nContent-Signal: " . implode( ', ', $parts ) . "\nDisallow:\n";
 	}
 }

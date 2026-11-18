@@ -101,12 +101,9 @@ if ( ! isset( $tavc_active_tab ) ) {
 				<p><?php esc_html_e( 'Take total control over AI crawlers and protect your content from unauthorized data harvesting.', 'tbsh-ai-visibility-control' ); ?></p>
 				
 				<ul class="tavc-pro-feature-list">
-					<li><span class="dashicons dashicons-yes-alt"></span> <?php esc_html_e( 'llms-full.txt generation', 'tbsh-ai-visibility-control' ); ?></li>
 					<li><span class="dashicons dashicons-yes-alt"></span> <?php esc_html_e( 'Full markdown page export', 'tbsh-ai-visibility-control' ); ?></li>
 					<li><span class="dashicons dashicons-yes-alt"></span> <?php esc_html_e( 'Real-time AI crawl firewall', 'tbsh-ai-visibility-control' ); ?></li>
 					<li><span class="dashicons dashicons-yes-alt"></span> <?php esc_html_e( 'Bot rate limiting', 'tbsh-ai-visibility-control' ); ?></li>
-					<li><span class="dashicons dashicons-yes-alt"></span> <?php esc_html_e( 'AI traffic trends & charts', 'tbsh-ai-visibility-control' ); ?></li>
-					<li><span class="dashicons dashicons-yes-alt"></span> <?php esc_html_e( 'WooCommerce AI attribution', 'tbsh-ai-visibility-control' ); ?></li>
 					<li><span class="dashicons dashicons-yes-alt"></span> <?php esc_html_e( 'Advanced entity graph generation', 'tbsh-ai-visibility-control' ); ?></li>
 				</ul>
 				
