@@ -37,6 +37,20 @@ class TAVC_Admin {
 	const SCREEN_ID = 'toplevel_page_tbsh-ai-visibility-control';
 
 	/**
+	 * Rows read per query when exporting a log to CSV.
+	 *
+	 * @since    1.4.0
+	 */
+	const CSV_BATCH_SIZE = 2000;
+
+	/**
+	 * Tabs that complete a "Get started" step when the user opens them.
+	 *
+	 * @since    1.4.0
+	 */
+	const GET_STARTED_TABS = array( 'bots', 'llmstxt', 'referrals' );
+
+	/**
 	 * The ID of this plugin.
 	 *
 	 * @since    1.0.0
@@ -92,6 +106,7 @@ class TAVC_Admin {
 			array(
 				'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
 				'healthNonce' => wp_create_nonce( 'tavc_health_check' ),
+				'tabs'        => $this->get_allowed_settings_tabs(),
 				'i18n'        => array(
 					'healthDone'   => __( 'Health check complete.', 'tbsh-ai-visibility-control' ),
 					'healthError'  => __( 'The health check could not be completed. Reload the page to try again.', 'tbsh-ai-visibility-control' ),
@@ -100,9 +115,6 @@ class TAVC_Admin {
 					/* translators: 1: number of blocked crawlers, 2: number of crawlers in the group. */
 					'groupCount'   => __( '%1$s of %2$s blocked', 'tbsh-ai-visibility-control' ),
 					'unsaved'      => __( 'Unsaved changes', 'tbsh-ai-visibility-control' ),
-					'stepDone'     => __( 'Done:', 'tbsh-ai-visibility-control' ),
-					/* translators: 1: completed steps, 2: total steps. */
-					'stepsDone'    => __( '%1$s of %2$s done', 'tbsh-ai-visibility-control' ),
 					'confirmOther' => __( 'You have unsaved changes in another section of this page. They will be lost if you save this section now. Continue?', 'tbsh-ai-visibility-control' ),
 				),
 			)
@@ -136,6 +148,31 @@ class TAVC_Admin {
 	 */
 	public static function get_page_url( $args = array() ) {
 		return add_query_arg( array_merge( array( 'page' => self::PAGE_SLUG ), $args ), admin_url( 'admin.php' ) );
+	}
+
+	/**
+	 * Link that runs one of the tools in handle_tool_actions(), with a nonce for that tool only.
+	 *
+	 * @since    1.4.0
+	 * @param    string    $tool    Tool key.
+	 * @return   string             Unescaped URL.
+	 */
+	public static function get_tool_url( $tool ) {
+		$tool = sanitize_key( $tool );
+
+		return wp_nonce_url( admin_url( 'admin-post.php?action=tavc_tool_action&tool=' . $tool ), 'tavc_tool_' . $tool );
+	}
+
+	/**
+	 * Remove the one-time tool message from the address bar after it is shown.
+	 *
+	 * @since    1.4.0
+	 * @param    string[]    $args    Query arguments WordPress removes.
+	 * @return   string[]
+	 */
+	public function add_removable_query_args( $args ) {
+		$args[] = 'tavc_msg';
+		return $args;
 	}
 
 	/**
@@ -174,7 +211,30 @@ class TAVC_Admin {
 	 */
 	public function display_plugin_admin_page() {
 		$tavc_active_tab = $this->get_active_settings_tab();
+
+		// Opening a tab completes its "Get started" step for this user.
+		if ( in_array( $tavc_active_tab, self::GET_STARTED_TABS, true ) ) {
+			$progress = self::get_get_started_progress();
+			if ( empty( $progress[ $tavc_active_tab ] ) ) {
+				$progress[ $tavc_active_tab ] = 1;
+				update_user_meta( get_current_user_id(), 'tavc_get_started', $progress );
+			}
+		}
+
 		require_once plugin_dir_path( __FILE__ ) . 'partials/tavc-admin-display.php';
+	}
+
+	/**
+	 * The current user's "Get started" progress, stored in user meta so it is
+	 * the same in every browser.
+	 *
+	 * @since    1.4.0
+	 * @return   array    Tab slug => 1 for opened tabs, plus 'hidden' => 1 when dismissed.
+	 */
+	public static function get_get_started_progress() {
+		$progress = get_user_meta( get_current_user_id(), 'tavc_get_started', true );
+
+		return is_array( $progress ) ? array_map( 'absint', $progress ) : array();
 	}
 
 	/**
@@ -321,29 +381,37 @@ class TAVC_Admin {
 	 * @since    1.0.0
 	 */
 	public function handle_tool_actions() {
-		// Nonce check
-		check_admin_referer( 'tavc_tool_nonce', '_wpnonce' );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- verified below with a nonce for this tool.
+		$tool = isset( $_GET['tool'] ) ? sanitize_key( wp_unslash( $_GET['tool'] ) ) : '';
+
+		// Each tool has its own nonce, so a link for one tool cannot run another.
+		check_admin_referer( 'tavc_tool_' . $tool, '_wpnonce' );
 
 		// Capability check
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'tbsh-ai-visibility-control' ) );
 		}
 
-		$tool   = isset( $_GET['tool'] ) ? sanitize_key( $_GET['tool'] ) : '';
-		$tab    = 'tools';
-		$msg    = '';
+		$tab = 'tools';
+		$msg = '';
 
 		switch ( $tool ) {
+			case 'hide_get_started':
+				$progress           = self::get_get_started_progress();
+				$progress['hidden'] = 1;
+				update_user_meta( get_current_user_id(), 'tavc_get_started', $progress );
+
+				$tab = 'overview';
+				break;
+
 			case 'rebuild_cache':
 				$llms_txt = new TAVC_LLMS_Txt();
 				$llms_txt->register_rewrite_rule();
 				flush_rewrite_rules();
-				$llms_txt->clear_llms_txt_cache();
+				TAVC_LLMS_Txt::clear_cache();
 
-				// Generate immediately to prime the cache (llms-full.txt is rebuilt on its next request)
-				$content = $llms_txt->generate_llms_txt();
-				set_transient( TAVC_LLMS_Txt::CACHE_KEY, $content, WEEK_IN_SECONDS );
-				update_option( 'tavc_llms_txt_last_rebuild', current_time( 'timestamp' ), 'no' );
+				// Build llms.txt now (llms-full.txt is rebuilt on its next request).
+				$llms_txt->get_output( 'index' );
 
 				// Delete health checks transients so they rebuild
 				delete_transient( 'tavc_health_llms_txt' );
@@ -421,16 +489,21 @@ class TAVC_Admin {
 			__( 'Detected Via', 'tbsh-ai-visibility-control' )
 		) );
 
-		// Data rows
-		$logs = TAVC_DB::get_all_referrals_for_csv();
-		foreach ( $logs as $log ) {
-			fputcsv( $output, array(
-				$log->timestamp,
-				self::csv_safe( $log->referrer ),
-				self::csv_safe( $log->target_url ),
-				TAVC_AI_Sources::get_method_label( isset( $log->method ) ? $log->method : '' )
-			) );
-		}
+		// Data rows, newest first, read in batches so large logs never have to fit in memory.
+		$before_id = 0;
+		do {
+			$logs = TAVC_DB::get_referrals_csv_batch( $before_id, self::CSV_BATCH_SIZE );
+			foreach ( $logs as $log ) {
+				fputcsv( $output, array(
+					$log->timestamp,
+					self::csv_safe( $log->referrer ),
+					self::csv_safe( $log->target_url ),
+					TAVC_AI_Sources::get_method_label( isset( $log->method ) ? $log->method : '' )
+				) );
+				$before_id = (int) $log->id;
+			}
+			flush();
+		} while ( count( $logs ) === self::CSV_BATCH_SIZE );
 
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 		fclose( $output );
@@ -464,20 +537,26 @@ class TAVC_Admin {
 			)
 		);
 
-		foreach ( TAVC_DB::get_all_crawler_hits_for_csv() as $row ) {
-			fputcsv(
-				$output,
-				array(
-					$row->hit_date,
-					isset( $definitions[ $row->bot ] ) ? $definitions[ $row->bot ]['name'] : $row->bot,
-					self::csv_safe( $row->url_path ),
-					intval( $row->hits ),
-					intval( $row->blocked ),
-					intval( $row->limited ),
-					$row->last_seen,
-				)
-			);
-		}
+		$before_id = 0;
+		do {
+			$rows = TAVC_DB::get_crawler_hits_csv_batch( $before_id, self::CSV_BATCH_SIZE );
+			foreach ( $rows as $row ) {
+				fputcsv(
+					$output,
+					array(
+						$row->hit_date,
+						isset( $definitions[ $row->bot ] ) ? $definitions[ $row->bot ]['name'] : $row->bot,
+						self::csv_safe( TAVC_DB::get_path_label( $row->url_path ) ),
+						intval( $row->hits ),
+						intval( $row->blocked ),
+						intval( $row->limited ),
+						$row->last_seen,
+					)
+				);
+				$before_id = (int) $row->id;
+			}
+			flush();
+		} while ( count( $rows ) === self::CSV_BATCH_SIZE );
 
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 		fclose( $output );
@@ -567,8 +646,9 @@ class TAVC_Admin {
 			);
 		}
 
-		// 2. llms.txt Reachability
-		$llms_check = get_transient( 'tavc_health_llms_txt' );
+		// 2. llms.txt Reachability (not checked when the site chose not to publish it)
+		$llms_settings = TAVC_Settings::get_llms_settings();
+		$llms_check    = empty( $llms_settings['enabled'] ) ? 'off' : get_transient( 'tavc_health_llms_txt' );
 		if ( false === $llms_check ) {
 			$response = $this->probe_public_endpoint( home_url( '/llms.txt' ) );
 
@@ -580,7 +660,13 @@ class TAVC_Admin {
 			set_transient( 'tavc_health_llms_txt', $llms_check, HOUR_IN_SECONDS );
 		}
 
-		if ( $llms_check === 'pass' ) {
+		if ( 'off' === $llms_check ) {
+			$status['llmstxt'] = array(
+				'status' => 'pass',
+				'title'  => __( 'llms.txt Turned Off', 'tbsh-ai-visibility-control' ),
+				'desc'   => __( 'You chose not to publish llms.txt, so /llms.txt returns "not found".', 'tbsh-ai-visibility-control' ),
+			);
+		} elseif ( $llms_check === 'pass' ) {
 			$status['llmstxt'] = array(
 				'status' => 'pass',
 				'title'  => __( 'llms.txt Endpoint Reachable', 'tbsh-ai-visibility-control' ),
@@ -621,14 +707,37 @@ class TAVC_Admin {
 			if ( false === $robots_check ) {
 				$response     = $this->probe_public_endpoint( home_url( '/robots.txt' ) );
 				$robots_check = $this->response_looks_like_plain_text( $response ) ? 'pass' : 'warning';
+
+				// Reachable is not enough: an SEO plugin, security plugin or CDN can replace
+				// the file. Check that the first rule this plugin adds is really there.
+				if ( 'pass' === $robots_check ) {
+					$bot_manager = new TAVC_Bot_Manager();
+					foreach ( explode( "\n", $bot_manager->build_rules() ) as $line ) {
+						$line = trim( $line );
+						if ( '' !== $line && 0 !== strpos( $line, '#' ) ) {
+							if ( false === stripos( (string) wp_remote_retrieve_body( $response ), $line ) ) {
+								$robots_check = 'missing';
+							}
+							break;
+						}
+					}
+				}
+
 				set_transient( 'tavc_health_robots', $robots_check, HOUR_IN_SECONDS );
 			}
 
-			if ( 'pass' === $robots_check ) {
+			if ( 'missing' === $robots_check ) {
+				$status['robots'] = array(
+					'status'         => 'warning',
+					'title'          => __( 'robots.txt Does Not Include the AI Crawler Rules', 'tbsh-ai-visibility-control' ),
+					'desc'           => __( 'Your robots.txt file loads, but the rules from this plugin are not in it. Another plugin, your host or a CDN probably serves its own version of the file.', 'tbsh-ai-visibility-control' ),
+					'recommendation' => __( 'Check SEO, security and caching plugins (and your CDN) for a robots.txt editor, and add the rules shown under AI Crawlers > Advanced > Rules Added to robots.txt there.', 'tbsh-ai-visibility-control' ),
+				);
+			} elseif ( 'pass' === $robots_check ) {
 				$status['robots'] = array(
 					'status' => 'pass',
 					'title'  => __( 'robots.txt Reachable', 'tbsh-ai-visibility-control' ),
-					'desc'   => __( 'The robots.txt file is loaded correctly by client crawlers.', 'tbsh-ai-visibility-control' ),
+					'desc'   => __( 'The robots.txt file loads and includes the rules from this plugin.', 'tbsh-ai-visibility-control' ),
 				);
 			} else {
 				$status['robots'] = array(
@@ -738,7 +847,8 @@ class TAVC_Admin {
 			return true;
 		}
 
-		if ( false === get_transient( 'tavc_health_llms_txt' ) ) {
+		$llms_settings = TAVC_Settings::get_llms_settings();
+		if ( ! empty( $llms_settings['enabled'] ) && false === get_transient( 'tavc_health_llms_txt' ) ) {
 			return false;
 		}
 
@@ -791,9 +901,15 @@ class TAVC_Admin {
 			return;
 		}
 
-		$status = $this->get_health_status();
+		$status   = $this->get_health_status();
+		$settings = TAVC_Settings::get_llms_settings();
 
-		if ( isset( $status['llmstxt']['status'] ) && 'pass' === $status['llmstxt']['status'] ) {
+		if ( empty( $settings['enabled'] ) ) {
+			printf(
+				'<span class="tavc-status-tag status-neutral">%s</span>',
+				esc_html__( 'Turned off', 'tbsh-ai-visibility-control' )
+			);
+		} elseif ( isset( $status['llmstxt']['status'] ) && 'pass' === $status['llmstxt']['status'] ) {
 			printf(
 				'<span class="tavc-status-tag status-green"><span class="tavc-pulse" aria-hidden="true"></span> %s</span>',
 				esc_html__( 'Live', 'tbsh-ai-visibility-control' )
@@ -918,7 +1034,7 @@ class TAVC_Admin {
 				);
 			case 'llmstxt':
 				return array(
-					'url'   => wp_nonce_url( admin_url( 'admin-post.php?action=tavc_tool_action&tool=rebuild_cache' ), 'tavc_tool_nonce' ),
+					'url'   => self::get_tool_url( 'rebuild_cache' ),
 					'label' => __( 'Rebuild llms.txt', 'tbsh-ai-visibility-control' ),
 				);
 			case 'visibility':
@@ -1100,7 +1216,12 @@ class TAVC_Admin {
 		$parts = array();
 		foreach ( array_slice( $fetches, 0, 4, true ) as $slug => $hits ) {
 			$name    = isset( $definitions[ $slug ] ) ? $definitions[ $slug ]['name'] : $slug;
-			$parts[] = $name . ' ' . number_format_i18n( $hits );
+			$parts[] = sprintf(
+				/* translators: 1: crawler name such as GPTBot, 2: number of requests. */
+				__( '%1$s (%2$s)', 'tbsh-ai-visibility-control' ),
+				$name,
+				number_format_i18n( $hits )
+			);
 		}
 
 		return sprintf(
@@ -1130,13 +1251,13 @@ class TAVC_Admin {
 	 * Range selected on the AI Traffic tab.
 	 *
 	 * @since    1.3.0
-	 * @return   string    '7', '30', '90' or 'all' (default, matches the pre-1.3.0 report).
+	 * @return   string    '7', '30' (default since 1.4.0), '90' or 'all'.
 	 */
 	public function get_active_referral_range() {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$range = isset( $_GET['tavc_range'] ) ? sanitize_key( wp_unslash( $_GET['tavc_range'] ) ) : 'all';
+		$range = isset( $_GET['tavc_range'] ) ? sanitize_key( wp_unslash( $_GET['tavc_range'] ) ) : '30';
 
-		return array_key_exists( $range, $this->get_referral_ranges() ) ? $range : 'all';
+		return array_key_exists( $range, $this->get_referral_ranges() ) ? $range : '30';
 	}
 
 	/**
@@ -1207,9 +1328,8 @@ class TAVC_Admin {
 			delete_post_meta( $post_id, TAVC_LLMS_Txt::EXCLUDE_META_KEY );
 		}
 
-		// The flag can change after the core save_post cache clear has already run.
-		delete_transient( TAVC_LLMS_Txt::CACHE_KEY );
-		delete_transient( TAVC_LLMS_Txt::FULL_CACHE_KEY );
+		// The flag is saved after the status-change cache clear has already run.
+		TAVC_LLMS_Txt::clear_cache();
 	}
 
 	/**
@@ -1223,7 +1343,7 @@ class TAVC_Admin {
 		}
 
 		$content  = '<p class="privacy-policy-tutorial">' . esc_html__( 'AI Visibility Control does not store personal data. Suggested text:', 'tbsh-ai-visibility-control' ) . '</p>';
-		$content .= '<p>' . esc_html__( 'When you arrive on this website from an AI assistant such as ChatGPT, Claude or Perplexity, we record the time of the visit, the name of the AI assistant and the page you visited. We do not store your IP address: it is used in hashed form for up to five minutes to avoid counting the same visit twice, and is then discarded. No cookies are set for this purpose.', 'tbsh-ai-visibility-control' ) . '</p>';
+		$content .= '<p>' . esc_html__( 'When you arrive on this website from an AI assistant such as ChatGPT, Claude or Perplexity, we record the time of the visit, the name of the AI assistant and the address of the page you visited, without search terms or other query parameters. We do not store your IP address: a one-way hash of it is kept for at most one day to avoid counting the same visit twice and to limit abuse, and is then deleted. No cookies are set for this purpose.', 'tbsh-ai-visibility-control' ) . '</p>';
 
 		if ( TAVC_WooCommerce::is_available() ) {
 			$content .= '<p>' . esc_html__( 'If you place an order after arriving from an AI assistant, the name of that assistant is saved with your order.', 'tbsh-ai-visibility-control' ) . '</p>';

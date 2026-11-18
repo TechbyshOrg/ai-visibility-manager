@@ -77,6 +77,7 @@ class TAVC_Activator {
 
 		$referrals_table = $wpdb->prefix . 'tavc_referrals';
 		$crawler_table   = $wpdb->prefix . 'tavc_crawler_hits';
+		$counter_table   = $wpdb->prefix . 'tavc_counters';
 		$charset_collate = $wpdb->get_charset_collate();
 
 		$referrals_sql = "CREATE TABLE $referrals_table (
@@ -105,18 +106,70 @@ class TAVC_Activator {
 			KEY hit_date (hit_date)
 		) $charset_collate;";
 
+		// Short-lived request counters (rate limit, beacon limits, referral debounce).
+		// One row per counter, overwritten in place; expired rows are pruned daily.
+		$counter_sql = "CREATE TABLE $counter_table (
+			bucket char(32) NOT NULL,
+			window_start int(10) unsigned DEFAULT 0 NOT NULL,
+			expires int(10) unsigned DEFAULT 0 NOT NULL,
+			hits int(10) unsigned DEFAULT 0 NOT NULL,
+			PRIMARY KEY  (bucket),
+			KEY expires (expires)
+		) $charset_collate;";
+
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-		dbDelta( array( $referrals_sql, $crawler_sql ) );
+		dbDelta( array( $referrals_sql, $crawler_sql, $counter_sql ) );
+
+		// Record the layout only when every table really exists, so a failed
+		// dbDelta() keeps the per-request schema checks in TAVC_DB.
+		foreach ( array( $referrals_table, $crawler_table, $counter_table ) as $table_name ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table_name ) ) ) !== $table_name ) {
+				delete_option( 'tavc_db_version' );
+				return;
+			}
+		}
+
+		update_option( 'tavc_db_version', TAVC_DB::SCHEMA_VERSION, true );
 	}
 
 	/**
 	 * Set default options on activation.
 	 *
+	 * Every option the front end reads on each request is created (autoloaded),
+	 * so a missing option never costs an extra query per page view.
+	 *
 	 * @since    1.0.0
+	 * @since    1.4.0 Also creates the llms.txt, tracking and enforcement options.
 	 */
 	private static function set_default_options() {
-		if ( false === get_option( 'tavc_blocked_bots' ) ) {
+		// tavc_blocked_bots has existed since 1.0.0, so its absence means a new install.
+		$is_new_install = false === get_option( 'tavc_blocked_bots' );
+
+		if ( $is_new_install ) {
 			update_option( 'tavc_blocked_bots', TAVC_Bots::get_default_settings() );
+		}
+
+		$llms     = TAVC_Settings::get_llms_defaults();
+		$tracking = TAVC_Settings::get_tracking_defaults();
+
+		if ( $is_new_install ) {
+			// New sites: keep referral logs for a year.
+			$tracking['referral_retention_days'] = 365;
+		} else {
+			// Upgrades keep the earlier behaviour: every post listed, logs kept forever.
+			$llms['max_per_type'] = 0;
+		}
+
+		$defaults = array(
+			'tavc_llms_txt_settings'    => $llms,
+			'tavc_tracking_settings'    => $tracking,
+			'tavc_enforcement_settings' => TAVC_Settings::get_enforcement_defaults(),
+		);
+
+		// add_option() never overwrites a saved value.
+		foreach ( $defaults as $option => $value ) {
+			add_option( $option, $value, '', true );
 		}
 	}
 }

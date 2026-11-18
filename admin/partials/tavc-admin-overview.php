@@ -44,11 +44,13 @@ $tavc_bot_count     = count( $tavc_blocked );
 // "Get started" steps.
 $tavc_custom_rules     = TAVC_Settings::get_custom_robots_rules();
 $tavc_signals          = TAVC_Settings::get_content_signals();
-$tavc_step_crawlers    = $tavc_blocked_count > 0 || ! empty( $tavc_custom_rules ) || '' !== implode( '', $tavc_signals );
-$tavc_step_llms        = false !== get_option( 'tavc_llms_txt_settings', false );
-$tavc_step_traffic     = $tavc_total_visits > 0;
+$tavc_progress         = TAVC_Admin::get_get_started_progress();
+// A step is done once the user opened its tab (stored per user), or when the site already shows it is set up.
+$tavc_step_crawlers    = ! empty( $tavc_progress['bots'] ) || $tavc_blocked_count > 0 || ! empty( $tavc_custom_rules ) || '' !== implode( '', $tavc_signals );
+$tavc_step_llms        = ! empty( $tavc_progress['llmstxt'] );
+$tavc_step_traffic     = ! empty( $tavc_progress['referrals'] ) || $tavc_total_visits > 0;
 $tavc_steps_done       = (int) $tavc_step_crawlers + (int) $tavc_step_llms + (int) $tavc_step_traffic;
-$tavc_show_get_started = $tavc_steps_done < 3;
+$tavc_show_get_started = $tavc_steps_done < 3 && empty( $tavc_progress['hidden'] );
 
 $tavc_steps = array(
 	array(
@@ -94,10 +96,10 @@ $tavc_discoverability_stats = $this->get_discoverability_stats();
 					?>
 				</span>
 			</h2>
-			<button type="button" class="button-link tavc-get-started-hide" data-tavc-hide-get-started hidden>
+			<a href="<?php echo esc_url( TAVC_Admin::get_tool_url( 'hide_get_started' ) ); ?>" class="tavc-get-started-hide">
 				<?php esc_html_e( 'Hide', 'tbsh-ai-visibility-control' ); ?>
 				<span class="screen-reader-text"><?php esc_html_e( 'the Get Started steps', 'tbsh-ai-visibility-control' ); ?></span>
-			</button>
+			</a>
 		</div>
 
 		<ol class="tavc-steps">
@@ -111,7 +113,7 @@ $tavc_discoverability_stats = $this->get_discoverability_stats();
 						</span>
 						<span class="tavc-step-desc"><?php echo esc_html( $tavc_step['desc'] ); ?></span>
 					</div>
-					<a href="#<?php echo esc_attr( $tavc_step['tab'] ); ?>" class="button<?php echo $tavc_step['done'] ? '' : ' button-primary'; ?> tavc-step-action" data-tavc-goto="<?php echo esc_attr( $tavc_step['tab'] ); ?>">
+					<a href="<?php echo esc_url( TAVC_Admin::get_page_url( array( 'tab' => $tavc_step['tab'] ) ) ); ?>" class="button<?php echo $tavc_step['done'] ? '' : ' button-primary'; ?> tavc-step-action">
 						<?php echo esc_html( $tavc_step['action'] ); ?>
 					</a>
 				</li>

@@ -1,166 +1,58 @@
 document.addEventListener('DOMContentLoaded', function() {
-	const tabs = document.querySelectorAll('.tavc-tab-nav');
-	const contents = document.querySelectorAll('.tavc-tab-content');
-	const allowedTabs = ['overview', 'bots', 'llmstxt', 'referrals', 'tools', 'status'];
-	const i18n = (window.tavcAdmin && window.tavcAdmin.i18n) || {};
+	const settings = window.tavcAdmin || {};
+	const i18n = settings.i18n || {};
+	const allowedTabs = Array.isArray(settings.tabs) ? settings.tabs : ['overview', 'bots', 'llmstxt', 'referrals', 'tools', 'status'];
+	const activeNav = document.querySelector('.tavc-tab-nav.active');
+	const activeTab = activeNav ? activeNav.getAttribute('data-tab') : '';
 
-	// Browser storage can be unavailable (private mode, blocked site data); the page must work without it.
-	function storageGet(key) {
-		try {
-			return window.localStorage.getItem(key) || '';
-		} catch (e) {
-			return '';
-		}
-	}
-
-	function storageSet(key, value) {
-		try {
-			window.localStorage.setItem(key, value);
-		} catch (e) {
-			// Not critical: only remembers the last open tab.
-		}
-	}
-
-	function isAllowedTab(tab) {
-		return allowedTabs.indexOf(tab) !== -1;
-	}
-
-	// Overview "Get started" checklist.
-	const getStarted = document.getElementById('tavc-get-started');
-
-	function markStepDone(key) {
-		if (!getStarted) {
-			return;
-		}
-		const step = getStarted.querySelector('[data-tavc-step="' + key + '"]');
-		if (!step || step.classList.contains('is-done')) {
-			return;
-		}
-		step.classList.add('is-done');
-		const mark = step.querySelector('.tavc-step-mark');
-		const state = step.querySelector('[data-tavc-step-state]');
-		const action = step.querySelector('.tavc-step-action');
-		if (mark) {
-			mark.textContent = '✓';
-		}
-		if (state) {
-			state.textContent = (i18n.stepDone || 'Done:') + ' ';
-		}
-		if (action) {
-			action.classList.remove('button-primary');
-		}
-		const total = getStarted.querySelectorAll('[data-tavc-step]').length;
-		const done = getStarted.querySelectorAll('[data-tavc-step].is-done').length;
-		const progress = getStarted.querySelector('.tavc-get-started-progress');
-		if (progress) {
-			progress.textContent = (i18n.stepsDone || '%1$s of %2$s done').replace('%1$s', done).replace('%2$s', total);
-		}
-	}
-
-	if (getStarted) {
-		if (storageGet('tavc_hide_get_started') === '1') {
-			getStarted.hidden = true;
-		}
-		if (storageGet('tavc_seen_llmstxt') === '1') {
-			markStepDone('llms');
-		}
-		const hideButton = getStarted.querySelector('[data-tavc-hide-get-started]');
-		if (hideButton) {
-			// Only offered when JavaScript can remember the choice.
-			hideButton.hidden = false;
-			hideButton.addEventListener('click', function() {
-				storageSet('tavc_hide_get_started', '1');
-				getStarted.hidden = true;
-				const overviewTab = document.querySelector('.tavc-tab-nav[data-tab="overview"]');
-				if (overviewTab) {
-					overviewTab.focus();
-				}
-			});
-		}
-	}
-
-	function activateTab(target, persistUrl) {
-		if (!isAllowedTab(target)) {
-			return;
-		}
-
-		tabs.forEach(function(t) {
-			t.classList.remove('active');
-			t.removeAttribute('aria-current');
-		});
-		contents.forEach(function(c) {
-			c.classList.remove('active');
-		});
-
-		const tabEl = document.querySelector('.tavc-tab-nav[data-tab="' + target + '"]');
-		const targetContent = document.getElementById('tavc-tab-' + target);
-
-		if (tabEl) {
-			tabEl.classList.add('active');
-			tabEl.setAttribute('aria-current', 'page');
-		}
-		if (targetContent) {
-			targetContent.classList.add('active');
-		}
-
-		storageSet('tavc_active_tab', target);
-
-		if (target === 'llmstxt') {
-			storageSet('tavc_seen_llmstxt', '1');
-			markStepDone('llms');
-		}
-
-		if (persistUrl) {
-			try {
-				const url = new URL(window.location.href);
-				url.hash = target;
-				history.replaceState(null, '', url);
-			} catch (e) {
-				history.replaceState(null, null, '#' + target);
-			}
-		}
-	}
-
-	tabs.forEach(function(tab) {
-		tab.addEventListener('click', function(e) {
-			e.preventDefault();
-			activateTab(this.getAttribute('data-tab'), true);
-		});
-	});
-
-	// In-page links to another tab (e.g. "Get started" steps): switch tab, then move focus to its first heading.
-	document.querySelectorAll('[data-tavc-goto]').forEach(function(link) {
-		link.addEventListener('click', function(e) {
-			const target = this.getAttribute('data-tavc-goto');
-			if (!isAllowedTab(target)) {
-				return;
-			}
-			e.preventDefault();
-			activateTab(target, true);
-			const heading = document.querySelector('#tavc-tab-' + target + ' h2');
-			if (heading) {
-				heading.setAttribute('tabindex', '-1');
-				heading.focus();
-			}
-		});
-	});
-
+	// Tabs are server-rendered links (?tab=…). Links and bookmarks from earlier
+	// versions used "#bots" etc.: send them to the matching tab.
 	const hashTab = window.location.hash ? window.location.hash.substring(1) : '';
-	const queryTab = new URLSearchParams(window.location.search).get('tab') || '';
-	const storedTab = storageGet('tavc_active_tab');
-
-	let activeTab = '';
-	if (isAllowedTab(hashTab)) {
-		activeTab = hashTab;
-	} else if (isAllowedTab(queryTab)) {
-		activeTab = queryTab;
-	} else if (isAllowedTab(storedTab)) {
-		activeTab = storedTab;
+	if (hashTab && hashTab !== activeTab && allowedTabs.indexOf(hashTab) !== -1) {
+		try {
+			const url = new URL(window.location.href);
+			url.searchParams.set('tab', hashTab);
+			url.searchParams.delete('tavc_msg');
+			url.searchParams.delete('settings-updated');
+			url.hash = '';
+			window.location.replace(url.toString());
+			return;
+		} catch (e) {
+			// Old browsers: stay on the current tab.
+		}
 	}
 
-	if (activeTab) {
-		activateTab(activeTab, true);
+	// A link to a section inside a closed <details> (e.g. #tavc-robots-preview): open it first.
+	if (hashTab && allowedTabs.indexOf(hashTab) === -1) {
+		const target = document.getElementById(hashTab);
+		if (target) {
+			let parent = target.parentElement;
+			while (parent) {
+				if (parent.tagName === 'DETAILS') {
+					parent.open = true;
+				}
+				parent = parent.parentElement;
+			}
+			target.scrollIntoView();
+			if (!target.hasAttribute('tabindex')) {
+				target.setAttribute('tabindex', '-1');
+			}
+			target.focus({ preventScroll: true });
+		}
 	}
+
+	// One-time notices (?tavc_msg=…, ?settings-updated=…) must not come back when a form
+	// on this page is saved: WordPress returns to the URL in _wp_http_referer.
+	document.querySelectorAll('input[name="_wp_http_referer"]').forEach(function(input) {
+		try {
+			const url = new URL(input.value, window.location.origin);
+			url.searchParams.delete('tavc_msg');
+			url.searchParams.delete('settings-updated');
+			input.value = url.pathname + url.search;
+		} catch (e) {
+			// Keep the original value.
+		}
+	});
 
 	// Health checks that were not cached are loaded after the page appears.
 	const pendingHealth = document.querySelectorAll('[data-tavc-health-pending]');

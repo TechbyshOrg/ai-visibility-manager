@@ -164,6 +164,7 @@ class TAVC {
 		// Health checks loaded in the background on the settings page (admins only).
 		add_action( 'wp_ajax_tavc_health_check', array( $this->admin, 'ajax_health_check' ) );
 		add_action( 'admin_notices', array( $this->admin, 'display_admin_notices' ) );
+		add_filter( 'removable_query_args', array( $this->admin, 'add_removable_query_args' ) );
 
 		// Plugin action links settings shortcut
 		$plugin_basename = plugin_basename( plugin_dir_path( dirname( __FILE__ ) ) . 'tbsh-ai-visibility-control.php' );
@@ -178,6 +179,8 @@ class TAVC {
 
 		// Tools > Site Health integration.
 		add_filter( 'site_status_tests', array( $this->site_health, 'add_tests' ) );
+		add_action( 'wp_ajax_health-check-tavc-llms-txt', array( $this->site_health, 'ajax_test_llms_txt' ) );
+		add_action( 'wp_ajax_health-check-tavc-robots-txt', array( $this->site_health, 'ajax_test_robots_txt' ) );
 		add_filter( 'debug_information', array( $this->site_health, 'add_debug_information' ) );
 	}
 
@@ -201,9 +204,9 @@ class TAVC {
 		add_action( 'wp_head', array( $this->llms_txt, 'print_markdown_alternate_link' ), 5 );
 
 		// Clear cache on content updates
-		add_action( 'save_post', array( $this->llms_txt, 'clear_llms_txt_cache' ) );
-		add_action( 'deleted_post', array( $this->llms_txt, 'clear_llms_txt_cache' ) );
-		add_action( 'trashed_post', array( $this->llms_txt, 'clear_llms_txt_cache' ) );
+		// Only changes to published posts of the selected types (trashing included) mark the files stale.
+		add_action( 'transition_post_status', array( $this->llms_txt, 'on_post_status_change' ), 10, 3 );
+		add_action( 'deleted_post', array( $this->llms_txt, 'on_post_deleted' ), 10, 2 );
 
 		// Clear cache when the llms.txt settings change
 		add_action( 'add_option_tavc_llms_txt_settings', array( $this->llms_txt, 'clear_cache_on_settings_change' ) );
@@ -253,8 +256,18 @@ class TAVC {
 	 * @since    1.1.0
 	 */
 	public function maybe_upgrade() {
-		if ( get_option( 'tavc_plugin_version', '' ) === $this->version ) {
+		if ( get_option( 'tavc_plugin_version', '' ) === $this->version && TAVC_DB::schema_is_current() ) {
 			return;
+		}
+
+		// Only one request runs the upgrade; others carry on with the old schema
+		// (TAVC_DB falls back to its runtime checks until tavc_db_version is set).
+		$lock = 'tavc_upgrade_lock';
+		if ( ! add_option( $lock, time(), '', false ) ) {
+			if ( time() - (int) get_option( $lock, 0 ) < MINUTE_IN_SECONDS ) {
+				return;
+			}
+			update_option( $lock, time(), false );
 		}
 
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-tavc-activator.php';
@@ -269,8 +282,14 @@ class TAVC {
 		delete_transient( 'tavc_health_robots' );
 
 		// The llms.txt output format improved; rebuild it on the next request.
-		delete_transient( TAVC_LLMS_Txt::CACHE_KEY );
-		delete_transient( TAVC_LLMS_Txt::FULL_CACHE_KEY );
+		TAVC_LLMS_Txt::clear_cache();
+
+		// Storage used before 1.4.0, replaced by the tavc_counters table and the llms.txt store.
+		foreach ( array( TAVC_LLMS_Txt::CACHE_KEY, TAVC_LLMS_Txt::FULL_CACHE_KEY, 'tavc_recent_referrals', 'tavc_beacon_rate', 'tavc_beacon_hourly' ) as $transient ) {
+			delete_transient( $transient );
+		}
+
+		delete_option( $lock );
 	}
 
 	/**

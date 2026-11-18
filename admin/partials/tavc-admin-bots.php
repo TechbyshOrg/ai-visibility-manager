@@ -84,6 +84,16 @@ foreach ( $tavc_crawler_summary as $tavc_activity ) {
 		<?php esc_html_e( 'Choose which AI crawlers may read your content. Your choices are published as rules in your site\'s robots.txt file when you save.', 'tbsh-ai-visibility-control' ); ?>
 	</p>
 
+	<?php
+	$tavc_llms_publish = TAVC_Settings::get_llms_settings();
+	if ( $tavc_llms_publish['enabled'] && count( $tavc_blocked_bots ) > 0 && ! in_array( 0, array_map( 'intval', $tavc_blocked_bots ), true ) ) :
+		?>
+		<p class="tavc-notice-inline tavc-notice-warning">
+			<?php esc_html_e( 'Every AI crawler is blocked, but your llms.txt file still publishes a list of your content. If you do not want that, turn off "Publish llms.txt" on the llms.txt tab.', 'tbsh-ai-visibility-control' ); ?>
+			<a href="<?php echo esc_url( TAVC_Admin::get_page_url( array( 'tab' => 'llmstxt' ) ) ); ?>"><?php esc_html_e( 'Open llms.txt settings', 'tbsh-ai-visibility-control' ); ?></a>
+		</p>
+	<?php endif; ?>
+
 	<form method="post" action="options.php" class="tavc-crawler-form">
 		<?php
 		settings_fields( 'tavc_bots_settings_group' );
@@ -234,14 +244,31 @@ foreach ( $tavc_crawler_summary as $tavc_activity ) {
 				<?php endforeach; ?>
 			</select>
 			<p class="tavc-field-help" id="tavc_rate_limit_help">
-				<?php esc_html_e( 'Requests above the limit get a "429 Too Many Requests" response asking the crawler to slow down; well-behaved crawlers retry later. Each AI training and search crawler is counted separately. User-requested fetchers such as ChatGPT-User are never limited, because a person is waiting for the answer.', 'tbsh-ai-visibility-control' ); ?>
+				<?php esc_html_e( 'Requests above the limit get a "429 Too Many Requests" response asking the crawler to slow down; well-behaved crawlers retry later. Each AI training and search crawler is counted separately for each network it connects from, so a fake crawler cannot use up the real crawler\x27s limit. User-requested fetchers such as ChatGPT-User are never limited, because a person is waiting for the answer.', 'tbsh-ai-visibility-control' ); ?>
 			</p>
 		</fieldset>
 
 		<?php if ( $tavc_page_cache_on ) : ?>
 			<p class="tavc-notice-inline tavc-notice-warning">
-				<?php esc_html_e( 'A page cache is active on this site. Pages served from the cache (or from a CDN) never reach WordPress, so those requests cannot be refused or counted. To block crawlers completely, also add a User-Agent rule in your cache plugin, CDN or web server.', 'tbsh-ai-visibility-control' ); ?>
+				<?php esc_html_e( 'A page cache is active on this site. Pages served from the cache (or from a CDN) never reach WordPress, so those requests cannot be refused or counted. To block crawlers completely, also add the web server rules below, or a User-Agent rule in your cache plugin or CDN.', 'tbsh-ai-visibility-control' ); ?>
 			</p>
+		<?php endif; ?>
+
+		<?php
+		$tavc_apache_rules = TAVC_Bot_Manager::get_server_rules( 'apache' );
+		$tavc_nginx_rules  = TAVC_Bot_Manager::get_server_rules( 'nginx' );
+		?>
+		<?php if ( '' !== $tavc_apache_rules ) : ?>
+			<details class="tavc-details"<?php echo $tavc_page_cache_on ? ' open' : ''; ?>>
+				<summary><?php esc_html_e( 'Web server rules for the blocked crawlers (optional)', 'tbsh-ai-visibility-control' ); ?></summary>
+				<p class="tavc-field-help">
+					<?php esc_html_e( 'These rules refuse the blocked crawlers in the web server itself, before WordPress or a page cache runs, so they also work for cached pages. The plugin never edits server files: copy the rules for your server, and update them when you change the crawlers above. Crawlers that are only a robots.txt name (Google-Extended, Applebot-Extended) are not included. Like every user-agent check, this cannot stop a crawler that pretends to be a normal browser.', 'tbsh-ai-visibility-control' ); ?>
+				</p>
+				<h4 class="tavc-field-sublabel" id="tavc-apache-rules-label"><?php esc_html_e( 'Apache (.htaccess, above the WordPress rules)', 'tbsh-ai-visibility-control' ); ?></h4>
+				<pre class="tavc-preview-box" role="region" tabindex="0" aria-labelledby="tavc-apache-rules-label"><?php echo esc_html( $tavc_apache_rules ); ?></pre>
+				<h4 class="tavc-field-sublabel" id="tavc-nginx-rules-label"><?php esc_html_e( 'nginx (inside the server block)', 'tbsh-ai-visibility-control' ); ?></h4>
+				<pre class="tavc-preview-box" role="region" tabindex="0" aria-labelledby="tavc-nginx-rules-label"><?php echo esc_html( $tavc_nginx_rules ); ?></pre>
+			</details>
 		<?php endif; ?>
 
 		<?php if ( $tavc_enforcement['enforce_blocks'] && $tavc_blocked_users ) : ?>
@@ -336,7 +363,7 @@ foreach ( $tavc_crawler_summary as $tavc_activity ) {
 					<tbody>
 						<?php foreach ( $tavc_crawler_paths as $tavc_path_row ) : ?>
 							<tr>
-								<td class="tavc-truncate" title="<?php echo esc_attr( $tavc_path_row->url_path ); ?>"><code><?php echo esc_html( $tavc_path_row->url_path ); ?></code></td>
+								<td class="tavc-truncate" title="<?php echo esc_attr( $tavc_path_row->url_path ); ?>"><code><?php echo esc_html( TAVC_DB::get_path_label( $tavc_path_row->url_path ) ); ?></code></td>
 								<td class="tavc-num"><?php echo esc_html( number_format_i18n( $tavc_path_row->hits ) ); ?></td>
 							</tr>
 						<?php endforeach; ?>
@@ -458,7 +485,7 @@ $tavc_advanced_open = '' !== $tavc_custom_rules_text || '' !== implode( '', $tav
 	<?php if ( '' === $tavc_robots_preview ) : ?>
 		<p class="tavc-muted-text"><?php esc_html_e( 'No rules are added at the moment. Block a crawler, add a custom rule or set a content signal to add rules.', 'tbsh-ai-visibility-control' ); ?></p>
 	<?php else : ?>
-		<div class="tavc-preview-box" tabindex="0" aria-label="<?php esc_attr_e( 'Rules added to robots.txt', 'tbsh-ai-visibility-control' ); ?>"><?php echo esc_html( $tavc_robots_preview ); ?></div>
+		<div class="tavc-preview-box" role="region" tabindex="0" aria-label="<?php esc_attr_e( 'Rules added to robots.txt', 'tbsh-ai-visibility-control' ); ?>"><?php echo esc_html( $tavc_robots_preview ); ?></div>
 	<?php endif; ?>
 </div>
 </details>

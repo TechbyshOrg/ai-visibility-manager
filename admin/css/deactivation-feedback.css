@@ -274,6 +274,13 @@ body.tavc-df-open {
 	margin: 2px 0 0;
 }
 
+.tavc-df-disclosure {
+	margin: 8px 0 0;
+	font-size: 12px;
+	line-height: 1.5;
+	color: var(--tavc-df-muted);
+}
+
 /* ------------------------------------------------------------------ */
 /* Footer.                                                             */
 /* ------------------------------------------------------------------ */

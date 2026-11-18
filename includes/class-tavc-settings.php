@@ -58,18 +58,23 @@ class TAVC_Settings {
 	*/
 
 	/**
-	 * Default llms.txt settings. These reproduce the pre-1.3.0 output.
+	 * Default llms.txt settings for new installs.
+	 *
+	 * Sites upgrading from 1.2.0 or earlier get max_per_type 0 (no limit) so their
+	 * file keeps listing everything it listed before (see TAVC_Activator).
 	 *
 	 * @since    1.3.0
+	 * @since    1.4.0 Added "enabled"; max_per_type defaults to 1000.
 	 * @return   array
 	 */
 	public static function get_llms_defaults() {
 		return array(
+			'enabled'          => 1,
 			'post_types'       => array( 'post', 'page' ),
 			'intro'            => '',
 			'include_excerpts' => 0,
 			'group_by_type'    => 0,
-			'max_per_type'     => 0,
+			'max_per_type'     => 1000,
 			'exclude_noindex'  => 1,
 			'full_enabled'     => 0,
 			'full_max_items'   => 100,
@@ -94,6 +99,7 @@ class TAVC_Settings {
 			$settings['post_types'] = $defaults['post_types'];
 		}
 
+		$settings['enabled']          = self::to_flag( $settings['enabled'] );
 		$settings['intro']            = (string) $settings['intro'];
 		$settings['include_excerpts'] = self::to_flag( $settings['include_excerpts'] );
 		$settings['group_by_type']    = self::to_flag( $settings['group_by_type'] );
@@ -156,6 +162,7 @@ class TAVC_Settings {
 		}
 
 		return array(
+			'enabled'          => self::to_flag( isset( $input['enabled'] ) ? $input['enabled'] : 0 ),
 			'post_types'       => $post_types,
 			'intro'            => $intro,
 			'include_excerpts' => self::to_flag( isset( $input['include_excerpts'] ) ? $input['include_excerpts'] : 0 ),

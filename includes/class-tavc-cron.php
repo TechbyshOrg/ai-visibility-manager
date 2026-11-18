@@ -135,6 +135,9 @@ class TAVC_Cron {
 			$cutoff = wp_date( 'Y-m-d', time() - ( $settings['crawler_retention_days'] * DAY_IN_SECONDS ) );
 			TAVC_DB::prune_crawler_hits( $cutoff );
 		}
+
+		// Expired rate limit and duplicate-visit counters.
+		TAVC_DB::prune_counters();
 	}
 
 	/**

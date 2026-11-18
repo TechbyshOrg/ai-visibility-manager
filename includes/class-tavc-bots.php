@@ -163,6 +163,41 @@ class TAVC_Bots {
 				'desc'     => __( 'Collects web content for datasets that Webz.io sells, including for AI model training.', 'tbsh-ai-visibility-control' ),
 				'ua'       => 'omgili',
 			),
+			'cohere-ai'            => array(
+				'name'     => 'cohere-ai',
+				'vendor'   => 'Cohere',
+				'category' => self::CATEGORY_TRAINING,
+				'desc'     => __( 'Collects web content for Cohere, whose language models are trained on web data.', 'tbsh-ai-visibility-control' ),
+				'ua'       => 'cohere-ai',
+			),
+			'diffbot'              => array(
+				'name'     => 'Diffbot',
+				'vendor'   => 'Diffbot',
+				'category' => self::CATEGORY_TRAINING,
+				'desc'     => __( 'Extracts structured data from web pages for the Diffbot knowledge graph, which is sold for uses including AI training.', 'tbsh-ai-visibility-control' ),
+				'ua'       => 'Diffbot',
+			),
+			'pangubot'             => array(
+				'name'     => 'PanguBot',
+				'vendor'   => 'Huawei',
+				'category' => self::CATEGORY_TRAINING,
+				'desc'     => __( 'Collects web content to train Huawei\'s PanGu AI models.', 'tbsh-ai-visibility-control' ),
+				'ua'       => 'PanguBot',
+			),
+			'timpibot'             => array(
+				'name'     => 'Timpibot',
+				'vendor'   => 'Timpi',
+				'category' => self::CATEGORY_TRAINING,
+				'desc'     => __( 'Crawls the web for Timpi\'s index, which it offers as data for training AI models.', 'tbsh-ai-visibility-control' ),
+				'ua'       => 'Timpibot',
+			),
+			'imagesiftbot'         => array(
+				'name'     => 'ImagesiftBot',
+				'vendor'   => 'ImageSift',
+				'category' => self::CATEGORY_TRAINING,
+				'desc'     => __( 'Collects public images for ImageSift\'s image search and datasets, which can be used to train AI models.', 'tbsh-ai-visibility-control' ),
+				'ua'       => 'ImagesiftBot',
+			),
 
 			// Search crawlers.
 			'oai-searchbot'        => array(

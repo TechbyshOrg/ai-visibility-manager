@@ -55,20 +55,6 @@ class TAVC_Referral_Logger {
 	const BEACON_LIMIT_PER_IP = 30;
 
 	/**
-	 * Maximum number of IP addresses tracked by the beacon rate limiter.
-	 */
-	const BEACON_MAX_TRACKED_IPS = 500;
-
-	/**
-	 * Tracking query parameters removed from logged URLs so the same page is
-	 * not split into several report rows.
-	 *
-	 * @since    1.3.0
-	 * @var      array
-	 */
-	private static $tracking_params = array( 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'utm_id' );
-
-	/**
 	 * Run checks on template_redirect to inspect the referrer.
 	 *
 	 * @since    1.0.0
@@ -112,10 +98,7 @@ class TAVC_Referral_Logger {
 			return;
 		}
 
-		// Build target URL
-		$target_url = ( is_ssl() ? 'https://' : 'http://' ) . ( isset( $_SERVER['HTTP_HOST'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ) ) : '' ) . ( isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '' );
-
-		$this->record_referral( $matched_source, $target_url, $method );
+		$this->record_referral( $matched_source, self::get_current_url(), $method );
 	}
 
 	/**
@@ -133,42 +116,11 @@ class TAVC_Referral_Logger {
 			return false;
 		}
 
-		// Get visitor IP for debouncing (hashed to respect privacy / GDPR)
-		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
-
-		// Generate unique visit hash for the combination of IP + Source + Target
-		$visit_hash = md5( $ip . '|' . $matched_source . '|' . $target_url );
-
-		// Retrieve recent referrals from a single fixed transient key to prevent database/cache bloat from unauthenticated spoofed requests
-		$recent_referrals = get_transient( 'tavc_recent_referrals' );
-		if ( ! is_array( $recent_referrals ) ) {
-			$recent_referrals = array();
-		}
-
-		$now = time();
-
-		// Clean up entries older than 5 minutes (300 seconds)
-		foreach ( $recent_referrals as $hash => $timestamp ) {
-			if ( ( $now - $timestamp ) > self::DEBOUNCE_SECONDS ) {
-				unset( $recent_referrals[ $hash ] );
-			}
-		}
-
-		// Check if this specific visit was already logged recently
-		if ( isset( $recent_referrals[ $visit_hash ] ) ) {
+		// The same visitor, source and page are counted once per 5-minute window.
+		// Only a hash is used as the counter name; the IP address is never stored.
+		if ( TAVC_DB::bump_counter( 'ref|' . TAVC_Enforcer::get_client_ip() . '|' . $matched_source . '|' . $target_url, self::DEBOUNCE_SECONDS ) > 1 ) {
 			return false;
 		}
-
-		// Bound the array size to prevent memory/option bloat under heavy traffic (max 100 entries)
-		if ( count( $recent_referrals ) >= 100 ) {
-			asort( $recent_referrals );
-			reset( $recent_referrals );
-			unset( $recent_referrals[ key( $recent_referrals ) ] );
-		}
-
-		// Save the visit timestamp
-		$recent_referrals[ $visit_hash ] = $now;
-		set_transient( 'tavc_recent_referrals', $recent_referrals, self::DEBOUNCE_SECONDS );
 
 		// Write to DB
 		return false !== TAVC_DB::insert_referral( $matched_source, $target_url, $method );
@@ -195,11 +147,56 @@ class TAVC_Referral_Logger {
 			$url = substr( $url, 0, $hash_position );
 		}
 
-		if ( false !== stripos( $url, 'utm_' ) ) {
-			$url = remove_query_arg( self::$tracking_params, $url );
+		$query_position = strpos( $url, '?' );
+		if ( false === $query_position ) {
+			return $url;
 		}
 
-		return $url;
+		// Query strings can carry personal data (search terms, e-mail addresses,
+		// order keys), so only arguments that identify the content are kept.
+		$query = substr( $url, $query_position + 1 );
+		$url   = substr( $url, 0, $query_position );
+		$args  = array();
+		wp_parse_str( $query, $args );
+
+		/**
+		 * Filters the query arguments kept in logged AI visit URLs.
+		 *
+		 * @since 1.4.0
+		 *
+		 * @param string[] $allowed Argument names. Default: the plain-permalink content arguments.
+		 */
+		$allowed = (array) apply_filters( 'tavc_referral_allowed_query_args', array( 'p', 'page_id', 'post_type', 'cat', 'tag', 'product', 'lang' ) );
+		$kept    = array();
+		foreach ( $allowed as $name ) {
+			if ( isset( $args[ $name ] ) && is_scalar( $args[ $name ] ) && '' !== (string) $args[ $name ] ) {
+				$kept[ $name ] = (string) $args[ $name ];
+			}
+		}
+
+		return empty( $kept ) ? $url : esc_url_raw( add_query_arg( urlencode_deep( $kept ), $url ) );
+	}
+
+	/**
+	 * Address of the current request on this site's own host.
+	 *
+	 * Built from home_url() and the raw request path, so a forged Host header
+	 * cannot plant another domain in the reports, and percent-encoded (for
+	 * example Cyrillic or Arabic) paths are kept intact.
+	 *
+	 * @since    1.4.0
+	 * @return   string
+	 */
+	public static function get_current_url() {
+		$home = wp_parse_url( home_url() );
+		if ( empty( $home['scheme'] ) || empty( $home['host'] ) ) {
+			return '';
+		}
+
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized by esc_url_raw() in normalize_target_url().
+		$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? (string) wp_unslash( $_SERVER['REQUEST_URI'] ) : '/';
+
+		return $home['scheme'] . '://' . $home['host'] . ( isset( $home['port'] ) ? ':' . $home['port'] : '' ) . '/' . ltrim( $request_uri, '/' );
 	}
 
 	/**
@@ -324,8 +321,13 @@ class TAVC_Referral_Logger {
 			return new WP_REST_Response( array( 'logged' => false ), 200 );
 		}
 
-		if ( ! $this->allow_beacon_request() ) {
+		$limits = $this->check_beacon_limits();
+		if ( 'client' === $limits ) {
 			return new WP_Error( 'tavc_rate_limited', __( 'Too many requests. Please try again later.', 'tbsh-ai-visibility-control' ), array( 'status' => 429 ) );
+		}
+		if ( 'site' === $limits ) {
+			// Busy hour: skip quietly so visitors' browsers never see an error.
+			return new WP_REST_Response( array( 'logged' => false ), 200 );
 		}
 
 		$logged = $this->record_referral( $matched_source, $url, TAVC_AI_Sources::METHOD_BEACON );
@@ -360,76 +362,34 @@ class TAVC_Referral_Logger {
 	/**
 	 * Per-IP and site-wide rate limiting for the public beacon endpoint.
 	 *
-	 * State is kept in two fixed transients, so spoofed traffic cannot create
-	 * an unbounded number of rows or options.
+	 * Uses the shared request counters (one small row per counter), so spoofed
+	 * traffic cannot grow an option or lose counts under concurrent requests.
 	 *
 	 * @since    1.3.0
-	 * @return   bool    Whether the request may be processed.
+	 * @since    1.4.0 Returns 'ok', 'client' or 'site' instead of a boolean.
+	 * @return   string    'ok', 'client' when this address sent too many requests,
+	 *                     or 'site' when the site-wide hourly budget is used up.
 	 */
-	private function allow_beacon_request() {
-		$now = time();
+	private function check_beacon_limits() {
+		// Checked first so one abusive client cannot use up the site-wide budget.
+		$per_client = TAVC_DB::bump_counter( 'beacon_ip|' . TAVC_Enforcer::get_client_ip(), self::BEACON_WINDOW );
+		if ( $per_client > self::BEACON_LIMIT_PER_IP ) {
+			return 'client';
+		}
 
 		/**
 		 * Filters the maximum number of beacon visits processed per hour, site-wide.
 		 *
 		 * @since 1.3.0
+		 * @since 1.4.0 Default raised from 500 to 2000.
 		 *
-		 * @param int $limit Requests per hour. Default 500.
+		 * @param int $limit Requests per hour. 0 for no limit.
 		 */
-		$hourly_limit = absint( apply_filters( 'tavc_beacon_hourly_limit', 500 ) );
-
-		$hour = get_transient( 'tavc_beacon_hourly' );
-		if ( ! is_array( $hour ) || ! isset( $hour['start'], $hour['count'] ) || ( $now - $hour['start'] ) >= HOUR_IN_SECONDS ) {
-			$hour = array(
-				'start' => $now,
-				'count' => 0,
-			);
-		}
-		if ( $hourly_limit > 0 && $hour['count'] >= $hourly_limit ) {
-			return false;
+		$hourly_limit = absint( apply_filters( 'tavc_beacon_hourly_limit', 2000 ) );
+		if ( $hourly_limit > 0 && TAVC_DB::bump_counter( 'beacon_hour', HOUR_IN_SECONDS ) > $hourly_limit ) {
+			return 'site';
 		}
 
-		$ip      = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
-		$ip_hash = 'h' . md5( $ip );
-
-		$per_ip = get_transient( 'tavc_beacon_rate' );
-		if ( ! is_array( $per_ip ) ) {
-			$per_ip = array();
-		}
-
-		foreach ( $per_ip as $hash => $entry ) {
-			if ( ! is_array( $entry ) || ! isset( $entry['start'] ) || ( $now - $entry['start'] ) >= self::BEACON_WINDOW ) {
-				unset( $per_ip[ $hash ] );
-			}
-		}
-
-		if ( isset( $per_ip[ $ip_hash ] ) ) {
-			if ( $per_ip[ $ip_hash ]['count'] >= self::BEACON_LIMIT_PER_IP ) {
-				return false;
-			}
-			$per_ip[ $ip_hash ]['count']++;
-		} else {
-			if ( count( $per_ip ) >= self::BEACON_MAX_TRACKED_IPS ) {
-				uasort(
-					$per_ip,
-					function ( $a, $b ) {
-						return $a['start'] - $b['start'];
-					}
-				);
-				reset( $per_ip );
-				unset( $per_ip[ key( $per_ip ) ] );
-			}
-			$per_ip[ $ip_hash ] = array(
-				'start' => $now,
-				'count' => 1,
-			);
-		}
-
-		set_transient( 'tavc_beacon_rate', $per_ip, self::BEACON_WINDOW );
-
-		$hour['count']++;
-		set_transient( 'tavc_beacon_hourly', $hour, HOUR_IN_SECONDS );
-
-		return true;
+		return 'ok';
 	}
 }

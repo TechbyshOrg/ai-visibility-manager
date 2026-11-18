@@ -1381,3 +1381,30 @@ ul.tavc-health-list > li {
     color: var(--tavc-text-muted);
     border: 1px solid var(--tavc-border);
 }
+
+/* Optional web server rules on the AI Crawlers tab (1.4.0) */
+.tavc-details {
+    margin-block: 12px 20px;
+}
+
+.tavc-details > summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--tavc-primary-text);
+    padding-block: 6px;
+}
+
+.tavc-details > summary:focus-visible {
+    outline: 2px solid var(--tavc-primary-text);
+    outline-offset: 2px;
+}
+
+.tavc-details h4.tavc-field-sublabel {
+    margin-block: 14px 6px;
+    font-size: 13px;
+}
+
+pre.tavc-preview-box {
+    margin: 0;
+    overflow-x: auto;
+}

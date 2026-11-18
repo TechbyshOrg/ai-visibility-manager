@@ -65,16 +65,59 @@ class TAVC_Site_Health {
 			return $tests;
 		}
 
-		$tests['direct']['tavc_llms_txt']   = array(
-			'label' => __( 'llms.txt is reachable', 'tbsh-ai-visibility-control' ),
-			'test'  => array( $this, 'test_llms_txt' ),
+		// Async: both tests may request the site's own llms.txt and robots.txt (up to 5 seconds
+		// each), which must not hold up the Site Health screen. The AJAX action is
+		// "health-check-{test}"; the test names use no underscores because Site Health
+		// only turns the first underscore into a hyphen.
+		$tests['async']['tavc_llms_txt']   = array(
+			'label'             => __( 'llms.txt is reachable', 'tbsh-ai-visibility-control' ),
+			'test'              => 'tavc-llms-txt',
+			'has_rest'          => false,
+			'async_direct_test' => array( $this, 'test_llms_txt' ),
 		);
-		$tests['direct']['tavc_robots_txt'] = array(
-			'label' => __( 'AI crawler rules are published in robots.txt', 'tbsh-ai-visibility-control' ),
-			'test'  => array( $this, 'test_robots_txt' ),
+		$tests['async']['tavc_robots_txt'] = array(
+			'label'             => __( 'AI crawler rules are published in robots.txt', 'tbsh-ai-visibility-control' ),
+			'test'              => 'tavc-robots-txt',
+			'has_rest'          => false,
+			'async_direct_test' => array( $this, 'test_robots_txt' ),
 		);
 
 		return $tests;
+	}
+
+	/**
+	 * AJAX callback of the async llms.txt test.
+	 *
+	 * @since    1.4.0
+	 */
+	public function ajax_test_llms_txt() {
+		$this->send_ajax_result( 'test_llms_txt' );
+	}
+
+	/**
+	 * AJAX callback of the async robots.txt test.
+	 *
+	 * @since    1.4.0
+	 */
+	public function ajax_test_robots_txt() {
+		$this->send_ajax_result( 'test_robots_txt' );
+	}
+
+	/**
+	 * Run a test for the Site Health screen, with the same checks WordPress uses
+	 * for its own async tests.
+	 *
+	 * @since    1.4.0
+	 * @param    string    $method    Test method name.
+	 */
+	private function send_ajax_result( $method ) {
+		check_ajax_referer( 'health-check-site-status' );
+
+		if ( ! current_user_can( 'view_site_health_checks' ) ) {
+			wp_send_json_error();
+		}
+
+		wp_send_json_success( $this->{$method}() );
 	}
 
 	/**
@@ -207,6 +250,8 @@ class TAVC_Site_Health {
 		}
 
 		$yes = __( 'Yes', 'tbsh-ai-visibility-control' );
+
+		$digest_frequencies = TAVC_Settings::get_digest_frequency_choices();
 		$no  = __( 'No', 'tbsh-ai-visibility-control' );
 
 		$info['tavc'] = array(
@@ -236,6 +281,10 @@ class TAVC_Site_Health {
 					'label' => __( 'Content signals', 'tbsh-ai-visibility-control' ),
 					'value' => empty( $signals ) ? __( 'Not set', 'tbsh-ai-visibility-control' ) : implode( ', ', $signals ),
 				),
+				'llms_enabled'     => array(
+					'label' => __( 'llms.txt published', 'tbsh-ai-visibility-control' ),
+					'value' => $llms['enabled'] ? $yes : $no,
+				),
 				'llms_post_types'  => array(
 					'label' => __( 'llms.txt content types', 'tbsh-ai-visibility-control' ),
 					'value' => implode( ', ', $llms['post_types'] ),
@@ -262,7 +311,8 @@ class TAVC_Site_Health {
 				),
 				'digest'           => array(
 					'label' => __( 'Summary email', 'tbsh-ai-visibility-control' ),
-					'value' => $tracking['digest_enabled'] ? $tracking['digest_frequency'] : $no,
+					'value' => $tracking['digest_enabled'] ? $digest_frequencies[ $tracking['digest_frequency'] ] : $no,
+					'debug' => $tracking['digest_enabled'] ? $tracking['digest_frequency'] : 'off',
 				),
 			),
 		);

@@ -16,7 +16,7 @@ $tavc_llms_txt_url      = home_url( '/llms.txt' );
 $tavc_llms_full_txt_url = home_url( '/llms-full.txt' );
 $tavc_llms_settings     = TAVC_Settings::get_llms_settings();
 $tavc_llms_type_choices = TAVC_Settings::get_llms_post_type_choices();
-$tavc_full_cache_val    = get_transient( TAVC_LLMS_Txt::FULL_CACHE_KEY );
+$tavc_full_stored       = TAVC_LLMS_Txt::get_stored( 'full' );
 
 // AI crawler fetches of both files in the last 30 days
 $tavc_llms_fetch_since = wp_date( 'Y-m-d', time() - ( 29 * DAY_IN_SECONDS ) );
@@ -36,24 +36,34 @@ $tavc_llms_excluded = get_posts(
 	)
 );
 
-// Check if cached
-$tavc_cache_val = get_transient( TAVC_LLMS_Txt::CACHE_KEY );
-$tavc_is_cached = ( false !== $tavc_cache_val );
+// The saved copy, rebuilt now (and saved, so the next visit is fast) when it is out of date.
+$tavc_stored          = TAVC_LLMS_Txt::get_stored( 'index' );
+$tavc_was_fresh       = $tavc_stored && $tavc_stored['fresh'];
+$tavc_preview_content = ( new TAVC_LLMS_Txt() )->get_output( 'index' );
 
-// If not cached, generate live preview
-if ( ! $tavc_is_cached ) {
-	$tavc_llms_txt_class = new TAVC_LLMS_Txt();
-	// We will call the public generator method
-	$tavc_preview_content = $tavc_llms_txt_class->generate_llms_txt();
-	$tavc_status_label    = __( 'Not saved yet (created on the next visit)', 'tbsh-ai-visibility-control' );
-	$tavc_status_class    = 'status-yellow';
+if ( ! $tavc_llms_settings['enabled'] ) {
+	$tavc_status_label = __( 'Not published (turned off below)', 'tbsh-ai-visibility-control' );
+	$tavc_status_class = 'status-yellow';
+} elseif ( $tavc_was_fresh ) {
+	$tavc_status_label = __( 'Saved and served', 'tbsh-ai-visibility-control' );
+	$tavc_status_class = 'status-green';
 } else {
-	$tavc_preview_content = $tavc_cache_val;
-	$tavc_status_label    = __( 'Saved and served', 'tbsh-ai-visibility-control' );
-	$tavc_status_class    = 'status-green';
+	$tavc_status_label = __( 'Rebuilt just now and served', 'tbsh-ai-visibility-control' );
+	$tavc_status_class = 'status-green';
 }
 
 $tavc_file_size = strlen( $tavc_preview_content );
+
+// Large files: show the beginning only, so the page stays fast.
+$tavc_preview_max_lines = 200;
+$tavc_preview_lines     = explode( "
+", $tavc_preview_content );
+$tavc_preview_total     = count( $tavc_preview_lines );
+if ( $tavc_preview_total > $tavc_preview_max_lines ) {
+	$tavc_preview_content = implode( "
+", array_slice( $tavc_preview_lines, 0, $tavc_preview_max_lines ) );
+}
+unset( $tavc_preview_lines );
 ?>
 
 <div class="tavc-card">
@@ -63,7 +73,7 @@ $tavc_file_size = strlen( $tavc_preview_content );
 	</h2>
 	
 	<p class="tavc-intro">
-		<?php esc_html_e( 'The llms.txt file is a new web standard used to provide structured, lightweight, markdown-formatted content specifically optimized for Large Language Models (LLMs) and AI search agents.', 'tbsh-ai-visibility-control' ); ?>
+		<?php esc_html_e( 'llms.txt is a proposed format: a short Markdown list of your most useful pages for AI tools. It is optional and not an official standard. Few AI crawlers request it today (coding assistants are the most frequent readers), so treat it as a low-cost extra rather than a ranking factor.', 'tbsh-ai-visibility-control' ); ?>
 	</p>
 	
 	<!-- File Status Board -->
@@ -96,7 +106,14 @@ $tavc_file_size = strlen( $tavc_preview_content );
 			<tr>
 				<td><strong><?php esc_html_e( 'File Size', 'tbsh-ai-visibility-control' ); ?></strong></td>
 				<td>
-					<?php echo esc_html( size_format( $tavc_file_size ) ); ?> (<?php echo esc_html( number_format_i18n( $tavc_file_size ) ); ?> <?php esc_html_e( 'bytes', 'tbsh-ai-visibility-control' ); ?>)
+					<?php
+					printf(
+						/* translators: 1: formatted size such as "12 KB", 2: exact number of bytes. */
+						esc_html( _n( '%1$s (%2$s byte)', '%1$s (%2$s bytes)', $tavc_file_size, 'tbsh-ai-visibility-control' ) ),
+						esc_html( size_format( $tavc_file_size ) ),
+						esc_html( number_format_i18n( $tavc_file_size ) )
+					);
+					?>
 				</td>
 			</tr>
 			<tr>
@@ -106,7 +123,7 @@ $tavc_file_size = strlen( $tavc_preview_content );
 			<tr>
 				<td><strong><?php esc_html_e( 'llms-full.txt', 'tbsh-ai-visibility-control' ); ?></strong></td>
 				<td>
-					<?php if ( $tavc_llms_settings['full_enabled'] ) : ?>
+					<?php if ( $tavc_llms_settings['enabled'] && $tavc_llms_settings['full_enabled'] ) : ?>
 						<a href="<?php echo esc_url( $tavc_llms_full_txt_url ); ?>" target="_blank" rel="noopener noreferrer" class="tavc-mono-link">
 							<?php echo esc_url( $tavc_llms_full_txt_url ); ?>
 							<span class="screen-reader-text"><?php esc_html_e( '(opens in a new tab)', 'tbsh-ai-visibility-control' ); ?></span>
@@ -115,11 +132,11 @@ $tavc_file_size = strlen( $tavc_preview_content );
 						<br>
 						<span class="tavc-muted-text tavc-small-text">
 							<?php
-							if ( false !== $tavc_full_cache_val ) {
+							if ( $tavc_full_stored && $tavc_full_stored['fresh'] ) {
 								printf(
 									/* translators: %s: file size. */
 									esc_html__( 'Cached, %s.', 'tbsh-ai-visibility-control' ),
-									esc_html( size_format( strlen( $tavc_full_cache_val ) ) )
+									esc_html( size_format( strlen( $tavc_full_stored['content'] ) ) )
 								);
 							} else {
 								esc_html_e( 'Not cached yet. It is built on the next visit.', 'tbsh-ai-visibility-control' );
@@ -145,10 +162,22 @@ $tavc_file_size = strlen( $tavc_preview_content );
 		</span>
 	</h3>
 
-	<div class="tavc-preview-box" tabindex="0" aria-label="<?php esc_attr_e( 'llms.txt preview', 'tbsh-ai-visibility-control' ); ?>"><?php echo esc_html( $tavc_preview_content ); ?></div>
+	<div class="tavc-preview-box" role="region" tabindex="0" aria-label="<?php esc_attr_e( 'llms.txt preview', 'tbsh-ai-visibility-control' ); ?>"><?php echo esc_html( $tavc_preview_content ); ?></div>
+	<?php if ( $tavc_preview_total > $tavc_preview_max_lines ) : ?>
+		<p class="tavc-field-help">
+			<?php
+			printf(
+				/* translators: 1: number of lines shown, 2: total number of lines. */
+				esc_html__( 'Showing the first %1$s of %2$s lines. Open the file to see all of it.', 'tbsh-ai-visibility-control' ),
+				esc_html( number_format_i18n( $tavc_preview_max_lines ) ),
+				esc_html( number_format_i18n( $tavc_preview_total ) )
+			);
+			?>
+		</p>
+	<?php endif; ?>
 
 	<div class="tavc-actions">
-		<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=tavc_tool_action&tool=rebuild_cache' ), 'tavc_tool_nonce' ) ); ?>" class="button button-secondary">
+		<a href="<?php echo esc_url( TAVC_Admin::get_tool_url( 'rebuild_cache' ) ); ?>" class="button button-secondary">
 			<?php esc_html_e( 'Rebuild llms.txt', 'tbsh-ai-visibility-control' ); ?>
 		</a>
 	</div>
@@ -162,6 +191,15 @@ $tavc_file_size = strlen( $tavc_preview_content );
 
 	<form method="post" action="options.php">
 		<?php settings_fields( 'tavc_llms_settings_group' ); ?>
+
+		<div class="tavc-field">
+			<label class="tavc-checkbox-row">
+				<input type="hidden" name="tavc_llms_txt_settings[enabled]" value="0">
+				<input type="checkbox" name="tavc_llms_txt_settings[enabled]" value="1" aria-describedby="tavc_llms_enabled_help" <?php checked( $tavc_llms_settings['enabled'], 1 ); ?>>
+				<?php esc_html_e( 'Publish llms.txt', 'tbsh-ai-visibility-control' ); ?>
+			</label>
+			<p class="tavc-field-help" id="tavc_llms_enabled_help"><?php esc_html_e( 'When off, /llms.txt and /llms-full.txt return "not found". Turn it off if you do not want a list of your content published, for example when you block all AI crawlers.', 'tbsh-ai-visibility-control' ); ?></p>
+		</div>
 
 		<fieldset class="tavc-field">
 			<legend class="tavc-field-label"><?php esc_html_e( 'Content types to list', 'tbsh-ai-visibility-control' ); ?></legend>

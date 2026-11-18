@@ -21,9 +21,6 @@ $tavc_referral_total = TAVC_DB::get_total_referrals();
 $tavc_crawler_total  = TAVC_DB::get_crawler_hits_between( '1000-01-01', '9999-12-31' );
 $tavc_blocked_total  = array_sum( TAVC_Bots::get_blocked_settings() );
 
-$tavc_tool_url = function ( $tool ) {
-	return wp_nonce_url( admin_url( 'admin-post.php?action=tavc_tool_action&tool=' . $tool ), 'tavc_tool_nonce' );
-};
 ?>
 
 <div class="tavc-card">
@@ -35,7 +32,7 @@ $tavc_tool_url = function ( $tool ) {
 	<form method="post" action="options.php">
 		<?php settings_fields( 'tavc_tracking_settings_group' ); ?>
 
-		<fieldset class="tavc-field">
+		<fieldset class="tavc-field" id="tavc-traffic-detection">
 			<legend class="tavc-field-label"><?php esc_html_e( 'AI traffic detection', 'tbsh-ai-visibility-control' ); ?></legend>
 
 			<label class="tavc-checkbox-row">
@@ -127,19 +124,19 @@ $tavc_tool_url = function ( $tool ) {
 		<div class="tavc-tool-card">
 			<h3><?php esc_html_e( 'Rebuild llms.txt', 'tbsh-ai-visibility-control' ); ?></h3>
 			<p><?php esc_html_e( 'Creates a fresh copy of your llms.txt file now and refreshes its web address.', 'tbsh-ai-visibility-control' ); ?></p>
-			<a href="<?php echo esc_url( $tavc_tool_url( 'rebuild_cache' ) ); ?>" class="button button-secondary"><?php esc_html_e( 'Rebuild llms.txt', 'tbsh-ai-visibility-control' ); ?></a>
+			<a href="<?php echo esc_url( TAVC_Admin::get_tool_url( 'rebuild_cache' ) ); ?>" class="button button-secondary"><?php esc_html_e( 'Rebuild llms.txt', 'tbsh-ai-visibility-control' ); ?></a>
 		</div>
 
 		<div class="tavc-tool-card">
 			<h3><?php esc_html_e( 'Export AI Traffic (CSV)', 'tbsh-ai-visibility-control' ); ?></h3>
 			<p><?php esc_html_e( 'Downloads a spreadsheet of every logged AI visit: date, AI platform, page visited and how it was detected.', 'tbsh-ai-visibility-control' ); ?></p>
-			<a href="<?php echo esc_url( $tavc_tool_url( 'export_csv' ) ); ?>" class="button button-secondary"><?php esc_html_e( 'Download CSV', 'tbsh-ai-visibility-control' ); ?><span class="screen-reader-text"> <?php esc_html_e( '(AI traffic)', 'tbsh-ai-visibility-control' ); ?></span></a>
+			<a href="<?php echo esc_url( TAVC_Admin::get_tool_url( 'export_csv' ) ); ?>" class="button button-secondary"><?php esc_html_e( 'Download CSV', 'tbsh-ai-visibility-control' ); ?><span class="screen-reader-text"> <?php esc_html_e( '(AI traffic)', 'tbsh-ai-visibility-control' ); ?></span></a>
 		</div>
 
 		<div class="tavc-tool-card">
 			<h3><?php esc_html_e( 'Export AI Crawler Visits (CSV)', 'tbsh-ai-visibility-control' ); ?></h3>
 			<p><?php esc_html_e( 'Downloads a spreadsheet of logged AI crawler requests per day: crawler, path, number of requests and how many were refused.', 'tbsh-ai-visibility-control' ); ?></p>
-			<a href="<?php echo esc_url( $tavc_tool_url( 'export_crawler_csv' ) ); ?>" class="button button-secondary"><?php esc_html_e( 'Download CSV', 'tbsh-ai-visibility-control' ); ?><span class="screen-reader-text"> <?php esc_html_e( '(AI crawler visits)', 'tbsh-ai-visibility-control' ); ?></span></a>
+			<a href="<?php echo esc_url( TAVC_Admin::get_tool_url( 'export_crawler_csv' ) ); ?>" class="button button-secondary"><?php esc_html_e( 'Download CSV', 'tbsh-ai-visibility-control' ); ?><span class="screen-reader-text"> <?php esc_html_e( '(AI crawler visits)', 'tbsh-ai-visibility-control' ); ?></span></a>
 		</div>
 
 		<div class="tavc-tool-card">
@@ -148,12 +145,12 @@ $tavc_tool_url = function ( $tool ) {
 				<?php
 				printf(
 					/* translators: %s: email address. */
-					esc_html__( 'Sends the AI visibility summary to %s now, using the frequency chosen above.', 'tbsh-ai-visibility-control' ),
+					esc_html__( 'Sends the AI visibility summary to %s now, using the saved frequency. Save your changes first if you changed it.', 'tbsh-ai-visibility-control' ),
 					esc_html( TAVC_Settings::get_digest_recipient() )
 				);
 				?>
 			</p>
-			<a href="<?php echo esc_url( $tavc_tool_url( 'send_digest' ) ); ?>" class="button button-secondary"><?php esc_html_e( 'Send Test Email', 'tbsh-ai-visibility-control' ); ?></a>
+			<a href="<?php echo esc_url( TAVC_Admin::get_tool_url( 'send_digest' ) ); ?>" class="button button-secondary"><?php esc_html_e( 'Send Test Email', 'tbsh-ai-visibility-control' ); ?></a>
 		</div>
 	</div>
 </div>
@@ -177,7 +174,7 @@ $tavc_tool_url = function ( $tool ) {
 			);
 			?>
 			<?php if ( $tavc_referral_total > 0 ) : ?>
-				<a href="<?php echo esc_url( $tavc_tool_url( 'clear_logs' ) ); ?>" class="button tavc-button-danger" data-tavc-confirm="<?php echo esc_attr( $tavc_confirm ); ?>"><?php esc_html_e( 'Delete AI Traffic Logs', 'tbsh-ai-visibility-control' ); ?></a>
+				<a href="<?php echo esc_url( TAVC_Admin::get_tool_url( 'clear_logs' ) ); ?>" class="button tavc-button-danger" data-tavc-confirm="<?php echo esc_attr( $tavc_confirm ); ?>"><?php esc_html_e( 'Delete AI Traffic Logs', 'tbsh-ai-visibility-control' ); ?></a>
 			<?php else : ?>
 				<button type="button" class="button" disabled aria-describedby="tavc_no_referrals"><?php esc_html_e( 'Delete AI Traffic Logs', 'tbsh-ai-visibility-control' ); ?></button>
 				<span class="tavc-disabled-reason" id="tavc_no_referrals"><?php esc_html_e( 'Nothing to delete yet.', 'tbsh-ai-visibility-control' ); ?></span>
@@ -195,7 +192,7 @@ $tavc_tool_url = function ( $tool ) {
 			);
 			?>
 			<?php if ( $tavc_crawler_total > 0 ) : ?>
-				<a href="<?php echo esc_url( $tavc_tool_url( 'clear_crawler_logs' ) ); ?>" class="button tavc-button-danger" data-tavc-confirm="<?php echo esc_attr( $tavc_confirm ); ?>"><?php esc_html_e( 'Delete Crawler Logs', 'tbsh-ai-visibility-control' ); ?></a>
+				<a href="<?php echo esc_url( TAVC_Admin::get_tool_url( 'clear_crawler_logs' ) ); ?>" class="button tavc-button-danger" data-tavc-confirm="<?php echo esc_attr( $tavc_confirm ); ?>"><?php esc_html_e( 'Delete Crawler Logs', 'tbsh-ai-visibility-control' ); ?></a>
 			<?php else : ?>
 				<button type="button" class="button" disabled aria-describedby="tavc_no_crawler_logs"><?php esc_html_e( 'Delete Crawler Logs', 'tbsh-ai-visibility-control' ); ?></button>
 				<span class="tavc-disabled-reason" id="tavc_no_crawler_logs"><?php esc_html_e( 'Nothing to delete yet.', 'tbsh-ai-visibility-control' ); ?></span>
@@ -213,7 +210,7 @@ $tavc_tool_url = function ( $tool ) {
 			);
 			?>
 			<?php if ( $tavc_blocked_total > 0 ) : ?>
-				<a href="<?php echo esc_url( $tavc_tool_url( 'reset_settings' ) ); ?>" class="button tavc-button-danger" data-tavc-confirm="<?php echo esc_attr( $tavc_confirm ); ?>"><?php esc_html_e( 'Reset Crawler Blocks', 'tbsh-ai-visibility-control' ); ?></a>
+				<a href="<?php echo esc_url( TAVC_Admin::get_tool_url( 'reset_settings' ) ); ?>" class="button tavc-button-danger" data-tavc-confirm="<?php echo esc_attr( $tavc_confirm ); ?>"><?php esc_html_e( 'Reset Crawler Blocks', 'tbsh-ai-visibility-control' ); ?></a>
 			<?php else : ?>
 				<button type="button" class="button" disabled aria-describedby="tavc_no_blocks"><?php esc_html_e( 'Reset Crawler Blocks', 'tbsh-ai-visibility-control' ); ?></button>
 				<span class="tavc-disabled-reason" id="tavc_no_blocks"><?php esc_html_e( 'All AI crawlers are already allowed.', 'tbsh-ai-visibility-control' ); ?></span>

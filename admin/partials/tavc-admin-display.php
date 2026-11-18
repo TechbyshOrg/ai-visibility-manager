@@ -27,6 +27,11 @@ $tavc_tabs = array(
 	'tools'     => array( 'dashicons-admin-settings', __( 'Settings & Tools', 'tbsh-ai-visibility-control' ) ),
 	'status'    => array( 'dashicons-info-outline', __( 'Status', 'tbsh-ai-visibility-control' ) ),
 );
+
+// The partial file name is built from the slug, so only known slugs are accepted.
+if ( ! isset( $tavc_tabs[ $tavc_active_tab ] ) ) {
+	$tavc_active_tab = 'overview';
+}
 ?>
 <div class="wrap tavc-wrap">
 	<!-- Plugin Header -->
@@ -52,13 +57,20 @@ $tavc_tabs = array(
 	<?php
 	// Top-level pages do not get WordPress's options-head.php, so print "Settings saved." and
 	// settings errors here (this also lets the AI Crawlers tab show custom-rule errors inline).
-	settings_errors();
+	// On the AI Crawlers tab, custom-rule errors are shown next to the rules field instead,
+	// so they are not printed twice.
+	$tavc_error_settings = array_unique( wp_list_pluck( get_settings_errors(), 'setting' ) );
+	foreach ( $tavc_error_settings as $tavc_error_setting ) {
+		if ( 'bots' !== $tavc_active_tab || 'tavc_custom_robots_rules' !== $tavc_error_setting ) {
+			settings_errors( $tavc_error_setting );
+		}
+	}
 	?>
 
-	<!-- Tabs Navigation -->
+	<!-- Tabs Navigation: real links, so each tab loads (and runs its queries) only when opened. -->
 	<nav class="tavc-tabs" aria-label="<?php esc_attr_e( 'AI Visibility Control sections', 'tbsh-ai-visibility-control' ); ?>">
 		<?php foreach ( $tavc_tabs as $tavc_tab_slug => $tavc_tab ) : ?>
-			<a href="#<?php echo esc_attr( $tavc_tab_slug ); ?>" class="tavc-tab-nav<?php echo $tavc_tab_slug === $tavc_active_tab ? ' active' : ''; ?>"<?php echo $tavc_tab_slug === $tavc_active_tab ? ' aria-current="page"' : ''; ?> data-tab="<?php echo esc_attr( $tavc_tab_slug ); ?>">
+			<a href="<?php echo esc_url( TAVC_Admin::get_page_url( array( 'tab' => $tavc_tab_slug ) ) ); ?>" class="tavc-tab-nav<?php echo $tavc_tab_slug === $tavc_active_tab ? ' active' : ''; ?>"<?php echo $tavc_tab_slug === $tavc_active_tab ? ' aria-current="page"' : ''; ?> data-tab="<?php echo esc_attr( $tavc_tab_slug ); ?>">
 				<span aria-hidden="true" class="dashicons <?php echo esc_attr( $tavc_tab[0] ); ?>"></span> <?php echo esc_html( $tavc_tab[1] ); ?>
 			</a>
 		<?php endforeach; ?>
@@ -68,34 +80,8 @@ $tavc_tabs = array(
 	<div id="tavc-live" class="screen-reader-text" role="status" aria-live="polite"></div>
 
 	<main class="tavc-main-column">
-		<!-- Overview Tab -->
-		<div id="tavc-tab-overview" class="tavc-tab-content<?php echo 'overview' === $tavc_active_tab ? ' active' : ''; ?>">
-			<?php require_once plugin_dir_path( __FILE__ ) . 'tavc-admin-overview.php'; ?>
-		</div>
-
-		<!-- AI Crawlers Tab -->
-		<div id="tavc-tab-bots" class="tavc-tab-content<?php echo 'bots' === $tavc_active_tab ? ' active' : ''; ?>">
-			<?php require_once plugin_dir_path( __FILE__ ) . 'tavc-admin-bots.php'; ?>
-		</div>
-
-		<!-- llms.txt Tab -->
-		<div id="tavc-tab-llmstxt" class="tavc-tab-content<?php echo 'llmstxt' === $tavc_active_tab ? ' active' : ''; ?>">
-			<?php require_once plugin_dir_path( __FILE__ ) . 'tavc-admin-llmstxt.php'; ?>
-		</div>
-
-		<!-- AI Traffic Tab -->
-		<div id="tavc-tab-referrals" class="tavc-tab-content<?php echo 'referrals' === $tavc_active_tab ? ' active' : ''; ?>">
-			<?php require_once plugin_dir_path( __FILE__ ) . 'tavc-admin-referrals.php'; ?>
-		</div>
-
-		<!-- Settings & Tools Tab -->
-		<div id="tavc-tab-tools" class="tavc-tab-content<?php echo 'tools' === $tavc_active_tab ? ' active' : ''; ?>">
-			<?php require_once plugin_dir_path( __FILE__ ) . 'tavc-admin-tools.php'; ?>
-		</div>
-
-		<!-- Status Tab -->
-		<div id="tavc-tab-status" class="tavc-tab-content<?php echo 'status' === $tavc_active_tab ? ' active' : ''; ?>">
-			<?php require_once plugin_dir_path( __FILE__ ) . 'tavc-admin-status.php'; ?>
+		<div id="tavc-tab-<?php echo esc_attr( $tavc_active_tab ); ?>" class="tavc-tab-content active">
+			<?php require plugin_dir_path( __FILE__ ) . 'tavc-admin-' . $tavc_active_tab . '.php'; ?>
 		</div>
 	</main>
 </div>

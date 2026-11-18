@@ -12,7 +12,7 @@
 // Prevent direct access
 defined( 'ABSPATH' ) || exit;
 
-// Selected range ("all" keeps the original all-time report)
+// Selected range (last 30 days unless another one is chosen)
 $tavc_range       = $this->get_active_referral_range();
 $tavc_ranges      = $this->get_referral_ranges();
 $tavc_range_days  = 'all' === $tavc_range ? 0 : intval( $tavc_range );
@@ -89,6 +89,7 @@ $tavc_bar_width  = max( 1, $tavc_slot_width * 0.7 );
 
 	<p class="tavc-intro">
 		<?php esc_html_e( 'Monitor how AI search engines like ChatGPT, Claude, and Perplexity refer visitors to your site when answering conversational search queries.', 'tbsh-ai-visibility-control' ); ?>
+		<?php esc_html_e( 'Treat these numbers as a minimum: some AI apps send visitors without a referrer or tag, and those visits look like direct traffic.', 'tbsh-ai-visibility-control' ); ?>
 	</p>
 
 	<?php if ( empty( $tavc_recent_logs ) ) : ?>
@@ -98,6 +99,15 @@ $tavc_bar_width  = max( 1, $tavc_slot_width * 0.7 );
 			<p>
 				<?php esc_html_e( 'Traffic from ChatGPT, Claude, Perplexity, Gemini, Copilot and other AI assistants will appear here as soon as referrals hit public pages.', 'tbsh-ai-visibility-control' ); ?>
 			</p>
+			<?php
+			$tavc_tracking_now = TAVC_Settings::get_tracking_settings();
+			if ( defined( 'WP_CACHE' ) && WP_CACHE && empty( $tavc_tracking_now['beacon_tracking'] ) ) :
+				?>
+				<p class="tavc-notice-inline tavc-notice-warning">
+					<?php esc_html_e( 'A page cache is active on this site. Cached pages never reach WordPress, so visits to them are not recorded. Turn on cache-compatible tracking to count them.', 'tbsh-ai-visibility-control' ); ?>
+					<a href="<?php echo esc_url( TAVC_Admin::get_page_url( array( 'tab' => 'tools' ) ) . '#tavc-traffic-detection' ); ?>"><?php esc_html_e( 'Open the tracking settings', 'tbsh-ai-visibility-control' ); ?></a>
+				</p>
+			<?php endif; ?>
 		</div>
 	<?php else : ?>
 		<!-- Range selector -->
@@ -222,7 +232,7 @@ $tavc_bar_width  = max( 1, $tavc_slot_width * 0.7 );
 				<table class="tavc-table">
 					<thead>
 						<tr>
-							<th><?php esc_html_e( 'AI Platform', 'tbsh-ai-visibility-control' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'AI Platform', 'tbsh-ai-visibility-control' ); ?></th>
 							<th scope="col" class="tavc-num tavc-col-30"><?php esc_html_e( 'Visits', 'tbsh-ai-visibility-control' ); ?></th>
 						</tr>
 					</thead>
@@ -251,7 +261,7 @@ $tavc_bar_width  = max( 1, $tavc_slot_width * 0.7 );
 				<table class="tavc-table">
 					<thead>
 						<tr>
-							<th><?php esc_html_e( 'Page Visited', 'tbsh-ai-visibility-control' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Page Visited', 'tbsh-ai-visibility-control' ); ?></th>
 							<th scope="col" class="tavc-num tavc-col-30"><?php esc_html_e( 'Visits', 'tbsh-ai-visibility-control' ); ?></th>
 						</tr>
 					</thead>
@@ -291,7 +301,7 @@ $tavc_bar_width  = max( 1, $tavc_slot_width * 0.7 );
 						<tr>
 							<th scope="col" class="tavc-col-25"><?php esc_html_e( 'Date', 'tbsh-ai-visibility-control' ); ?></th>
 							<th scope="col" class="tavc-col-20"><?php esc_html_e( 'AI Platform', 'tbsh-ai-visibility-control' ); ?></th>
-							<th><?php esc_html_e( 'Page Visited', 'tbsh-ai-visibility-control' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Page Visited', 'tbsh-ai-visibility-control' ); ?></th>
 							<th scope="col" class="tavc-col-15"><?php esc_html_e( 'Detected Via', 'tbsh-ai-visibility-control' ); ?></th>
 						</tr>
 					</thead>

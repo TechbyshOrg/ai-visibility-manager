@@ -14,40 +14,16 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Prepare release folder
+        # .distignore is the single list of files left out of the plugin; the
+        # WordPress.org deploy (10up action) reads the same file.
         run: |
           mkdir -p tbsh-ai-visibility-control
           rsync -av ./ tbsh-ai-visibility-control/ \
+            --exclude-from=.distignore \
             --exclude='tbsh-ai-visibility-control' \
-            --exclude='.git' \
-            --exclude='.gitignore' \
-            --exclude='.gitattributes' \
-            --exclude='.github' \
-            --exclude='.distignore' \
-            --exclude='.wordpress-org' \
-            --exclude='src' \
-            --exclude='.vscode' \
-            --exclude='.idea' \
-            --exclude='tests' \
-            --exclude='phpunit.xml' \
-            --exclude='phpunit.xml.dist' \
-            --exclude='scratch' \
-            --exclude='docs' \
-            --exclude='CLAUDE.md' \
-            --exclude='composer.json' \
-            --exclude='composer.lock' \
-            --exclude='package.json' \
-            --exclude='package-lock.json' \
-            --exclude='node_modules' \
-            --exclude='vendor' \
-            --exclude='*.log' \
-            --exclude='*.suo' \
-            --exclude='*.user' \
-            --exclude='*.usr' \
-            --exclude='.DS_Store' \
-            --exclude='Thumbs.db' \
             --exclude='tbsh-ai-visibility-control_*.zip'
 
       - name: Create zip file
@@ -58,7 +34,7 @@ jobs:
           echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
 
       - name: Upload release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           name: Release ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}

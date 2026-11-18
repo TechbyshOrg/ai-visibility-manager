@@ -54,9 +54,9 @@ function tavc_activate() {
  * The code that runs during plugin deactivation.
  * This action is documented in includes/class-tavc-deactivator.php
  */
-function tavc_deactivate() {
+function tavc_deactivate( $network_wide = false ) {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-tavc-deactivator.php';
-	TAVC_Deactivator::deactivate();
+	TAVC_Deactivator::deactivate( $network_wide );
 }
 
 register_activation_hook( __FILE__, 'tavc_activate' );

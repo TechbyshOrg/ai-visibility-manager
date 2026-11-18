@@ -42,6 +42,111 @@ class TAVC_DB {
 	private static $table_exists = array();
 
 	/**
+	 * Version of the table layout created by TAVC_Activator. Stored in the
+	 * tavc_db_version option once dbDelta() has run; bump it whenever a table changes.
+	 *
+	 * @since    1.4.0
+	 */
+	const SCHEMA_VERSION = '1.4.0';
+
+	/**
+	 * Object cache group for the request counters.
+	 *
+	 * @since    1.4.0
+	 */
+	const COUNTER_CACHE_GROUP = 'tavc_counters';
+
+	/**
+	 * Whether the tables match SCHEMA_VERSION. Saves the SHOW TABLES / SHOW COLUMNS
+	 * checks on every logged request; tavc_db_version is autoloaded.
+	 *
+	 * @since    1.4.0
+	 * @return   bool
+	 */
+	public static function schema_is_current() {
+		return self::SCHEMA_VERSION === get_option( 'tavc_db_version', '' );
+	}
+
+	/**
+	 * Name of the request counter table.
+	 *
+	 * @since    1.4.0
+	 * @return   string
+	 */
+	public static function get_counter_table_name() {
+		global $wpdb;
+		return $wpdb->prefix . 'tavc_counters';
+	}
+
+	/**
+	 * Count one event in a fixed time window and return the count so far.
+	 *
+	 * Used for the crawler rate limit, the beacon limits and the referral
+	 * debounce. Uses the persistent object cache when there is one, otherwise
+	 * a single atomic upsert in the counter table, so concurrent requests are
+	 * never lost and no option row is rewritten per request.
+	 *
+	 * @since    1.4.0
+	 * @param    string    $key       Counter name (any length; it is hashed).
+	 * @param    int       $window    Window length in seconds.
+	 * @return   int                  Events in the current window, this one included.
+	 *                                0 when the counter is unavailable (callers should then allow).
+	 */
+	public static function bump_counter( $key, $window ) {
+		global $wpdb;
+
+		$window = max( 1, (int) $window );
+		$start  = (int) ( floor( time() / $window ) * $window );
+		$bucket = md5( $key );
+
+		if ( wp_using_ext_object_cache() ) {
+			$cache_key = $bucket . '_' . $start;
+			wp_cache_add( $cache_key, 0, self::COUNTER_CACHE_GROUP, $window + 60 );
+			$count = wp_cache_incr( $cache_key, 1, self::COUNTER_CACHE_GROUP );
+			if ( false !== $count ) {
+				return (int) $count;
+			}
+		}
+
+		$table_name = self::get_counter_table_name();
+		if ( ! self::table_exists( $table_name ) ) {
+			return 0;
+		}
+
+		// "hits" is assigned before "window_start", so the IF() still compares with the stored window.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->query(
+			$wpdb->prepare(
+				'INSERT INTO %i (bucket, window_start, expires, hits) VALUES (%s, %d, %d, 1) ON DUPLICATE KEY UPDATE hits = IF(window_start = VALUES(window_start), hits + 1, 1), window_start = VALUES(window_start), expires = VALUES(expires)',
+				$table_name,
+				$bucket,
+				$start,
+				$start + $window
+			)
+		);
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		return (int) $wpdb->get_var( $wpdb->prepare( 'SELECT hits FROM %i WHERE bucket = %s', $table_name, $bucket ) );
+	}
+
+	/**
+	 * Delete expired counter rows.
+	 *
+	 * @since    1.4.0
+	 * @return   int    Rows deleted.
+	 */
+	public static function prune_counters() {
+		global $wpdb;
+
+		$table_name = self::get_counter_table_name();
+		if ( ! self::table_exists( $table_name ) ) {
+			return 0;
+		}
+
+		return self::delete_in_batches( $wpdb->prepare( 'DELETE FROM %i WHERE expires < %d LIMIT %d', $table_name, time(), self::PRUNE_BATCH_SIZE ) );
+	}
+
+	/**
 	 * Retrieve table name with proper prefix.
 	 *
 	 * @since    1.0.0
@@ -73,6 +178,10 @@ class TAVC_DB {
 	private static function table_exists( $table_name ) {
 		global $wpdb;
 
+		if ( ! isset( self::$table_exists[ $table_name ] ) && self::schema_is_current() ) {
+			self::$table_exists[ $table_name ] = true;
+		}
+
 		if ( ! isset( self::$table_exists[ $table_name ] ) ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			self::$table_exists[ $table_name ] = ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table_name ) ) ) === $table_name );
@@ -94,6 +203,10 @@ class TAVC_DB {
 		global $wpdb;
 
 		static $has_column = null;
+
+		if ( null === $has_column && self::schema_is_current() ) {
+			$has_column = true;
+		}
 
 		if ( null === $has_column ) {
 			$table_name = self::get_table_name();
@@ -147,8 +260,7 @@ class TAVC_DB {
 		$table_name = self::get_table_name();
 
 		// Check table existence first to avoid errors before DB table is created
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) !== $table_name ) {
+		if ( ! self::table_exists( $table_name ) ) {
 			return 0;
 		}
 
@@ -217,8 +329,7 @@ class TAVC_DB {
 
 		$table_name = self::get_table_name();
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) !== $table_name ) {
+		if ( ! self::table_exists( $table_name ) ) {
 			return null;
 		}
 
@@ -241,8 +352,7 @@ class TAVC_DB {
 
 		$table_name = self::get_table_name();
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) !== $table_name ) {
+		if ( ! self::table_exists( $table_name ) ) {
 			return array();
 		}
 
@@ -286,8 +396,7 @@ class TAVC_DB {
 
 		$table_name = self::get_table_name();
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) !== $table_name ) {
+		if ( ! self::table_exists( $table_name ) ) {
 			return array();
 		}
 
@@ -328,8 +437,7 @@ class TAVC_DB {
 
 		$table_name = self::get_table_name();
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) !== $table_name ) {
+		if ( ! self::table_exists( $table_name ) ) {
 			return array();
 		}
 
@@ -361,8 +469,7 @@ class TAVC_DB {
 
 		$table_name = self::get_table_name();
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) !== $table_name ) {
+		if ( ! self::table_exists( $table_name ) ) {
 			return false;
 		}
 
@@ -389,29 +496,29 @@ class TAVC_DB {
 	}
 
 	/**
-	 * Fetch all logs for CSV export.
+	 * One batch of referral rows for CSV export, newest first.
 	 *
-	 * @since    1.0.0
-	 * @return   array    All referral log objects.
+	 * Exports read the table in batches (keyset on id) so large logs never
+	 * have to fit in memory at once.
+	 *
+	 * @since    1.4.0
+	 * @param    int    $before_id    Only rows with a smaller id; 0 for the first batch.
+	 * @param    int    $limit        Rows per batch.
+	 * @return   array                Objects with id, timestamp, referrer, target_url, method.
 	 */
-	public static function get_all_referrals_for_csv() {
+	public static function get_referrals_csv_batch( $before_id = 0, $limit = 2000 ) {
 		global $wpdb;
 
 		$table_name = self::get_table_name();
-
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) !== $table_name ) {
+		if ( ! self::table_exists( $table_name ) ) {
 			return array();
 		}
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		if ( ! self::referrals_has_method_column() ) {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			return $wpdb->get_results( $wpdb->prepare( "SELECT timestamp, referrer, target_url, 'referrer' AS method FROM %i ORDER BY id DESC", $table_name ) );
-		}
+		$method    = self::referrals_has_method_column() ? 'method' : "'referrer' AS method";
+		$before_id = $before_id > 0 ? (int) $before_id : PHP_INT_MAX;
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		return $wpdb->get_results( $wpdb->prepare( 'SELECT timestamp, referrer, target_url, method FROM %i ORDER BY id DESC', $table_name ) );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $method is one of two fixed strings.
+		return (array) $wpdb->get_results( $wpdb->prepare( "SELECT id, timestamp, referrer, target_url, {$method} FROM %i WHERE id < %d ORDER BY id DESC LIMIT %d", $table_name, $before_id, max( 1, (int) $limit ) ) );
 	}
 
 	/*
@@ -434,6 +541,10 @@ class TAVC_DB {
 
 		static $has_columns = null;
 
+		if ( null === $has_columns && self::schema_is_current() ) {
+			$has_columns = true;
+		}
+
 		if ( null === $has_columns ) {
 			$table_name = self::get_crawler_table_name();
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -444,10 +555,47 @@ class TAVC_DB {
 	}
 
 	/**
+	 * Path stored for crawler requests that ended in a 404 page.
+	 *
+	 * @since    1.4.0
+	 */
+	const NOT_FOUND_PATH = '(not found)';
+
+	/**
+	 * Path stored for requests beyond the daily number of distinct paths per crawler.
+	 *
+	 * @since    1.4.0
+	 */
+	const OTHER_PATHS = '(other paths)';
+
+	/**
+	 * Readable label for a stored crawler path (translates the placeholder rows).
+	 *
+	 * @since    1.4.0
+	 * @param    string    $path    Stored path.
+	 * @return   string
+	 */
+	public static function get_path_label( $path ) {
+		if ( self::NOT_FOUND_PATH === $path ) {
+			return __( '(pages not found)', 'tbsh-ai-visibility-control' );
+		}
+		if ( self::OTHER_PATHS === $path ) {
+			return __( '(other pages)', 'tbsh-ai-visibility-control' );
+		}
+
+		return (string) $path;
+	}
+
+	/**
 	 * Count one crawler request. Rows are aggregated per crawler, day and path.
 	 *
+	 * Each crawler gets at most a fixed number of distinct path rows per day
+	 * (filter tavc_crawler_paths_per_day, default 5000); later new paths are
+	 * counted in one "(other paths)" row. Anyone can send a crawler user agent
+	 * with random addresses, so this keeps the table from growing without limit.
+	 *
 	 * @since    1.3.0
-	 * @since    1.4.0 Added the $outcome parameter.
+	 * @since    1.4.0 Added the $outcome parameter and the daily path cap.
 	 * @param    string    $bot        Crawler slug.
 	 * @param    string    $path       Requested URL path.
 	 * @param    string    $outcome    Empty for a served request, 'blocked' when it was refused with
@@ -455,6 +603,48 @@ class TAVC_DB {
 	 * @return   int|false             Rows affected or false on failure.
 	 */
 	public static function record_crawler_hit( $bot, $path, $outcome = '' ) {
+		global $wpdb;
+
+		$result = self::upsert_crawler_hit( $bot, $path, $outcome );
+
+		// 1 = a new row was inserted (2 = an existing row was updated).
+		if ( 1 !== $result || self::OTHER_PATHS === $path ) {
+			return $result;
+		}
+
+		$bot = substr( sanitize_key( $bot ), 0, 64 );
+
+		/**
+		 * Filters how many distinct paths are logged per crawler and day.
+		 *
+		 * @since 1.4.0
+		 *
+		 * @param int    $limit Paths per day. 0 for no limit.
+		 * @param string $bot   Crawler slug.
+		 */
+		$limit = absint( apply_filters( 'tavc_crawler_paths_per_day', 5000, $bot ) );
+		$today = current_time( 'Y-m-d' );
+
+		if ( $limit > 0 && self::bump_counter( 'crawler_paths|' . $bot . '|' . $today, DAY_IN_SECONDS ) > $limit ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE bot = %s AND hit_date = %s AND url_hash = %s', self::get_crawler_table_name(), $bot, $today, md5( substr( (string) $path, 0, 255 ) ) ) );
+
+			return self::upsert_crawler_hit( $bot, self::OTHER_PATHS, $outcome );
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Insert or increment one crawler row.
+	 *
+	 * @since    1.4.0
+	 * @param    string    $bot        Crawler slug.
+	 * @param    string    $path       Requested URL path.
+	 * @param    string    $outcome    '', 'blocked' or 'limited'.
+	 * @return   int|false             1 when a row was inserted, 2 when one was updated, false on failure.
+	 */
+	private static function upsert_crawler_hit( $bot, $path, $outcome ) {
 		global $wpdb;
 
 		$table_name = self::get_crawler_table_name();
@@ -609,12 +799,14 @@ class TAVC_DB {
 	}
 
 	/**
-	 * Every crawler row, newest day first, for CSV export.
+	 * One batch of crawler rows for CSV export, newest first.
 	 *
 	 * @since    1.4.0
-	 * @return   array    Objects with hit_date, bot, url_path, hits, blocked, limited, last_seen.
+	 * @param    int    $before_id    Only rows with a smaller id; 0 for the first batch.
+	 * @param    int    $limit        Rows per batch.
+	 * @return   array                Objects with id, hit_date, bot, url_path, hits, blocked, limited, last_seen.
 	 */
-	public static function get_all_crawler_hits_for_csv() {
+	public static function get_crawler_hits_csv_batch( $before_id = 0, $limit = 2000 ) {
 		global $wpdb;
 
 		$table_name = self::get_crawler_table_name();
@@ -622,13 +814,11 @@ class TAVC_DB {
 			return array();
 		}
 
-		if ( self::crawler_has_outcome_columns() ) {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			return (array) $wpdb->get_results( $wpdb->prepare( 'SELECT hit_date, bot, url_path, hits, blocked, limited, last_seen FROM %i ORDER BY hit_date DESC, bot ASC, hits DESC', $table_name ) );
-		}
+		$outcome   = self::crawler_has_outcome_columns() ? 'blocked, limited' : '0 AS blocked, 0 AS limited';
+		$before_id = $before_id > 0 ? (int) $before_id : PHP_INT_MAX;
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		return (array) $wpdb->get_results( $wpdb->prepare( 'SELECT hit_date, bot, url_path, hits, 0 AS blocked, 0 AS limited, last_seen FROM %i ORDER BY hit_date DESC, bot ASC, hits DESC', $table_name ) );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $outcome is one of two fixed strings.
+		return (array) $wpdb->get_results( $wpdb->prepare( "SELECT id, hit_date, bot, url_path, hits, {$outcome}, last_seen FROM %i WHERE id < %d ORDER BY id DESC LIMIT %d", $table_name, $before_id, max( 1, (int) $limit ) ) );
 	}
 
 	/**

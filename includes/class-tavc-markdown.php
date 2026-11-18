@@ -37,17 +37,30 @@ class TAVC_Markdown {
 	private static $skip_tags = array( 'script', 'style', 'noscript', 'iframe', 'form', 'button', 'input', 'select', 'textarea', 'svg', 'canvas', 'template' );
 
 	/**
+	 * Address relative links are resolved against during a conversion.
+	 *
+	 * @since    1.4.0
+	 * @var      string
+	 */
+	private static $base_url = '';
+
+	/**
 	 * Convert an HTML fragment to Markdown.
 	 *
 	 * @since    1.3.0
-	 * @param    string    $html    HTML fragment.
+	 * @since    1.4.0 Added $base_url.
+	 * @param    string    $html        HTML fragment.
+	 * @param    string    $base_url    Address of the page the HTML comes from, for relative
+	 *                                  links such as "page-2". Defaults to the home URL.
 	 * @return   string
 	 */
-	public static function from_html( $html ) {
+	public static function from_html( $html, $base_url = '' ) {
 		$html = trim( (string) $html );
 		if ( '' === $html ) {
 			return '';
 		}
+
+		self::$base_url = '' !== $base_url ? (string) $base_url : home_url( '/' );
 
 		if ( ! class_exists( 'DOMDocument' ) ) {
 			return self::plain_text( $html );
@@ -325,6 +338,17 @@ class TAVC_Markdown {
 			$url = ( is_ssl() ? 'https:' : 'http:' ) . $url;
 		} elseif ( 0 === strpos( $url, '/' ) ) {
 			$url = home_url( $url );
+		} elseif ( ! preg_match( '/^[a-z][a-z0-9+.\-]*:/i', $url ) ) {
+			// Relative to the page ("page-2", "?p=5"): resolve against its address,
+			// otherwise esc_url_raw() would turn "page-2" into "http://page-2".
+			$base = '' !== self::$base_url ? self::$base_url : home_url( '/' );
+			if ( 0 === strpos( $url, '?' ) ) {
+				$query_position = strpos( $base, '?' );
+				$url            = ( false !== $query_position ? substr( $base, 0, $query_position ) : $base ) . $url;
+			} else {
+				$base = preg_replace( '/[?#].*$/', '', $base );
+				$url  = substr( $base, 0, strrpos( $base, '/' ) + 1 ) . $url;
+			}
 		}
 
 		$url = esc_url_raw( $url, array( 'http', 'https', 'mailto' ) );

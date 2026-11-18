@@ -56,6 +56,13 @@ class TAVC_Crawler_Logger {
 		$path        = wp_parse_url( $request_uri, PHP_URL_PATH );
 		$path        = ( is_string( $path ) && '' !== $path ) ? $path : '/';
 
+		// Requests for pages that do not exist share one row per crawler and day,
+		// so random addresses cannot add a row each. llms.txt served through the
+		// path fallback is still a 404 query at this point and keeps its path.
+		if ( is_404() && ! in_array( strtolower( TAVC_Enforcer::to_home_relative_path( $path ) ), array( '/llms.txt', '/llms-full.txt' ), true ) ) {
+			$path = TAVC_DB::NOT_FOUND_PATH;
+		}
+
 		/**
 		 * Filters whether an AI crawler request is logged.
 		 *

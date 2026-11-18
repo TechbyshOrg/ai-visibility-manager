@@ -149,31 +149,53 @@ class TAVC_Enforcer {
 	 * @return   int               Requests counted this minute, including this one.
 	 */
 	public static function count_request( $bot ) {
-		$minute = (int) floor( time() / MINUTE_IN_SECONDS );
+		// Counted per crawler and client network (IPv4 /24, IPv6 /48). With one counter
+		// per crawler, anyone sending a fake user agent could use up the real crawler's
+		// budget and get it refused.
+		return TAVC_DB::bump_counter( 'rate|' . $bot . '|' . self::get_network_key( self::get_client_ip() ), MINUTE_IN_SECONDS );
+	}
 
-		if ( wp_using_ext_object_cache() ) {
-			$key = $bot . '_' . $minute;
-			wp_cache_add( $key, 0, self::RATE_CACHE_GROUP, 2 * MINUTE_IN_SECONDS );
-			$count = wp_cache_incr( $key, 1, self::RATE_CACHE_GROUP );
-			if ( false !== $count ) {
-				return (int) $count;
-			}
+	/**
+	 * The visitor's IP address.
+	 *
+	 * REMOTE_ADDR by default. Sites behind a proxy or CDN that does not restore
+	 * the visitor address can return the right one with the tavc_client_ip filter.
+	 *
+	 * @since    1.4.0
+	 * @return   string    Valid IP address, or an empty string.
+	 */
+	public static function get_client_ip() {
+		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+
+		/**
+		 * Filters the visitor IP address used for rate limits and duplicate-visit checks.
+		 *
+		 * The address is never stored; only a one-way hash is kept, for at most a day.
+		 *
+		 * @since 1.4.0
+		 *
+		 * @param string $ip REMOTE_ADDR.
+		 */
+		$ip = (string) apply_filters( 'tavc_client_ip', $ip );
+
+		return false !== filter_var( $ip, FILTER_VALIDATE_IP ) ? $ip : '';
+	}
+
+	/**
+	 * The network an IP address belongs to: the first three IPv4 octets or the
+	 * first 48 bits of an IPv6 address.
+	 *
+	 * @since    1.4.0
+	 * @param    string    $ip    IP address.
+	 * @return   string
+	 */
+	public static function get_network_key( $ip ) {
+		$packed = '' !== $ip ? inet_pton( $ip ) : false;
+		if ( false === $packed ) {
+			return 'unknown';
 		}
 
-		$key   = self::RATE_CACHE_GROUP . '_' . $bot;
-		$state = get_transient( $key );
-		$count = ( is_array( $state ) && isset( $state['minute'], $state['count'] ) && (int) $state['minute'] === $minute ) ? (int) $state['count'] + 1 : 1;
-
-		set_transient(
-			$key,
-			array(
-				'minute' => $minute,
-				'count'  => $count,
-			),
-			2 * MINUTE_IN_SECONDS
-		);
-
-		return $count;
+		return bin2hex( substr( $packed, 0, 4 === strlen( $packed ) ? 3 : 6 ) );
 	}
 
 	/**
@@ -250,13 +272,24 @@ class TAVC_Enforcer {
 	 * @return   bool
 	 */
 	public static function is_exempt_request( $path ) {
-		// Plain-permalink forms: ?robots=1 and ?tavc_llms_txt=1|full.
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only routing check.
-		if ( isset( $_GET['robots'] ) || isset( $_GET['tavc_llms_txt'] ) ) {
-			return true;
+		// Plain-permalink forms (?robots=1, ?tavc_llms_txt=1) count only on the home URL
+		// itself and with the exact values WordPress serves the file for; otherwise any
+		// URL (or the REST API) could be read by adding the parameter.
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- read-only routing check.
+		if ( in_array( $path, array( '/', '/index.php' ), true ) && ! isset( $_GET['rest_route'] ) ) {
+			if ( ( isset( $_GET['robots'] ) && '1' === $_GET['robots'] ) || ( isset( $_GET['tavc_llms_txt'] ) && '1' === $_GET['tavc_llms_txt'] ) ) {
+				return true;
+			}
+		}
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+		// "PATHINFO" permalinks serve the files at /index.php/llms.txt.
+		if ( 0 === strpos( $path, '/index.php/' ) ) {
+			$path = substr( $path, strlen( '/index.php' ) );
 		}
 
-		$exempt = array( '/robots.txt', '/llms.txt', '/llms-full.txt' );
+		// llms-full.txt holds the full text of the site, so blocked crawlers do not get it.
+		$exempt = array( '/robots.txt', '/llms.txt' );
 
 		/**
 		 * Filters the paths that blocked crawlers can always read.
@@ -308,7 +341,7 @@ class TAVC_Enforcer {
 			header( 'Retry-After: ' . $retry_after );
 		}
 
-		echo esc_html( "429 Too Many Requests\n\n" . __( 'This crawler is sending requests too quickly. Please slow down and try again later.', 'tbsh-ai-visibility-control' ) . "\n" );
+		self::print_plain_text( "429 Too Many Requests\n\n" . __( 'This crawler is sending requests too quickly. Please slow down and try again later.', 'tbsh-ai-visibility-control' ) . "\n" );
 		exit;
 	}
 
@@ -339,7 +372,22 @@ class TAVC_Enforcer {
 			)
 		);
 
-		echo esc_html( $message );
+		self::print_plain_text( $message );
 		exit;
+	}
+
+	/**
+	 * Print a text/plain body. HTML escaping would show entities such as &#039;
+	 * in translations, so only control characters (other than new lines) are removed.
+	 *
+	 * @since    1.4.0
+	 * @param    string    $text    Message.
+	 */
+	private static function print_plain_text( $text ) {
+		if ( ! headers_sent() ) {
+			header( 'X-Content-Type-Options: nosniff' );
+		}
+
+		echo preg_replace( '/[^\P{Cc}\n]/u', '', (string) $text ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- text/plain with nosniff; control characters removed.
 	}
 }

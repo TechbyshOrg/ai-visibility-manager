@@ -42,6 +42,42 @@ class TAVC_LLMS_Txt {
 	const FULL_CACHE_KEY = 'tavc_llms_full_txt_cache';
 
 	/**
+	 * Option prefix of the stored files (suffix "index" or "full"), not autoloaded.
+	 * Replaces the CACHE_KEY / FULL_CACHE_KEY transients, which are only kept for clean-up.
+	 *
+	 * @since    1.4.0
+	 */
+	const STORE_OPTION = 'tavc_llms_store_';
+
+	/**
+	 * Option holding the cache generation counter.
+	 *
+	 * @since    1.4.0
+	 */
+	const GENERATION_OPTION = 'tavc_llms_generation';
+
+	/**
+	 * Option prefix of the rebuild locks (suffix "index" or "full").
+	 *
+	 * @since    1.4.0
+	 */
+	const LOCK_OPTION = 'tavc_llms_lock_';
+
+	/**
+	 * A stored file older than this is rebuilt even without a content change.
+	 *
+	 * @since    1.4.0
+	 */
+	const MAX_AGE = WEEK_IN_SECONDS;
+
+	/**
+	 * Posts fetched per query while building the files.
+	 *
+	 * @since    1.4.0
+	 */
+	const BATCH_SIZE = 200;
+
+	/**
 	 * Post meta flag that leaves a single post out of llms.txt and llms-full.txt.
 	 */
 	const EXCLUDE_META_KEY = '_tavc_llms_exclude';
@@ -59,6 +95,10 @@ class TAVC_LLMS_Txt {
 	public function register_rewrite_rule() {
 		add_rewrite_rule( '^llms\.txt$', 'index.php?tavc_llms_txt=1', 'top' );
 		add_rewrite_rule( '^llms-full\.txt$', 'index.php?tavc_llms_txt=full', 'top' );
+
+		// "PATHINFO" permalinks (/index.php/%postname%/) match the request including "index.php/".
+		add_rewrite_rule( '^index\.php/llms\.txt$', 'index.php?tavc_llms_txt=1', 'top' );
+		add_rewrite_rule( '^index\.php/llms-full\.txt$', 'index.php?tavc_llms_txt=full', 'top' );
 	}
 
 	/**
@@ -85,35 +125,118 @@ class TAVC_LLMS_Txt {
 			return;
 		}
 
-		if ( 'full' === $type ) {
-			$settings = TAVC_Settings::get_llms_settings();
-			if ( empty( $settings['full_enabled'] ) ) {
-				// Disabled: let the theme render a normal 404 page.
-				$this->send_not_found();
-				return;
-			}
-
-			$output = get_transient( self::FULL_CACHE_KEY );
-			if ( false === $output ) {
-				$output = $this->generate_llms_full_txt();
-				set_transient( self::FULL_CACHE_KEY, $output, WEEK_IN_SECONDS );
-			}
-		} else {
-			// Check cache first
-			$output = get_transient( self::CACHE_KEY );
-			if ( false === $output ) {
-				$output = $this->generate_llms_txt();
-				set_transient( self::CACHE_KEY, $output, WEEK_IN_SECONDS );
-				update_option( 'tavc_llms_txt_last_rebuild', current_time( 'timestamp' ), 'no' );
-			}
+		$settings = TAVC_Settings::get_llms_settings();
+		if ( empty( $settings['enabled'] ) || ( 'full' === $type && empty( $settings['full_enabled'] ) ) ) {
+			// Disabled: let the theme render a normal 404 page.
+			$this->send_not_found();
+			return;
 		}
 
-		// Disable caching in browsers/proxies for live fetching if needed, but output as plain text
+		$output = $this->get_output( $type );
+
+		// The path fallback runs after WordPress has already set a 404 status.
+		status_header( 200 );
 		header( 'Content-Type: text/plain; charset=utf-8' );
+		header( 'X-Content-Type-Options: nosniff' );
 		header( 'X-Robots-Tag: noindex, follow' );
 
-		echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- plain text, not HTML.
 		exit;
+	}
+
+	/**
+	 * The current llms.txt or llms-full.txt content, from the stored copy when it
+	 * is up to date.
+	 *
+	 * Only one request rebuilds a file at a time. While it does, other requests
+	 * get the previous copy, so a burst of crawler requests after a content
+	 * change never runs the expensive build in parallel.
+	 *
+	 * @since    1.4.0
+	 * @param    string    $type    'index' for llms.txt, 'full' for llms-full.txt.
+	 * @return   string
+	 */
+	public function get_output( $type ) {
+		$type   = 'full' === $type ? 'full' : 'index';
+		$stored = self::get_stored( $type );
+		if ( $stored && $stored['fresh'] ) {
+			return $stored['content'];
+		}
+
+		$lock = self::LOCK_OPTION . $type;
+		if ( ! add_option( $lock, time(), '', false ) ) {
+			if ( $stored && time() - (int) get_option( $lock, 0 ) < 2 * MINUTE_IN_SECONDS ) {
+				return $stored['content'];
+			}
+			// No previous copy, or the lock is left over from a request that died.
+			update_option( $lock, time(), false );
+		}
+
+		try {
+			// Read before building: a change made during the build leaves this copy stale.
+			$generation = self::get_generation();
+			$content    = 'full' === $type ? $this->generate_llms_full_txt() : $this->generate_llms_txt();
+
+			update_option(
+				self::STORE_OPTION . $type,
+				array(
+					'content'    => $content,
+					'generation' => $generation,
+					'time'       => time(),
+				),
+				false
+			);
+
+			if ( 'index' === $type ) {
+				update_option( 'tavc_llms_txt_last_rebuild', current_time( 'timestamp' ), false );
+			}
+		} finally {
+			delete_option( $lock );
+		}
+
+		return $content;
+	}
+
+	/**
+	 * The stored copy of a file, with a "fresh" flag.
+	 *
+	 * The copy lives in a non-autoloaded option rather than a transient: it can
+	 * be larger than an object cache item (1 MB on Memcached), and a stale copy
+	 * must stay available while a new one is built.
+	 *
+	 * @since    1.4.0
+	 * @param    string    $type    'index' or 'full'.
+	 * @return   array|null         content, generation, time and fresh; null when nothing is stored.
+	 */
+	public static function get_stored( $type ) {
+		$stored = get_option( self::STORE_OPTION . ( 'full' === $type ? 'full' : 'index' ) );
+		if ( ! is_array( $stored ) || ! isset( $stored['content'], $stored['generation'], $stored['time'] ) || ! is_string( $stored['content'] ) ) {
+			return null;
+		}
+
+		$stored['fresh'] = (int) $stored['generation'] === self::get_generation() && ( time() - (int) $stored['time'] ) < self::MAX_AGE;
+
+		return $stored;
+	}
+
+	/**
+	 * Current cache generation. Bumped by clear_cache(); stored copies from an
+	 * older generation are rebuilt on their next request.
+	 *
+	 * @since    1.4.0
+	 * @return   int
+	 */
+	private static function get_generation() {
+		return (int) get_option( self::GENERATION_OPTION, 0 );
+	}
+
+	/**
+	 * Mark both files out of date. Cheap: one autoloaded option write.
+	 *
+	 * @since    1.4.0
+	 */
+	public static function clear_cache() {
+		update_option( self::GENERATION_OPTION, self::get_generation() + 1, true );
 	}
 
 	/**
@@ -165,10 +288,10 @@ class TAVC_LLMS_Txt {
 		$home_path    = wp_parse_url( home_url( '/' ), PHP_URL_PATH );
 		$home_path    = is_string( $home_path ) ? untrailingslashit( strtolower( $home_path ) ) : '';
 
-		if ( $request_path === $home_path . '/llms.txt' ) {
+		if ( in_array( $request_path, array( $home_path . '/llms.txt', $home_path . '/index.php/llms.txt' ), true ) ) {
 			return 'index';
 		}
-		if ( $request_path === $home_path . '/llms-full.txt' ) {
+		if ( in_array( $request_path, array( $home_path . '/llms-full.txt', $home_path . '/index.php/llms-full.txt' ), true ) ) {
 			return 'full';
 		}
 
@@ -200,17 +323,17 @@ class TAVC_LLMS_Txt {
 		$settings = TAVC_Settings::get_llms_settings();
 
 		$output  = $this->build_header( $settings );
-		$posts   = $this->get_included_posts( $settings, 'index' );
-		$grouped = ! empty( $settings['group_by_type'] ) && count( $posts ) > 1;
+		$lines   = $this->collect_index_lines( $settings );
+		$grouped = ! empty( $settings['group_by_type'] ) && count( $lines ) > 1;
 
 		if ( $grouped ) {
-			foreach ( $posts as $post_type => $type_posts ) {
+			foreach ( $lines as $post_type => $type_lines ) {
 				$type_object = get_post_type_object( $post_type );
 				$label       = $type_object ? $type_object->labels->name : $post_type;
 
 				$output .= '## ' . $this->plain_text( $label ) . "\n\n";
-				foreach ( $type_posts as $post ) {
-					$output .= $this->format_post_line( $post, $settings );
+				foreach ( $type_lines as $line ) {
+					$output .= $line[1];
 				}
 				$output .= "\n";
 			}
@@ -218,10 +341,10 @@ class TAVC_LLMS_Txt {
 		} else {
 			$output .= "## Recent Content\n\n";
 
-			$all_posts = $this->flatten_posts( $posts );
-			if ( ! empty( $all_posts ) ) {
-				foreach ( $all_posts as $post ) {
-					$output .= $this->format_post_line( $post, $settings );
+			$all_lines = $this->flatten_posts( $lines );
+			if ( ! empty( $all_lines ) ) {
+				foreach ( $all_lines as $line ) {
+					$output .= $line[1];
 				}
 			} else {
 				$output .= __( 'No content found.', 'tbsh-ai-visibility-control' ) . "\n";
@@ -313,33 +436,25 @@ class TAVC_LLMS_Txt {
 	}
 
 	/**
-	 * Published, public content to list, grouped by post type.
+	 * WP_Query arguments shared by both files: published, not password-protected,
+	 * newest first, minus the excluded IDs.
 	 *
-	 * @since    1.3.0
-	 * @param    array     $settings    llms.txt settings.
-	 * @param    string    $context     'index' for llms.txt, 'full' for llms-full.txt.
-	 * @return   array                  Post type => WP_Post[] (newest first).
+	 * @since    1.4.0
+	 * @param    array    $settings      llms.txt settings.
+	 * @param    array    $post_types    Selected post types.
+	 * @return   array
 	 */
-	private function get_included_posts( $settings, $context ) {
-		$post_types = apply_filters( 'tavc_llms_txt_post_types', $settings['post_types'] );
-		if ( ! is_array( $post_types ) || empty( $post_types ) ) {
-			$post_types = array( 'post', 'page' );
-		}
-		$post_types = array_values( array_filter( array_map( 'sanitize_key', $post_types ) ) );
-		if ( empty( $post_types ) ) {
-			$post_types = array( 'post', 'page' );
-		}
-
-		// Query public posts and pages. Password-protected entries are omitted
-		// because those URLs are not useful to crawlers without credentials.
+	private function get_query_args( $settings, $post_types ) {
+		// Password-protected entries are omitted because those URLs are not useful
+		// to crawlers without credentials.
 		$args = array(
-			'post_type'      => $post_types,
-			'post_status'    => 'publish',
-			'posts_per_page' => -1,
-			'orderby'        => 'date',
-			'order'          => 'DESC',
-			'has_password'   => false,
-			'no_found_rows'  => true, // Performance optimization
+			'post_type'           => $post_types,
+			'post_status'         => 'publish',
+			'orderby'             => 'date',
+			'order'               => 'DESC',
+			'has_password'        => false,
+			'no_found_rows'       => true,
+			'ignore_sticky_posts' => true,
 		);
 
 		$excluded_ids = $this->get_excluded_ids( $post_types, $settings );
@@ -347,70 +462,135 @@ class TAVC_LLMS_Txt {
 			$args['post__not_in'] = $excluded_ids;
 		}
 
-		$grouped = array_fill_keys( $post_types, array() );
+		return $args;
+	}
 
-		if ( 'full' === $context ) {
-			$args['posts_per_page'] = $settings['full_max_items'];
-			$this->collect_posts( $args, $settings, $context, $grouped );
-		} elseif ( $settings['max_per_type'] > 0 ) {
+	/**
+	 * Run a query in batches and pass each post to a callback.
+	 *
+	 * Only one batch of posts is in memory at a time, so building llms.txt for a
+	 * site with tens of thousands of posts stays within PHP's memory limit.
+	 *
+	 * @since    1.4.0
+	 * @param    array       $args        WP_Query arguments (without paging).
+	 * @param    int         $limit       Maximum number of posts; 0 for no limit.
+	 * @param    callable    $callback    Receives each WP_Post.
+	 */
+	private function each_post( $args, $limit, $callback ) {
+		$seen = 0;
+
+		do {
+			$per_page = $limit > 0 ? min( self::BATCH_SIZE, $limit - $seen ) : self::BATCH_SIZE;
+			$query    = new WP_Query(
+				array_merge(
+					$args,
+					array(
+						'posts_per_page' => $per_page,
+						'offset'         => $seen,
+					)
+				)
+			);
+
+			foreach ( $query->posts as $post ) {
+				call_user_func( $callback, $post );
+			}
+
+			$count = count( $query->posts );
+			$seen += $count;
+
+			// The in-memory object cache would otherwise keep every post and its meta.
+			if ( ! wp_using_ext_object_cache() ) {
+				foreach ( $query->posts as $post ) {
+					wp_cache_delete( $post->ID, 'posts' );
+					wp_cache_delete( $post->ID, 'post_meta' );
+				}
+			}
+		} while ( $count === $per_page && ( 0 === $limit || $seen < $limit ) );
+	}
+
+	/**
+	 * The llms.txt lines, grouped by post type.
+	 *
+	 * Only the formatted line and the post date are kept per post.
+	 *
+	 * @since    1.4.0
+	 * @param    array    $settings    llms.txt settings.
+	 * @return   array                 Post type => array( array( post_date, line ) ), newest first.
+	 */
+	private function collect_index_lines( $settings ) {
+		$post_types = $this->get_selected_post_types( $settings );
+		$args       = $this->get_query_args( $settings, $post_types );
+		$lines      = array_fill_keys( $post_types, array() );
+
+		$collect = function ( $post ) use ( &$lines, $settings ) {
+			if ( isset( $lines[ $post->post_type ] ) && ! $this->is_post_excluded( $post, $settings, 'index' ) ) {
+				$lines[ $post->post_type ][] = array( $post->post_date, $this->format_post_line( $post, $settings ) );
+			}
+		};
+
+		if ( $settings['max_per_type'] > 0 ) {
 			foreach ( $post_types as $post_type ) {
-				$type_args                   = $args;
-				$type_args['post_type']      = $post_type;
-				$type_args['posts_per_page'] = $settings['max_per_type'];
-				$this->collect_posts( $type_args, $settings, $context, $grouped );
+				$this->each_post( array_merge( $args, array( 'post_type' => $post_type ) ), $settings['max_per_type'], $collect );
 			}
 		} else {
-			$this->collect_posts( $args, $settings, $context, $grouped );
+			$this->each_post( $args, 0, $collect );
 		}
+
+		return array_filter( $lines );
+	}
+
+	/**
+	 * Posts for llms-full.txt (at most full_max_items), grouped by post type.
+	 *
+	 * @since    1.3.0
+	 * @since    1.4.0 Only used for llms-full.txt; llms.txt uses collect_index_lines().
+	 * @param    array     $settings    llms.txt settings.
+	 * @param    string    $context     Kept for compatibility; always 'full'.
+	 * @return   array                  Post type => WP_Post[] (newest first).
+	 */
+	private function get_included_posts( $settings, $context = 'full' ) {
+		$post_types = $this->get_selected_post_types( $settings );
+		$grouped    = array_fill_keys( $post_types, array() );
+
+		$this->each_post(
+			$this->get_query_args( $settings, $post_types ),
+			$settings['full_max_items'],
+			function ( $post ) use ( &$grouped, $settings, $context ) {
+				if ( isset( $grouped[ $post->post_type ] ) && ! $this->is_post_excluded( $post, $settings, $context ) ) {
+					$grouped[ $post->post_type ][] = $post;
+				}
+			}
+		);
 
 		return array_filter( $grouped );
 	}
 
 	/**
-	 * Run a query and add the posts that pass the exclusion checks.
+	 * Merge grouped items into one list, newest first.
 	 *
 	 * @since    1.3.0
-	 * @param    array     $args        WP_Query arguments.
-	 * @param    array     $settings    llms.txt settings.
-	 * @param    string    $context     'index' or 'full'.
-	 * @param    array     $grouped     Post type => WP_Post[], by reference.
-	 */
-	private function collect_posts( $args, $settings, $context, &$grouped ) {
-		$query = new WP_Query( $args );
-
-		foreach ( $query->posts as $post ) {
-			if ( ! isset( $grouped[ $post->post_type ] ) || $this->is_post_excluded( $post, $settings, $context ) ) {
-				continue;
-			}
-			$grouped[ $post->post_type ][] = $post;
-		}
-	}
-
-	/**
-	 * Merge grouped posts into one list, newest first.
-	 *
-	 * @since    1.3.0
-	 * @param    array    $grouped    Post type => WP_Post[].
-	 * @return   WP_Post[]
+	 * @since    1.4.0 Also accepts array( post_date, line ) items.
+	 * @param    array    $grouped    Post type => WP_Post[] or array( post_date, line )[].
+	 * @return   array
 	 */
 	private function flatten_posts( $grouped ) {
-		$posts = array();
-		foreach ( $grouped as $type_posts ) {
-			foreach ( $type_posts as $post ) {
-				$posts[] = $post;
+		$items = array();
+		foreach ( $grouped as $type_items ) {
+			foreach ( $type_items as $item ) {
+				$items[] = $item;
 			}
 		}
 
 		if ( count( $grouped ) > 1 ) {
 			usort(
-				$posts,
+				$items,
 				function ( $a, $b ) {
-					return strcmp( $b->post_date, $a->post_date );
+					return strcmp( is_array( $b ) ? $b[0] : $b->post_date, is_array( $a ) ? $a[0] : $a->post_date );
 				}
 			);
 		}
 
-		return $posts;
+		return $items;
 	}
 
 	/**
@@ -437,15 +617,11 @@ class TAVC_LLMS_Txt {
 			)
 		);
 
-		if ( ! empty( $settings['exclude_noindex'] ) ) {
-			$aioseo_table = $wpdb->prefix . 'aioseo_posts';
+		if ( ! empty( $settings['exclude_noindex'] ) && self::has_aioseo_table() ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $aioseo_table ) ) ) === $aioseo_table ) {
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-				$aioseo_ids = $wpdb->get_col( $wpdb->prepare( 'SELECT post_id FROM %i WHERE robots_default = 0 AND robots_noindex = 1', $aioseo_table ) );
-				if ( is_array( $aioseo_ids ) ) {
-					$ids = array_merge( $ids, $aioseo_ids );
-				}
+			$aioseo_ids = $wpdb->get_col( $wpdb->prepare( 'SELECT post_id FROM %i WHERE robots_default = 0 AND robots_noindex = 1', $wpdb->prefix . 'aioseo_posts' ) );
+			if ( is_array( $aioseo_ids ) ) {
+				$ids = array_merge( $ids, $aioseo_ids );
 			}
 		}
 
@@ -524,6 +700,8 @@ class TAVC_LLMS_Txt {
 	private function format_post_line( $post, $settings ) {
 		$url = ( ! empty( $settings['markdown_pages'] ) && ! empty( $settings['markdown_links'] ) ) ? $this->get_markdown_url( $post ) : get_permalink( $post );
 
+		// Parentheses and spaces would end the Markdown link early.
+		$url  = str_replace( array( '(', ')', ' ' ), array( '%28', '%29', '%20' ), (string) $url );
 		$line = sprintf( '- [%s](%s)', TAVC_Markdown::escape_brackets( $this->get_post_title( $post ) ), $url );
 
 		if ( ! empty( $settings['include_excerpts'] ) ) {
@@ -596,9 +774,14 @@ class TAVC_LLMS_Txt {
 	 * @return   string
 	 */
 	private function strip_shortcodes( $content ) {
+		// Registered shortcodes are removed with their enclosed content.
 		$content = strip_shortcodes( (string) $content );
 
-		return preg_replace( '/\[\/?[a-z][a-z0-9_\-]*(?:\s[^\[\]]*)?\/?\]/', '', $content );
+		// Unregistered enclosing shortcodes ([members]…[/members]) often wrap
+		// restricted content: drop what they enclose, not only the tags.
+		$content = preg_replace( '/\[([a-z][a-z0-9_\-]*)(?:\s[^\[\]]*)?\].*?\[\/\1\]/is', '', $content );
+
+		return preg_replace( '/\[\/?[a-z][a-z0-9_\-]*(?:\s[^\[\]]*)?\/?\]/i', '', $content );
 	}
 
 	/**
@@ -622,12 +805,26 @@ class TAVC_LLMS_Txt {
 	 * @return   string
 	 */
 	private function get_post_markdown( $post ) {
-		$content = $this->strip_shortcodes( $post->post_content );
-		if ( ! has_blocks( $content ) ) {
+		$content = (string) $post->post_content;
+
+		if ( has_blocks( $content ) ) {
+			// Render blocks so membership and visibility plugins that filter
+			// render_block can hide restricted content, as on the page itself.
+			$previous_post   = isset( $GLOBALS['post'] ) ? $GLOBALS['post'] : null;
+			$GLOBALS['post'] = $post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- restored below.
+			setup_postdata( $post );
+
+			$content = do_blocks( $content );
+
+			$GLOBALS['post'] = $previous_post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+			if ( $previous_post instanceof WP_Post ) {
+				setup_postdata( $previous_post );
+			}
+		} else {
 			$content = wpautop( $content );
 		}
 
-		return TAVC_Markdown::from_html( $content );
+		return TAVC_Markdown::from_html( $this->strip_shortcodes( $content ), (string) get_permalink( $post ) );
 	}
 
 	/*
@@ -740,7 +937,9 @@ class TAVC_LLMS_Txt {
 
 		$output = $this->generate_markdown_page( $post );
 
+		status_header( 200 );
 		header( 'Content-Type: text/markdown; charset=utf-8' );
+		header( 'X-Content-Type-Options: nosniff' );
 		header( 'X-Robots-Tag: noindex, follow' );
 
 		echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- plain-text Markdown, not HTML.
@@ -853,14 +1052,35 @@ class TAVC_LLMS_Txt {
 	private function is_aioseo_noindex( $post_id ) {
 		global $wpdb;
 
-		$aioseo_table = $wpdb->prefix . 'aioseo_posts';
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $aioseo_table ) ) ) !== $aioseo_table ) {
+		if ( ! self::has_aioseo_table() ) {
 			return false;
 		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		return (bool) $wpdb->get_var( $wpdb->prepare( 'SELECT 1 FROM %i WHERE post_id = %d AND robots_default = 0 AND robots_noindex = 1', $aioseo_table, $post_id ) );
+		return (bool) $wpdb->get_var( $wpdb->prepare( 'SELECT 1 FROM %i WHERE post_id = %d AND robots_default = 0 AND robots_noindex = 1', $wpdb->prefix . 'aioseo_posts', $post_id ) );
+	}
+
+	/**
+	 * Whether All in One SEO is active and its posts table exists.
+	 *
+	 * Checked once per request, and only when the plugin is loaded, so pages do
+	 * not run a SHOW TABLES query on sites without AIOSEO.
+	 *
+	 * @since    1.4.0
+	 * @return   bool
+	 */
+	private static function has_aioseo_table() {
+		global $wpdb;
+
+		static $exists = null;
+
+		if ( null === $exists ) {
+			$table  = $wpdb->prefix . 'aioseo_posts';
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$exists = function_exists( 'aioseo' ) && $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table ) ) ) === $table;
+		}
+
+		return $exists;
 	}
 
 	/**
@@ -913,19 +1133,62 @@ class TAVC_LLMS_Txt {
 	}
 
 	/**
-	 * Clear cache when a post is saved, updated or deleted.
+	 * Mark both files out of date.
 	 *
 	 * @since    1.0.0
-	 * @param    int    $post_id    The post ID.
+	 * @since    1.4.0 Bumps the cache generation instead of deleting transients.
+	 * @param    int    $post_id    Unused; kept for backward compatibility.
 	 */
 	public function clear_llms_txt_cache( $post_id = 0 ) {
-		// Ignore revisions or autosaves
-		if ( $post_id && ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) ) {
+		self::clear_cache();
+	}
+
+	/**
+	 * Clear the cache only when a change can affect the files: a post of a
+	 * selected content type enters or leaves the published state, or a
+	 * published one is updated. Orders, menu items, revisions and drafts never do.
+	 *
+	 * @since    1.4.0
+	 * @param    string     $new_status    New post status.
+	 * @param    string     $old_status    Old post status.
+	 * @param    WP_Post    $post          Post.
+	 */
+	public function on_post_status_change( $new_status, $old_status, $post ) {
+		if ( 'publish' !== $new_status && 'publish' !== $old_status ) {
 			return;
 		}
 
-		delete_transient( self::CACHE_KEY );
-		delete_transient( self::FULL_CACHE_KEY );
+		if ( $this->affects_files( $post ) ) {
+			self::clear_cache();
+		}
+	}
+
+	/**
+	 * Clear the cache when a published post is deleted without going through the trash.
+	 *
+	 * @since    1.4.0
+	 * @param    int             $post_id    Post ID.
+	 * @param    WP_Post|null    $post       Post (WordPress 5.5+).
+	 */
+	public function on_post_deleted( $post_id, $post = null ) {
+		if ( $post instanceof WP_Post && 'publish' === $post->post_status && $this->affects_files( $post ) ) {
+			self::clear_cache();
+		}
+	}
+
+	/**
+	 * Whether a post belongs to a content type listed in the files.
+	 *
+	 * @since    1.4.0
+	 * @param    WP_Post    $post    Post.
+	 * @return   bool
+	 */
+	private function affects_files( $post ) {
+		if ( ! ( $post instanceof WP_Post ) || wp_is_post_revision( $post ) || wp_is_post_autosave( $post ) ) {
+			return false;
+		}
+
+		return in_array( $post->post_type, $this->get_selected_post_types( TAVC_Settings::get_llms_settings() ), true );
 	}
 
 	/**

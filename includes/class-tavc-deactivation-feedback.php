@@ -339,6 +339,9 @@ class TAVC_Deactivation_Feedback {
 								<input type="checkbox" id="tavc-df-consent" name="tavc_df_consent" value="1" />
 								<span><?php esc_html_e( 'Share my site URL and admin email so you can contact me about this issue.', 'tbsh-ai-visibility-control' ); ?></span>
 							</label>
+							<p class="tavc-df-disclosure">
+								<?php esc_html_e( 'Submitting also sends your answer and these technical details: plugin, WordPress and PHP versions, site language, active theme name and whether the site is a multisite network. Nothing is sent if you skip.', 'tbsh-ai-visibility-control' ); ?>
+							</p>
 						</div>
 					</div>
 

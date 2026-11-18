@@ -24,7 +24,7 @@ Block AI training bots such as GPTBot and ClaudeBot in one click, while search c
 
 ### Control which AI crawlers can read your site
 
-* **21 AI crawlers in three groups**: training crawlers, AI search crawlers, and fetchers that open a page when a person asks an AI assistant to. Each crawler shows who runs it and what it does.
+* **26 AI crawlers in three groups**: training crawlers, AI search crawlers, and fetchers that open a page when a person asks an AI assistant to. Each crawler shows who runs it and what it does.
 * **One-click quick setup**: Allow all, Block AI training and allow AI search, Block all, or choose your own.
 * **Clear status**: every crawler shows "Allowed" or "Blocked", and each group shows how many are blocked.
 * **Custom robots.txt rules**: block any other crawler, or block a crawler from part of your site only, for example `/members/`. Invalid lines are rejected and shown to you.
@@ -100,7 +100,7 @@ You can block any other crawler with your own robots.txt rules.
 
 ### For developers
 
-Filters let you extend the plugin: `tavc_bot_definitions` (add crawlers), `tavc_ai_referrer_domains` and `tavc_ai_utm_sources` (add AI platforms), `tavc_llms_txt_post_types`, `tavc_llms_txt_include_post`, `tavc_llms_txt_output`, `tavc_llms_full_txt_output`, `tavc_llms_full_txt_max_bytes` and `tavc_markdown_page_output` (llms.txt and Markdown pages), `tavc_custom_robots_rules` (robots.txt), `tavc_refuse_blocked_crawler`, `tavc_enforcement_exempt_paths` and `tavc_rate_limit_per_minute` (turning crawlers away), `tavc_log_crawler_visit`, `tavc_beacon_hourly_limit`, `tavc_digest_email` and `tavc_woocommerce_order_ai_source`. The `tavc_crawler_request_refused` action fires when a crawler request is refused.
+Filters let you extend the plugin: `tavc_bot_definitions` (add crawlers), `tavc_ai_referrer_domains` and `tavc_ai_utm_sources` (add AI platforms), `tavc_llms_txt_post_types`, `tavc_llms_txt_include_post`, `tavc_llms_txt_output`, `tavc_llms_full_txt_output`, `tavc_llms_full_txt_max_bytes` and `tavc_markdown_page_output` (llms.txt and Markdown pages), `tavc_custom_robots_rules` (robots.txt), `tavc_refuse_blocked_crawler`, `tavc_enforcement_exempt_paths` and `tavc_rate_limit_per_minute` (turning crawlers away), `tavc_log_crawler_visit`, `tavc_crawler_paths_per_day`, `tavc_beacon_hourly_limit`, `tavc_client_ip` (visitor address behind a proxy), `tavc_referral_allowed_query_args`, `tavc_digest_email` and `tavc_woocommerce_order_ai_source`. The `tavc_crawler_request_refused` action fires when a crawler request is refused.
 
 ### External services
 
@@ -134,7 +134,7 @@ No. Google Search uses Googlebot, which AI Visibility Control never blocks. Goog
 
 = Which AI crawlers can I block? =
 
-21 crawlers in three groups. Training: GPTBot, ClaudeBot, Google-Extended, Applebot-Extended, CCBot, Amazonbot, Bytespider, meta-externalagent, FacebookBot, AI2Bot and omgili. AI search: OAI-SearchBot, Claude-SearchBot, PerplexityBot, DuckAssistBot and YouBot. User-requested fetchers: ChatGPT-User, Claude-User, Perplexity-User, MistralAI-User and meta-externalfetcher. You can block any other crawler with custom robots.txt rules.
+26 crawlers in three groups. Training: GPTBot, ClaudeBot, Google-Extended, Applebot-Extended, CCBot, Amazonbot, Bytespider, meta-externalagent, FacebookBot, AI2Bot, omgili, cohere-ai, Diffbot, PanguBot, Timpibot and ImagesiftBot. AI search: OAI-SearchBot, Claude-SearchBot, PerplexityBot, DuckAssistBot and YouBot. User-requested fetchers: ChatGPT-User, Claude-User, Perplexity-User, MistralAI-User and meta-externalfetcher. You can block any other crawler with custom robots.txt rules.
 
 = Do AI crawlers have to obey robots.txt? =
 
@@ -142,7 +142,7 @@ No. robots.txt is a request, not a lock. Major AI companies say their crawlers f
 
 = Can the plugin block crawlers that ignore robots.txt? =
 
-Yes, for crawlers that identify themselves. Turn on "Refuse requests from blocked crawlers" on the AI Crawlers tab, and blocked crawlers get a short "403 Forbidden" response instead of your pages. robots.txt and llms.txt stay readable so every crawler can see your rules. Crawlers are recognised by their User-Agent, which a bot can fake, and pages served from a page cache or CDN never reach WordPress, so add CDN or server rules for complete blocking.
+Yes, for crawlers that identify themselves. Turn on "Refuse requests from blocked crawlers" on the AI Crawlers tab, and blocked crawlers get a short "403 Forbidden" response instead of your pages. robots.txt and llms.txt stay readable so every crawler can see your rules. Crawlers are recognised by their User-Agent, which a bot can fake, and pages served from a page cache or CDN never reach WordPress. For complete blocking, the AI Crawlers tab shows ready-to-copy Apache and nginx rules for the crawlers you block; the plugin never edits server files itself.
 
 = An AI crawler is slowing down my site. What can I do? =
 
@@ -178,7 +178,7 @@ Yes, with WooCommerce 8.5 or later and WooCommerce Order Attribution turned on. 
 
 = Does it store personal data, use cookies or need an account? =
 
-No account, no API key and no cookies. AI Visibility Control does not store IP addresses: a one-way hash is kept for a few minutes to avoid counting the same visit twice. Logs stay in your own WordPress database and contain the date, the AI platform and the page visited.
+No account, no API key and no cookies. AI Visibility Control does not store IP addresses: a one-way hash is kept for at most one day to avoid counting the same visit twice and to apply rate limits. Logs stay in your own WordPress database and contain the date, the AI platform and the page visited, without search terms or other query parameters. New installs keep AI traffic logs for one year; you can change this under Settings & Tools.
 
 = Will it slow down my site, and does it change my existing robots.txt? =
 
@@ -195,7 +195,7 @@ By default, your logs and settings are kept when you delete the plugin. To remov
 == Screenshots ==
 
 1. Overview: a "Get started" checklist, AI visits in the last 30 days with the change from the previous period, the last AI visit, llms.txt status, crawlers blocked, and a health check that shows how to fix each problem.
-2. AI Crawlers: quick setup to block AI training and allow AI search, an "Allowed" or "Blocked" label for each of the 21 crawlers, turning blocked crawlers away and the crawl rate limit, AI crawler activity with refused requests and the most crawled pages, custom robots.txt rules, Content Signals and a preview of the rules added to robots.txt.
+2. AI Crawlers: quick setup to block AI training and allow AI search, an "Allowed" or "Blocked" label for each crawler, turning blocked crawlers away and the crawl rate limit, AI crawler activity with refused requests and the most crawled pages, custom robots.txt rules, Content Signals and a preview of the rules added to robots.txt.
 3. llms.txt: the file address, size and AI crawler fetches, a live preview, and settings for content types, About text, grouping, item limits, noindex content, llms-full.txt and Markdown versions of pages.
 4. AI Traffic: AI visits per day, top AI platforms such as ChatGPT and Perplexity, the most visited pages, the latest visits with how each was detected, and WooCommerce orders from AI with revenue, average order value, top products and the pages where buyers arrived.
 5. Settings & Tools: UTM detection, cache-compatible tracking, crawler logging, log retention and the weekly or monthly summary email, plus CSV exports, maintenance tools and a separate Danger Zone.
@@ -211,10 +211,25 @@ By default, your logs and settings are kept when you delete the plugin. To remov
 * New: WooCommerce report shows the average order value, the products AI visitors buy most and the pages where they arrived.
 * New: CSV export of AI crawler visits.
 * New: The summary email can be sent weekly or monthly.
-* New: FacebookBot (Meta) and omgili (Webz.io) training crawlers (21 in total).
+* New: FacebookBot (Meta), omgili (Webz.io), cohere-ai, Diffbot, PanguBot (Huawei), Timpibot and ImagesiftBot training crawlers (26 in total).
+* New: Option to stop publishing llms.txt and llms-full.txt, with a reminder when every AI crawler is blocked.
+* New: Copy-ready Apache and nginx rules that block the selected crawlers before WordPress or a page cache runs.
 * New: The Status health check warns when a page cache stops blocked crawlers from being turned away.
 * Improvement: The Status tab links to the WordPress.org support forum for help.
 * Fix: The selected period (7, 30 or 90 days) is highlighted again on the AI Traffic tab.
+* Improvement: llms.txt is built in small batches by one request at a time, and the previous copy is served while it is rebuilt. It is rebuilt only when published content of the listed types changes, not on every order or menu save. New installs list at most 1,000 items per content type.
+* Improvement: The crawl rate limit is counted per crawler and network, so a crawler faking another's name cannot use up its limit. Rate limits and duplicate-visit checks no longer write to the options table on every request.
+* Improvement: Requests for missing pages, and more than 5,000 different pages per crawler per day, are grouped into one row, so fake crawler traffic cannot fill the database.
+* Improvement: The settings page loads only the open tab, AI Traffic opens on the last 30 days, and CSV exports are written in batches.
+* Improvement: Site Health checks run in the background and confirm that robots.txt really contains the plugin's rules.
+* Improvement: "Get started" progress is saved for each user instead of in the browser.
+* Privacy: Logged AI visit addresses no longer keep search terms or other query parameters (only content identifiers such as ?p=), and new installs keep AI traffic logs for one year.
+* Fix: Blocked crawlers can no longer read pages or the REST API by adding ?robots= to an address, and blocked crawlers are no longer served llms-full.txt.
+* Fix: Page addresses in non-Latin scripts (for example Cyrillic or Arabic) are logged correctly.
+* Fix: llms.txt and .md pages return status 200 when served before the rewrite rules are refreshed.
+* Fix: llms-full.txt and .md pages render blocks (so membership plugins can hide restricted content) and leave out text wrapped in shortcodes of inactive plugins. Relative links are resolved correctly.
+* Fix: After saving a form you stay on the same tab, and one-time messages are not shown again.
+* Fix: On multisite, uninstalling removes the data of every site that opted in, and network deactivation cleans up every site.
 * Fix: Sites installed in a sub-folder get a clear robots.txt health message (crawlers only read robots.txt at the domain root) instead of advice to delete a physical file, and the AI Crawlers tab links to the generated rules instead of a missing page.
 
 = 1.3.0 =
@@ -252,7 +267,6 @@ By default, your logs and settings are kept when you delete the plugin. To remov
 
 = 1.1.0 =
 * Improvement: Smaller download; development source files are no longer included.
-* New: Pro beta contact details.
 * Improvement: Internal version numbers are consistent.
 
 = 1.0.2 =
@@ -267,7 +281,7 @@ By default, your logs and settings are kept when you delete the plugin. To remov
 == Upgrade Notice ==
 
 = 1.4.0 =
-Big update from 1.2.0: block AI training while staying in AI search, 21 AI crawlers, optional 403 and rate limits for crawlers, llms.txt controls and .md pages, AI traffic and WooCommerce sales reports. Your settings and logs are kept; new options stay off until you turn them on.
+Big update from 1.2.0: block AI training while staying in AI search, 26 AI crawlers, optional 403 and rate limits for crawlers, llms.txt controls and .md pages, AI traffic and WooCommerce sales reports. Your settings and logs are kept; new options stay off until you turn them on.
 
 = 1.3.0 =
 Block AI training and stay in AI search with one click, 19 AI crawlers, llms.txt controls, AI traffic reports and WooCommerce sales from AI. Your settings and logs are kept.

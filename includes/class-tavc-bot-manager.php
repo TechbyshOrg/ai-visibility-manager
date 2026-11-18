@@ -147,4 +147,56 @@ class TAVC_Bot_Manager {
 
 		return "\nUser-agent: *\nContent-Signal: " . implode( ', ', $parts ) . "\nDisallow:\n";
 	}
+
+	/**
+	 * Web server rules that refuse the blocked crawlers before WordPress (or a
+	 * page cache) runs. Shown on the AI Crawlers tab for copying; never written
+	 * to any file by the plugin.
+	 *
+	 * Crawlers without their own user agent (Google-Extended, Applebot-Extended)
+	 * are robots.txt tokens only and are left out. robots.txt and llms.txt stay
+	 * readable so crawlers can still see the rules.
+	 *
+	 * @since    1.4.0
+	 * @param    string    $format    'apache' or 'nginx'.
+	 * @return   string               Rules, or '' when no blocked crawler has a user agent.
+	 */
+	public static function get_server_rules( $format ) {
+		$definitions = TAVC_Bots::get_definitions();
+		$agents      = array();
+
+		foreach ( TAVC_Bots::get_blocked_settings() as $slug => $blocked ) {
+			if ( $blocked && isset( $definitions[ $slug ] ) && '' !== $definitions[ $slug ]['ua'] ) {
+				// Tokens are limited to letters, digits, "-", "_" and ".", so only the dot needs escaping.
+				$agents[] = str_replace( '.', '\.', preg_replace( '/[^A-Za-z0-9._\-]/', '', $definitions[ $slug ]['ua'] ) );
+			}
+		}
+
+		$agents = array_values( array_unique( array_filter( $agents ) ) );
+		if ( empty( $agents ) ) {
+			return '';
+		}
+
+		$pattern   = '(' . implode( '|', $agents ) . ')';
+		$home_path = wp_parse_url( home_url( '/' ), PHP_URL_PATH );
+		$home_path = is_string( $home_path ) ? trailingslashit( $home_path ) : '/';
+		$exempt    = '^(/robots\.txt|' . preg_quote( $home_path, '/' ) . 'llms\.txt)$';
+
+		if ( 'nginx' === $format ) {
+			return "# AI Visibility Control: refuse blocked AI crawlers. Add inside the server { } block.\n"
+				. "set \$tavc_block 0;\n"
+				. "if (\$http_user_agent ~* \"{$pattern}\") { set \$tavc_block 1; }\n"
+				. "if (\$uri ~ \"{$exempt}\") { set \$tavc_block 0; }\n"
+				. "if (\$tavc_block = 1) { return 403; }\n";
+		}
+
+		return "# BEGIN AI Visibility Control: refuse blocked AI crawlers\n"
+			. "<IfModule mod_rewrite.c>\n"
+			. "RewriteEngine On\n"
+			. "RewriteCond %{REQUEST_URI} !{$exempt}\n"
+			. "RewriteCond %{HTTP_USER_AGENT} {$pattern} [NC]\n"
+			. "RewriteRule .* - [F,L]\n"
+			. "</IfModule>\n"
+			. "# END AI Visibility Control\n";
+	}
 }
