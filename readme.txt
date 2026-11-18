@@ -93,9 +93,8 @@ You can block any other crawler with your own robots.txt rules.
 * Logs stay in your WordPress database. You choose how long they are kept, and you can export or delete them at any time.
 * Suggested text for your privacy policy is added under Settings > Privacy.
 
-### Documentation and support
+### Support
 
-* [Read the documentation](https://www.techbysh.com/docs/tbsh-ai-visibility-control.html)
 * [Ask a question in the support forum](https://wordpress.org/support/plugin/tbsh-ai-visibility-control/)
 * [Source code on GitHub](https://github.com/TechbyshOrg/ai-visibility-manager)
 
@@ -214,6 +213,7 @@ By default, your logs and settings are kept when you delete the plugin. To remov
 * New: The summary email can be sent weekly or monthly.
 * New: FacebookBot (Meta) and omgili (Webz.io) training crawlers (21 in total).
 * New: The Status health check warns when a page cache stops blocked crawlers from being turned away.
+* Improvement: The Status tab links to the WordPress.org support forum for help.
 * Fix: The selected period (7, 30 or 90 days) is highlighted again on the AI Traffic tab.
 * Fix: Sites installed in a sub-folder get a clear robots.txt health message (crawlers only read robots.txt at the domain root) instead of advice to delete a physical file, and the AI Crawlers tab links to the generated rules instead of a missing page.
 

@@ -54,3 +54,7 @@ A separate standalone product, `ai-visibility-manager-pro` (prefix `aivmp`), liv
 ## Release
 
 Push a tag: `.github/workflows/create-release.yml` builds a zip for any tag; `deploy-to-wp.yml` deploys `X.Y.Z` tags to WordPress.org SVN (10up action). `.distignore` excludes `docs/`, `.wordpress-org/`, `.github/`, etc. from the shipped plugin.
+
+## Open items (owner will fix later)
+
+- **Documentation page not published.** `https://www.techbysh.com/docs/tbsh-ai-visibility-control.html` returns 404. Its source is `docs/support.html` (not shipped; its canonical and og:url point to that address). Until it is live, help links point to the WordPress.org support forum instead: the Status tab card (`admin/partials/tavc-admin-help.php`) and the readme "Support" section. When the page is published, add a "Read the documentation" link back to both.
