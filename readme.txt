@@ -196,10 +196,10 @@ By default, your logs and settings are kept when you delete the plugin. To remov
 == Screenshots ==
 
 1. Overview: a "Get started" checklist, AI visits in the last 30 days with the change from the previous period, the last AI visit, llms.txt status, crawlers blocked, and a health check that shows how to fix each problem.
-2. AI Crawlers: quick setup to block AI training and allow AI search, an "Allowed" or "Blocked" label for each crawler, AI crawler activity with the most crawled pages, custom robots.txt rules, Content Signals and a preview of the rules added to robots.txt.
-3. llms.txt: the file address, size and AI crawler fetches, a live preview, and settings for content types, About text, grouping, item limits, noindex content and llms-full.txt.
-4. AI Traffic: AI visits per day, top AI platforms such as ChatGPT and Perplexity, the most visited pages, the latest visits with how each was detected, and WooCommerce paid orders and revenue by AI platform.
-5. Settings & Tools: UTM detection, cache-compatible tracking, crawler logging, log retention and the summary email, plus maintenance tools and a separate Danger Zone.
+2. AI Crawlers: quick setup to block AI training and allow AI search, an "Allowed" or "Blocked" label for each of the 21 crawlers, turning blocked crawlers away and the crawl rate limit, AI crawler activity with refused requests and the most crawled pages, custom robots.txt rules, Content Signals and a preview of the rules added to robots.txt.
+3. llms.txt: the file address, size and AI crawler fetches, a live preview, and settings for content types, About text, grouping, item limits, noindex content, llms-full.txt and Markdown versions of pages.
+4. AI Traffic: AI visits per day, top AI platforms such as ChatGPT and Perplexity, the most visited pages, the latest visits with how each was detected, and WooCommerce orders from AI with revenue, average order value, top products and the pages where buyers arrived.
+5. Settings & Tools: UTM detection, cache-compatible tracking, crawler logging, log retention and the weekly or monthly summary email, plus CSV exports, maintenance tools and a separate Danger Zone.
 6. Status: the AI visibility health check and system details for troubleshooting.
 
 == Changelog ==
@@ -213,6 +213,8 @@ By default, your logs and settings are kept when you delete the plugin. To remov
 * New: CSV export of AI crawler visits.
 * New: The summary email can be sent weekly or monthly.
 * New: FacebookBot (Meta) and omgili (Webz.io) training crawlers (21 in total).
+* New: The Status health check warns when a page cache stops blocked crawlers from being turned away.
+* Fix: The selected period (7, 30 or 90 days) is highlighted again on the AI Traffic tab.
 
 = 1.3.0 =
 * New: 12 more AI crawlers (19 in total), grouped into training, AI search and user-requested fetchers.

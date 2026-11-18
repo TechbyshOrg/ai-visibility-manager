@@ -111,7 +111,8 @@ $tavc_bar_width  = max( 1, $tavc_slot_width * 0.7 );
 					)
 				);
 				?>
-				<a href="<?php echo esc_url( $tavc_range_url ); ?>" class="tavc-range-link<?php echo $tavc_range_key === $tavc_range ? ' is-active' : ''; ?>"<?php echo $tavc_range_key === $tavc_range ? ' aria-current="page"' : ''; ?>>
+				<?php // PHP turns numeric keys such as '30' into integers: compare as strings. ?>
+				<a href="<?php echo esc_url( $tavc_range_url ); ?>" class="tavc-range-link<?php echo (string) $tavc_range_key === $tavc_range ? ' is-active' : ''; ?>"<?php echo (string) $tavc_range_key === $tavc_range ? ' aria-current="page"' : ''; ?>>
 					<?php echo esc_html( $tavc_range_label ); ?>
 				</a>
 			<?php endforeach; ?>
