@@ -55,6 +55,12 @@ To build the assets from source:
 2. Run `npm install`
 3. Run `npm run build`
 
+### External services
+
+This plugin does not need any external service to work. It connects to one external service, only in the case below:
+
+1. **Google Apps Script** (https://script.google.com) — Optional deactivation feedback, sent to the plugin author (Techbysh) and stored in a Google Sheet. It is sent **only** when an administrator deactivates the plugin and clicks **Submit & Deactivate** in the feedback popup; **Skip & Deactivate** and closing the popup send nothing. It contains the chosen reason, any text typed, the plugin, WordPress, and PHP versions, the site language, whether the site is multisite, and the active theme name. The site URL and admin email are included only if the administrator ticks the opt-in checkbox. Privacy: https://policies.google.com/privacy Terms: https://policies.google.com/terms
+
 == Installation ==
 
 1. Upload the `tbsh-ai-visibility-control` folder to the `/wp-content/plugins/` directory, or install directly through the WordPress admin panel.
@@ -64,7 +70,7 @@ To build the assets from source:
 == Frequently Asked Questions ==
 
 = Does this plugin require any external API keys or accounts? =
-No. The plugin is 100% self-contained, runs entirely on your local server, and requires no external APIs or accounts.
+No. The plugin is 100% self-contained, runs entirely on your local server, and requires no external APIs or accounts. The only outgoing request is the optional feedback you can choose to send when deactivating the plugin (see External services).
 
 = What is the llms.txt file and why does my site need it? =
 The `llms.txt` file is an emerging web standard that provides LLM crawlers with a lightweight, clean, markdown-formatted directory of your site's content. This ensures AI search platforms read and attribute your content accurately.

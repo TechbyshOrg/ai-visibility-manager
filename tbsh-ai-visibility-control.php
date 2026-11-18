@@ -33,6 +33,14 @@ if ( ! defined( 'TAVC_VERSION' ) ) {
 	define( 'TAVC_VERSION', '1.3.0' );
 }
 
+if ( ! defined( 'TAVC_PLUGIN_FILE' ) ) {
+	define( 'TAVC_PLUGIN_FILE', __FILE__ );
+}
+
+if ( ! defined( 'TAVC_PLUGIN_URL' ) ) {
+	define( 'TAVC_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+}
+
 /**
  * The code that runs during plugin activation.
  * This action is documented in includes/class-tavc-activator.php
@@ -72,6 +80,12 @@ add_action( 'before_woocommerce_init', 'tavc_declare_woocommerce_compatibility' 
  * Core class to start the plugin.
  */
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-tavc.php';
+
+// Optional deactivation feedback survey (Plugins screen and its AJAX handler only).
+if ( is_admin() ) {
+	require_once plugin_dir_path( __FILE__ ) . 'includes/class-tavc-deactivation-feedback.php';
+	TAVC_Deactivation_Feedback::init();
+}
 
 /**
  * Begins execution of the plugin.
