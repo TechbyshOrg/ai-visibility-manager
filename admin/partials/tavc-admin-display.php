@@ -38,7 +38,7 @@ $tavc_tabs = array(
 				<span class="tavc-version-badge">
 					<?php
 					/* translators: %s: plugin version number. */
-					printf( esc_html__( 'Free v%s', 'tbsh-ai-visibility-control' ), esc_html( $this->version ) );
+					printf( esc_html__( 'Version %s', 'tbsh-ai-visibility-control' ), esc_html( $this->version ) );
 					?>
 				</span>
 			</h1>

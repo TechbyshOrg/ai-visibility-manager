@@ -217,4 +217,3 @@ $tavc_discoverability_stats = $this->get_discoverability_stats();
 	</div>
 </details>
 
-<?php require plugin_dir_path( __FILE__ ) . 'tavc-admin-pro.php'; ?>

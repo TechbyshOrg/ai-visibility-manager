@@ -90,10 +90,6 @@ You can block any other crawler with your own robots.txt rules.
 * Logs stay in your WordPress database. You choose how long they are kept, and you can export or delete them at any time.
 * Suggested text for your privacy policy is added under Settings > Privacy.
 
-### Free and Pro
-
-Everything described on this page is free. A Pro version is in beta and is planned to add a real-time AI crawl firewall, bot rate limiting, full Markdown page export and entity graph generation. To try it early, email support@techbysh.com.
-
 ### Documentation and support
 
 * [Read the documentation](https://www.techbysh.com/docs/tbsh-ai-visibility-control.html)
@@ -178,9 +174,9 @@ No to both. The plugin loads nothing on your public pages unless you turn on cac
 
 Yes. On multisite, each site has its own settings, logs and llms.txt. All text in the plugin is translatable, and the admin screens support right-to-left languages.
 
-= What happens to my data if I delete the plugin, and is there a Pro version? =
+= What happens to my data if I delete the plugin? =
 
-By default, your logs and settings are kept when you delete the plugin. To remove everything, tick "Completely Remove Data on Deletion" under Settings & Tools first. Everything described here is free; a Pro version is in beta and is planned to add a real-time crawl firewall, bot rate limiting, full Markdown page export and entity graph generation. Email support@techbysh.com to join the beta.
+By default, your logs and settings are kept when you delete the plugin. To remove everything, tick "Completely Remove Data on Deletion" under Settings & Tools first, then delete the plugin from the Plugins screen.
 
 == Screenshots ==
 
