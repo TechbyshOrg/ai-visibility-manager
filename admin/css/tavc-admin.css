@@ -97,7 +97,8 @@
     gap: 10px;
     margin-bottom: 25px;
     border-bottom: 2px solid var(--tavc-border);
-    padding-bottom: 10px;
+    /* Room for the keyboard focus outline: overflow-x: auto also clips vertically. */
+    padding: 5px 5px 10px;
     overflow-x: auto;
 }
 
@@ -125,6 +126,25 @@
     color: var(--tavc-primary-text);
     background: var(--tavc-primary-light);
     border-color: rgba(99, 102, 241, 0.15);
+}
+
+/*
+ * Core's a:focus adds a box-shadow ring, a 2px radius and a dark color on every click.
+ * Remove it for mouse focus, and show our outline for keyboard focus only.
+ */
+.tavc-tabs .tavc-tab-nav:focus {
+    box-shadow: none;
+    border-radius: 8px;
+    outline: 2px solid transparent; /* Still visible in Windows High Contrast mode. */
+}
+
+.tavc-tabs .tavc-tab-nav:focus:not(.active):not(:hover) {
+    color: var(--tavc-text-muted);
+}
+
+.tavc-tabs .tavc-tab-nav:focus-visible {
+    outline: 2px solid var(--tavc-primary-hover);
+    outline-offset: 2px;
 }
 
 .tavc-tab-nav span.dashicons {
@@ -339,9 +359,8 @@
     transform: translateX(-20px);
 }
 
-/* Keyboard focus for the toggle switches and tabs */
+/* Keyboard focus for the toggle switches and range links (tabs: see .tavc-tabs above) */
 .tavc-bot-toggle input[type="checkbox"]:focus-visible,
-.tavc-tab-nav:focus-visible,
 .tavc-range-link:focus-visible {
     outline: 2px solid var(--tavc-primary-hover);
     outline-offset: 2px;
