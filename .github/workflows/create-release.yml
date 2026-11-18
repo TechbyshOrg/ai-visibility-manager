@@ -35,6 +35,7 @@ jobs:
             --exclude='phpunit.xml.dist' \
             --exclude='scratch' \
             --exclude='docs' \
+            --exclude='CLAUDE.md' \
             --exclude='composer.json' \
             --exclude='composer.lock' \
             --exclude='package.json' \

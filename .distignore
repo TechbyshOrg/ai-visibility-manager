@@ -32,4 +32,5 @@ phpunit.xml
 phpunit.xml.dist
 scratch
 docs
+CLAUDE.md
 *.log
