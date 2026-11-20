@@ -204,42 +204,20 @@ By default, your logs and settings are kept when you delete the plugin. To remov
 == Changelog ==
 
 = 2.0.0 =
-Major update. Everything below is new since 1.2.0.
+Major update since 1.2.0.
 
-* New: 26 AI crawlers (up from 7), grouped into training, AI search and user-requested fetchers.
-* New: Quick setup, including "Block AI training, allow AI search".
-* New: Optionally turn blocked crawlers away with a "403 Forbidden" response, for crawlers that ignore robots.txt. robots.txt and llms.txt stay readable.
-* New: Optional crawl rate limit per AI crawler (10 to 300 requests per minute) with a "429 Too Many Requests" response. User-requested fetchers are never limited.
-* New: AI crawler activity: requests, refused requests, last visit and most crawled pages, including llms.txt fetches, with a CSV export.
-* New: Custom robots.txt rules for any crawler and path, and Content Signals (search, ai-input, ai-train).
-* New: Copy-ready Apache and nginx rules that block the selected crawlers before WordPress or a page cache runs.
-* New: llms.txt settings: content types, About text, short descriptions, grouping, item limit, per-post exclusion, automatic exclusion of noindex content, and an option to stop publishing llms.txt.
-* New: Optional /llms-full.txt with the full text of your newest content as Markdown.
-* New: Optional Markdown version of every page listed in llms.txt, at the page address plus ".md", with a link in the page head and an option to link to these copies from llms.txt.
-* New: AI visits are also detected from UTM tags such as utm_source=chatgpt.com, and from DeepSeek, Mistral, You.com, Phind, Poe, Duck.ai and copilot.com.
-* New: 7, 30 and 90-day AI traffic reports with a daily chart and a comparison with the previous period.
-* New: Optional cache-compatible tracking for sites behind a page cache or CDN.
-* New: WooCommerce orders from AI: paid orders, revenue and average order value by AI source, the products AI visitors buy most and the pages where they arrived (HPOS compatible).
-* New: Optional weekly or monthly summary email.
-* New: Choose how long logs are kept. New installs keep AI traffic logs for one year.
-* New: Health checks on the Status tab and in Tools > Site Health, including warnings for page caches and sub-folder installs, plus suggested privacy policy text.
-* New: Optional deactivation feedback form. Nothing is sent unless you click "Submit & Deactivate".
-* Improvement: The plugin has its own "AI Visibility" admin menu. The old Settings link still works.
-* Improvement: Redesigned screens: a "Get started" checklist, clearer tabs (Overview, AI Crawlers, llms.txt, AI Traffic, Settings & Tools, Status), "Allowed / Blocked" labels, a warning before unsaved changes are lost, and a separate Danger Zone.
-* Improvement: Accessibility: readable status colors and switches (WCAG 2.2 AA contrast), correct heading structure, screen-reader labels and larger switch targets. The layout adapts to narrow screens and right-to-left languages, and no external font is loaded.
-* Improvement: The settings page loads only the open tab, reachability checks run in the background, and CSV exports are written in batches.
-* Improvement: llms.txt is built in small batches by one request at a time, the previous copy is served while it is rebuilt, and it is rebuilt only when published content of the listed types changes. New installs list at most 1,000 items per content type.
-* Improvement: Requests for missing pages, and more than 5,000 different pages per crawler per day, are grouped into one row, so fake crawler traffic cannot fill the database.
-* Improvement: AI visit logs ignore AI crawlers and no longer split the same page by UTM tags. The CSV export has a "Detected Via" column.
-* Improvement: The Status tab links to the WordPress.org support forum for help.
-* Privacy: Logged AI visit addresses no longer keep search terms or other query parameters (only content identifiers such as ?p=).
-* Fix: /llms.txt is no longer redirected to /llms.txt/ on some permalink settings, and returns status 200 before the URL rules are refreshed.
-* Fix: Updating the plugin no longer resets other plugins' URL rules.
-* Fix: llms.txt titles and the site name no longer contain HTML codes such as &amp;#8217;.
-* Fix: Page addresses in non-Latin scripts (for example Cyrillic or Arabic) are logged correctly.
-* Fix: Health checks no longer fail on local or staging sites with self-signed certificates.
-* Fix: Save confirmations appear below the header instead of inside it.
-* Fix: On multisite, uninstalling removes the data of every site that opted in, and network deactivation cleans up every site.
+* New: 26 AI crawlers (up from 7) and one-click "Block AI training, allow AI search".
+* New: Optional 403 for blocked crawlers and a per-crawler rate limit (429). robots.txt and llms.txt stay readable.
+* New: AI crawler activity with refused requests, most crawled pages and CSV export.
+* New: Custom robots.txt rules, Content Signals and copy-ready Apache/nginx rules.
+* New: llms.txt settings, optional llms-full.txt and Markdown (.md) versions of pages.
+* New: AI traffic reports (7, 30, 90 days) with UTM detection and cache-compatible tracking.
+* New: WooCommerce sales from AI: revenue, average order value, top products and entry pages.
+* New: Weekly or monthly summary email, log retention settings and Site Health checks.
+* Improvement: Own "AI Visibility" menu, redesigned and accessible settings screens.
+* Improvement: Faster: llms.txt is built in batches and caches no longer write on every request.
+* Privacy: AI visit logs no longer keep search terms or other query parameters.
+* Fix: Several llms.txt URL, multisite cleanup and non-Latin address fixes.
 
 = 1.2.0 =
 * Fix: Saving the crawler settings no longer resets the uninstall setting, and the other way round.
