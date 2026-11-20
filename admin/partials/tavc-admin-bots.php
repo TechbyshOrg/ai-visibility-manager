@@ -244,7 +244,7 @@ foreach ( $tavc_crawler_summary as $tavc_activity ) {
 				<?php endforeach; ?>
 			</select>
 			<p class="tavc-field-help" id="tavc_rate_limit_help">
-				<?php esc_html_e( 'Requests above the limit get a "429 Too Many Requests" response asking the crawler to slow down; well-behaved crawlers retry later. Each AI training and search crawler is counted separately for each network it connects from, so a fake crawler cannot use up the real crawler\x27s limit. User-requested fetchers such as ChatGPT-User are never limited, because a person is waiting for the answer.', 'tbsh-ai-visibility-control' ); ?>
+				<?php esc_html_e( 'Requests above the limit get a "429 Too Many Requests" response asking the crawler to slow down; well-behaved crawlers retry later. Each AI training and search crawler is counted separately for each network it connects from, so a fake crawler cannot use up the real crawler\'s limit. User-requested fetchers such as ChatGPT-User are never limited, because a person is waiting for the answer.', 'tbsh-ai-visibility-control' ); ?>
 			</p>
 		</fieldset>
 
