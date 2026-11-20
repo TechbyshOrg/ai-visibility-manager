@@ -7,7 +7,7 @@
  * fragment used to recognise its visits.
  *
  * @link       https://techbysh.com
- * @since      1.3.0
+ * @since      2.0.0
  *
  * @package    Tavc
  * @subpackage Tavc/includes
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * AI crawler registry.
  *
- * @since      1.3.0
+ * @since      2.0.0
  * @package    Tavc
  * @subpackage Tavc/includes
  * @author     Techbysh
@@ -46,7 +46,7 @@ class TAVC_Bots {
 	/**
 	 * Per-request cache of the User-Agent lookup map.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @var      array|null
 	 */
 	private static $user_agent_map = null;
@@ -54,7 +54,7 @@ class TAVC_Bots {
 	/**
 	 * Purpose categories, in display order.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   array    Category slug => array( 'label', 'desc' ).
 	 */
 	public static function get_categories() {
@@ -77,10 +77,10 @@ class TAVC_Bots {
 	/**
 	 * Full crawler definitions.
 	 *
-	 * Slugs of the seven crawlers shipped before 1.3.0 are unchanged so saved
+	 * Slugs of the seven crawlers shipped before 2.0.0 are unchanged so saved
 	 * settings keep working.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   array    Slug => array( 'name', 'vendor', 'category', 'desc', 'ua' ).
 	 */
 	public static function get_definitions() {
@@ -282,7 +282,7 @@ class TAVC_Bots {
 		 * search or user). 'vendor', 'desc' and 'ua' (User-Agent fragment used for
 		 * crawler visit logging; empty to skip logging) are optional.
 		 *
-		 * @since 1.3.0
+		 * @since 2.0.0
 		 *
 		 * @param array $bots Slug => definition.
 		 */
@@ -294,7 +294,7 @@ class TAVC_Bots {
 	/**
 	 * Drop malformed entries and fill optional keys.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    array    $bots    Raw definitions.
 	 * @return   array
 	 */
@@ -329,7 +329,7 @@ class TAVC_Bots {
 	/**
 	 * Default stored value for the tavc_blocked_bots option (everything allowed).
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   array    Slug => 0.
 	 */
 	public static function get_default_settings() {
@@ -339,7 +339,7 @@ class TAVC_Bots {
 	/**
 	 * Saved block flags merged over the defaults.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   array    Slug => 0|1 for every known crawler.
 	 */
 	public static function get_blocked_settings() {
@@ -357,7 +357,7 @@ class TAVC_Bots {
 	/**
 	 * Quick setup presets offered on the AI Crawlers tab.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   array    Preset key => array( 'label', 'block' => category slugs ).
 	 */
 	public static function get_presets() {
@@ -380,7 +380,7 @@ class TAVC_Bots {
 	/**
 	 * Identify a known AI crawler from a User-Agent string.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $user_agent    Raw User-Agent header.
 	 * @return   string|false             Crawler slug, or false when not an AI crawler.
 	 */

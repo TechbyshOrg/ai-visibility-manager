@@ -3,7 +3,7 @@
  * Weekly or monthly AI visibility summary email.
  *
  * @link       https://techbysh.com
- * @since      1.3.0
+ * @since      2.0.0
  *
  * @package    Tavc
  * @subpackage Tavc/includes
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Weekly or monthly AI visibility summary email.
  *
- * @since      1.3.0
+ * @since      2.0.0
  * @package    Tavc
  * @subpackage Tavc/includes
  * @author     Techbysh
@@ -27,7 +27,7 @@ class TAVC_Digest {
 	/**
 	 * Send the summary of the last week or month, as configured.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $recipient    Optional address; defaults to the configured recipient.
 	 * @return   bool                    Whether wp_mail() accepted the message.
 	 */
@@ -43,7 +43,7 @@ class TAVC_Digest {
 		/**
 		 * Filters the summary email before it is sent.
 		 *
-		 * @since 1.3.0
+		 * @since 2.0.0
 		 *
 		 * @param array  $message   array( 'subject' => string, 'body' => string ).
 		 * @param string $recipient Recipient address.
@@ -61,8 +61,7 @@ class TAVC_Digest {
 	 * Build the plain-text summary: the 7 full days before today (weekly), or
 	 * the previous calendar month (monthly), compared with the period before.
 	 *
-	 * @since    1.3.0
-	 * @since    1.4.0 Added the $frequency parameter.
+	 * @since    2.0.0
 	 * @param    string    $frequency    'weekly' or 'monthly'.
 	 * @return   array                   array( 'subject' => string, 'body' => string ).
 	 */
@@ -174,8 +173,7 @@ class TAVC_Digest {
 	/**
 	 * Describe the change between two counts.
 	 *
-	 * @since    1.3.0
-	 * @since    1.4.0 Added the $monthly parameter.
+	 * @since    2.0.0
 	 * @param    int     $current     This period.
 	 * @param    int     $previous    Previous period.
 	 * @param    bool    $monthly     Whether the periods are months.

@@ -3,7 +3,7 @@
  * Refuses requests from blocked AI crawlers.
  *
  * @link       https://techbysh.com
- * @since      1.4.0
+ * @since      2.0.0
  *
  * @package    Tavc
  * @subpackage Tavc/includes
@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Crawlers are matched by User-Agent only. Requests answered by a page cache
  * or CDN never reach WordPress and cannot be refused here.
  *
- * @since      1.4.0
+ * @since      2.0.0
  * @package    Tavc
  * @subpackage Tavc/includes
  * @author     Techbysh
@@ -54,7 +54,7 @@ class TAVC_Enforcer {
 	 * plugin has loaded (so the crawler list filter is applied and translations
 	 * can load), before most plugins and the theme do their init work.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 */
 	public function maybe_refuse_request() {
 		if ( is_admin() || wp_doing_cron() || ( defined( 'WP_CLI' ) && WP_CLI ) ) {
@@ -88,7 +88,7 @@ class TAVC_Enforcer {
 			 * Return false to let the request through, for example for a path the
 			 * crawler should still reach.
 			 *
-			 * @since 1.4.0
+			 * @since 2.0.0
 			 *
 			 * @param bool   $refuse Whether to refuse the request.
 			 * @param string $bot    Crawler slug.
@@ -114,7 +114,7 @@ class TAVC_Enforcer {
 	 * User-requested fetchers are not limited by default: each of their
 	 * requests is made for a person who asked an AI assistant about the page.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    string    $bot      Crawler slug.
 	 * @param    int       $limit    Limit from the settings.
 	 * @return   int
@@ -128,7 +128,7 @@ class TAVC_Enforcer {
 		/**
 		 * Filters the requests per minute allowed for an AI crawler.
 		 *
-		 * @since 1.4.0
+		 * @since 2.0.0
 		 *
 		 * @param int    $limit Requests per minute. 0 means no limit.
 		 * @param string $bot   Crawler slug.
@@ -144,7 +144,7 @@ class TAVC_Enforcer {
 	 * site has one; otherwise a short-lived transient. Without an object cache
 	 * the count is approximate when requests arrive at the same moment.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    string    $bot    Crawler slug.
 	 * @return   int               Requests counted this minute, including this one.
 	 */
@@ -161,7 +161,7 @@ class TAVC_Enforcer {
 	 * REMOTE_ADDR by default. Sites behind a proxy or CDN that does not restore
 	 * the visitor address can return the right one with the tavc_client_ip filter.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @return   string    Valid IP address, or an empty string.
 	 */
 	public static function get_client_ip() {
@@ -172,7 +172,7 @@ class TAVC_Enforcer {
 		 *
 		 * The address is never stored; only a one-way hash is kept, for at most a day.
 		 *
-		 * @since 1.4.0
+		 * @since 2.0.0
 		 *
 		 * @param string $ip REMOTE_ADDR.
 		 */
@@ -185,7 +185,7 @@ class TAVC_Enforcer {
 	 * The network an IP address belongs to: the first three IPv4 octets or the
 	 * first 48 bits of an IPv6 address.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    string    $ip    IP address.
 	 * @return   string
 	 */
@@ -201,7 +201,7 @@ class TAVC_Enforcer {
 	/**
 	 * Log, announce and send the refusal.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    string    $bot         Crawler slug.
 	 * @param    string    $raw_path    Requested path as sent.
 	 * @param    string    $path        Path relative to the home URL.
@@ -214,7 +214,7 @@ class TAVC_Enforcer {
 		/**
 		 * Fires before an AI crawler request is refused.
 		 *
-		 * @since 1.4.0
+		 * @since 2.0.0
 		 *
 		 * @param string $bot     Crawler slug.
 		 * @param string $path    Requested path, relative to the site's home URL.
@@ -232,7 +232,7 @@ class TAVC_Enforcer {
 	/**
 	 * Requested URL path as sent by the client, e.g. "/blog/llms.txt".
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @return   string
 	 */
 	public static function get_raw_request_path() {
@@ -246,7 +246,7 @@ class TAVC_Enforcer {
 	 * Path relative to the site's home URL, e.g. "/llms.txt" for
 	 * "/blog/llms.txt" when the site lives in /blog.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    string    $path    Raw request path.
 	 * @return   string
 	 */
@@ -267,7 +267,7 @@ class TAVC_Enforcer {
 	 * Whether the request is for a file every crawler must be able to read:
 	 * robots.txt (its rules), llms.txt and llms-full.txt.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    string    $path    Path relative to the home URL.
 	 * @return   bool
 	 */
@@ -294,7 +294,7 @@ class TAVC_Enforcer {
 		/**
 		 * Filters the paths that blocked crawlers can always read.
 		 *
-		 * @since 1.4.0
+		 * @since 2.0.0
 		 *
 		 * @param string[] $exempt Paths relative to the home URL.
 		 */
@@ -306,7 +306,7 @@ class TAVC_Enforcer {
 	/**
 	 * Count the refused request in the crawler log, when logging is on.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    string    $bot        Crawler slug.
 	 * @param    string    $path       Requested path.
 	 * @param    string    $outcome    Outcome constant.
@@ -328,7 +328,7 @@ class TAVC_Enforcer {
 	/**
 	 * Send a short plain-text 429 response and stop.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 */
 	private static function send_rate_limited() {
 		$retry_after = max( 1, MINUTE_IN_SECONDS - ( time() % MINUTE_IN_SECONDS ) );
@@ -348,7 +348,7 @@ class TAVC_Enforcer {
 	/**
 	 * Send a short plain-text 403 response and stop.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    string    $bot    Crawler slug.
 	 */
 	private static function send_refusal( $bot ) {
@@ -380,7 +380,7 @@ class TAVC_Enforcer {
 	 * Print a text/plain body. HTML escaping would show entities such as &#039;
 	 * in translations, so only control characters (other than new lines) are removed.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    string    $text    Message.
 	 */
 	private static function print_plain_text( $text ) {

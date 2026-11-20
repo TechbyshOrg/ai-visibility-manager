@@ -3,7 +3,7 @@
  * Logs visits from known AI crawlers.
  *
  * @link       https://techbysh.com
- * @since      1.3.0
+ * @since      2.0.0
  *
  * @package    Tavc
  * @subpackage Tavc/includes
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * so the table grows with the number of distinct pages crawled, not with the
  * number of requests. No IP address is stored.
  *
- * @since      1.3.0
+ * @since      2.0.0
  * @package    Tavc
  * @subpackage Tavc/includes
  * @author     Techbysh
@@ -34,7 +34,7 @@ class TAVC_Crawler_Logger {
 	 * Hooked to template_redirect at priority 1 so /llms.txt and robots.txt
 	 * requests are counted before they are served.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 */
 	public function log_crawler_visit() {
 		if ( is_admin() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) || ( defined( 'DOING_CRON' ) && DOING_CRON ) ) {
@@ -66,7 +66,7 @@ class TAVC_Crawler_Logger {
 		/**
 		 * Filters whether an AI crawler request is logged.
 		 *
-		 * @since 1.3.0
+		 * @since 2.0.0
 		 *
 		 * @param bool   $log  Whether to log the request.
 		 * @param string $bot  Crawler slug.

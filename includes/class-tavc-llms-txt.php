@@ -19,9 +19,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Registers the rewrite rules, generates the output in plain text markdown format,
  * handles transient caching, and hooks into save/delete actions to clear cache.
- * Since 1.3.0 it also serves the optional /llms-full.txt file and honours the
+ * Since 2.0.0 it also serves the optional /llms-full.txt file and honours the
  * llms.txt settings (content types, exclusions, noindex, intro and excerpts).
- * Since 1.4.0 it can serve a Markdown version of each listed page at the
+ * Since 2.0.0 it can serve a Markdown version of each listed page at the
  * page URL plus ".md" (for example /about.md), following the same rules.
  *
  * @since      1.0.0
@@ -45,35 +45,35 @@ class TAVC_LLMS_Txt {
 	 * Option prefix of the stored files (suffix "index" or "full"), not autoloaded.
 	 * Replaces the CACHE_KEY / FULL_CACHE_KEY transients, which are only kept for clean-up.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 */
 	const STORE_OPTION = 'tavc_llms_store_';
 
 	/**
 	 * Option holding the cache generation counter.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 */
 	const GENERATION_OPTION = 'tavc_llms_generation';
 
 	/**
 	 * Option prefix of the rebuild locks (suffix "index" or "full").
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 */
 	const LOCK_OPTION = 'tavc_llms_lock_';
 
 	/**
 	 * A stored file older than this is rebuilt even without a content change.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 */
 	const MAX_AGE = WEEK_IN_SECONDS;
 
 	/**
 	 * Posts fetched per query while building the files.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 */
 	const BATCH_SIZE = 200;
 
@@ -152,7 +152,7 @@ class TAVC_LLMS_Txt {
 	 * get the previous copy, so a burst of crawler requests after a content
 	 * change never runs the expensive build in parallel.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    string    $type    'index' for llms.txt, 'full' for llms-full.txt.
 	 * @return   string
 	 */
@@ -204,7 +204,7 @@ class TAVC_LLMS_Txt {
 	 * be larger than an object cache item (1 MB on Memcached), and a stale copy
 	 * must stay available while a new one is built.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    string    $type    'index' or 'full'.
 	 * @return   array|null         content, generation, time and fresh; null when nothing is stored.
 	 */
@@ -223,7 +223,7 @@ class TAVC_LLMS_Txt {
 	 * Current cache generation. Bumped by clear_cache(); stored copies from an
 	 * older generation are rebuilt on their next request.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @return   int
 	 */
 	private static function get_generation() {
@@ -233,7 +233,7 @@ class TAVC_LLMS_Txt {
 	/**
 	 * Mark both files out of date. Cheap: one autoloaded option write.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 */
 	public static function clear_cache() {
 		update_option( self::GENERATION_OPTION, self::get_generation() + 1, true );
@@ -245,7 +245,7 @@ class TAVC_LLMS_Txt {
 	 * redirect_canonical() runs on template_redirect before the file is served
 	 * and would add a trailing slash on sites whose permalinks end with "/".
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string|false    $redirect_url    Canonical redirect target.
 	 * @return   string|false
 	 */
@@ -263,7 +263,7 @@ class TAVC_LLMS_Txt {
 	 * Uses the rewrite query var, with a path fallback for when rewrite rules
 	 * have not been flushed yet.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   string|false    'index', 'full', or false.
 	 */
 	private function get_requested_type() {
@@ -301,7 +301,7 @@ class TAVC_LLMS_Txt {
 	/**
 	 * Mark the current request as a 404 so the theme's 404 template is used.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 */
 	private function send_not_found() {
 		global $wp_query;
@@ -358,7 +358,7 @@ class TAVC_LLMS_Txt {
 	/**
 	 * Generate the llms-full.txt content: the full text of recent content as Markdown.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   string
 	 */
 	public function generate_llms_full_txt() {
@@ -370,7 +370,7 @@ class TAVC_LLMS_Txt {
 		 * The file is cached in the database, so very large values can exceed
 		 * the MySQL max_allowed_packet limit on some hosts.
 		 *
-		 * @since 1.3.0
+		 * @since 2.0.0
 		 *
 		 * @param int $max_bytes Default 2 MB.
 		 */
@@ -402,7 +402,7 @@ class TAVC_LLMS_Txt {
 		/**
 		 * Filters the generated llms-full.txt content.
 		 *
-		 * @since 1.3.0
+		 * @since 2.0.0
 		 *
 		 * @param string $output Markdown text.
 		 */
@@ -413,7 +413,7 @@ class TAVC_LLMS_Txt {
 	/**
 	 * Site title and About section shared by both files.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    array    $settings    llms.txt settings.
 	 * @return   string
 	 */
@@ -439,7 +439,7 @@ class TAVC_LLMS_Txt {
 	 * WP_Query arguments shared by both files: published, not password-protected,
 	 * newest first, minus the excluded IDs.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    array    $settings      llms.txt settings.
 	 * @param    array    $post_types    Selected post types.
 	 * @return   array
@@ -471,7 +471,7 @@ class TAVC_LLMS_Txt {
 	 * Only one batch of posts is in memory at a time, so building llms.txt for a
 	 * site with tens of thousands of posts stays within PHP's memory limit.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    array       $args        WP_Query arguments (without paging).
 	 * @param    int         $limit       Maximum number of posts; 0 for no limit.
 	 * @param    callable    $callback    Receives each WP_Post.
@@ -513,7 +513,7 @@ class TAVC_LLMS_Txt {
 	 *
 	 * Only the formatted line and the post date are kept per post.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    array    $settings    llms.txt settings.
 	 * @return   array                 Post type => array( array( post_date, line ) ), newest first.
 	 */
@@ -542,8 +542,7 @@ class TAVC_LLMS_Txt {
 	/**
 	 * Posts for llms-full.txt (at most full_max_items), grouped by post type.
 	 *
-	 * @since    1.3.0
-	 * @since    1.4.0 Only used for llms-full.txt; llms.txt uses collect_index_lines().
+	 * @since    2.0.0
 	 * @param    array     $settings    llms.txt settings.
 	 * @param    string    $context     Kept for compatibility; always 'full'.
 	 * @return   array                  Post type => WP_Post[] (newest first).
@@ -568,8 +567,7 @@ class TAVC_LLMS_Txt {
 	/**
 	 * Merge grouped items into one list, newest first.
 	 *
-	 * @since    1.3.0
-	 * @since    1.4.0 Also accepts array( post_date, line ) items.
+	 * @since    2.0.0
 	 * @param    array    $grouped    Post type => WP_Post[] or array( post_date, line )[].
 	 * @return   array
 	 */
@@ -597,7 +595,7 @@ class TAVC_LLMS_Txt {
 	 * IDs left out on purpose: the per-post exclusion flag and, when enabled,
 	 * All in One SEO noindex entries (stored in its own table).
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    array    $post_types    Post types.
 	 * @param    array    $settings      llms.txt settings.
 	 * @return   int[]
@@ -631,7 +629,7 @@ class TAVC_LLMS_Txt {
 	/**
 	 * Whether a queried post must be left out.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    WP_Post    $post        Post.
 	 * @param    array      $settings    llms.txt settings.
 	 * @param    string     $context     'index' or 'full'.
@@ -648,12 +646,12 @@ class TAVC_LLMS_Txt {
 		 * Use this to hide members-only or otherwise restricted content, which
 		 * WordPress itself reports as public.
 		 *
-		 * @since 1.3.0
+		 * @since 2.0.0
 		 *
 		 * @param bool    $include Whether to include the post.
 		 * @param WP_Post $post    Post.
 		 * @param string  $context 'index' for llms.txt, 'full' for llms-full.txt,
-		 *                         'markdown' for the page's Markdown version (since 1.4.0).
+		 *                         'markdown' for the page's Markdown version (since 2.0.0).
 		 */
 		return ! apply_filters( 'tavc_llms_txt_include_post', true, $post, $context );
 	}
@@ -664,7 +662,7 @@ class TAVC_LLMS_Txt {
 	 * Supports Yoast SEO, Rank Math, SEOPress and The SEO Framework (post meta).
 	 * All in One SEO is handled in get_excluded_ids().
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    int    $post_id    Post ID.
 	 * @return   bool
 	 */
@@ -692,7 +690,7 @@ class TAVC_LLMS_Txt {
 	/**
 	 * One "- [Title](url)" line, optionally followed by a short description.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    WP_Post    $post        Post.
 	 * @param    array      $settings    llms.txt settings.
 	 * @return   string
@@ -717,7 +715,7 @@ class TAVC_LLMS_Txt {
 	/**
 	 * Full-text section for llms-full.txt.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    WP_Post    $post    Post.
 	 * @return   string
 	 */
@@ -738,7 +736,7 @@ class TAVC_LLMS_Txt {
 	/**
 	 * Plain-text post title.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    WP_Post    $post    Post.
 	 * @return   string
 	 */
@@ -751,7 +749,7 @@ class TAVC_LLMS_Txt {
 	/**
 	 * Short plain-text description: the manual excerpt, or the first 30 words.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    WP_Post    $post    Post.
 	 * @return   string
 	 */
@@ -769,7 +767,7 @@ class TAVC_LLMS_Txt {
 	 * Remove shortcodes, including ones whose plugin does not register them in
 	 * the current request (they would otherwise appear as raw "[tag]" text).
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $content    Post content.
 	 * @return   string
 	 */
@@ -787,7 +785,7 @@ class TAVC_LLMS_Txt {
 	/**
 	 * Strip tags, decode entities and collapse whitespace.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $text    Text or HTML.
 	 * @return   string
 	 */
@@ -800,7 +798,7 @@ class TAVC_LLMS_Txt {
 	/**
 	 * Post content as Markdown.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    WP_Post    $post    Post.
 	 * @return   string
 	 */
@@ -829,7 +827,7 @@ class TAVC_LLMS_Txt {
 
 	/*
 	|--------------------------------------------------------------------------
-	| Markdown versions of pages (1.4.0)
+	| Markdown versions of pages (2.0.0)
 	|--------------------------------------------------------------------------
 	*/
 
@@ -837,7 +835,7 @@ class TAVC_LLMS_Txt {
 	 * Address of a post's Markdown version: the permalink plus ".md", or
 	 * ?tavc_markdown=1 when the site uses plain permalinks.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    WP_Post|int    $post    Post or ID.
 	 * @return   string
 	 */
@@ -869,7 +867,7 @@ class TAVC_LLMS_Txt {
 	 * suffix, so the post is resolved from the path and the query is rewritten
 	 * to that post, flagged with the Markdown query var.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    array    $query_vars    Parsed query vars.
 	 * @return   array
 	 */
@@ -915,7 +913,7 @@ class TAVC_LLMS_Txt {
 	 * ?tavc_markdown=1 form shows the normal page. While the feature is off
 	 * the query var is ignored.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 */
 	public function render_markdown_page() {
 		if ( '1' !== (string) get_query_var( self::MARKDOWN_QUERY_VAR ) ) {
@@ -949,7 +947,7 @@ class TAVC_LLMS_Txt {
 	/**
 	 * Markdown document for one post.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    WP_Post    $post    Post.
 	 * @return   string
 	 */
@@ -970,7 +968,7 @@ class TAVC_LLMS_Txt {
 		/**
 		 * Filters the Markdown version of a post.
 		 *
-		 * @since 1.4.0
+		 * @since 2.0.0
 		 *
 		 * @param string  $output Markdown text.
 		 * @param WP_Post $post   Post.
@@ -983,7 +981,7 @@ class TAVC_LLMS_Txt {
 	/**
 	 * Advertise the Markdown version in the page head.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 */
 	public function print_markdown_alternate_link() {
 		if ( ! is_singular() ) {
@@ -1002,7 +1000,7 @@ class TAVC_LLMS_Txt {
 	/**
 	 * Whether a post has a Markdown version: the same rules as llms.txt.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    WP_Post    $post        Post.
 	 * @param    array      $settings    llms.txt settings.
 	 * @return   bool
@@ -1030,7 +1028,7 @@ class TAVC_LLMS_Txt {
 	/**
 	 * Content types chosen for llms.txt, after the tavc_llms_txt_post_types filter.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    array    $settings    llms.txt settings.
 	 * @return   string[]
 	 */
@@ -1045,7 +1043,7 @@ class TAVC_LLMS_Txt {
 	/**
 	 * Whether All in One SEO marks one post as noindex (stored in its own table).
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    int    $post_id    Post ID.
 	 * @return   bool
 	 */
@@ -1066,7 +1064,7 @@ class TAVC_LLMS_Txt {
 	 * Checked once per request, and only when the plugin is loaded, so pages do
 	 * not run a SHOW TABLES query on sites without AIOSEO.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @return   bool
 	 */
 	private static function has_aioseo_table() {
@@ -1086,7 +1084,7 @@ class TAVC_LLMS_Txt {
 	/**
 	 * Whether the current request asks for a Markdown version.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @return   bool
 	 */
 	private function is_markdown_request() {
@@ -1107,7 +1105,7 @@ class TAVC_LLMS_Txt {
 	/**
 	 * Request path relative to the home URL when it ends in ".md", else null.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @return   string|null    For example "/about.md".
 	 */
 	private function get_markdown_request_path() {
@@ -1136,7 +1134,7 @@ class TAVC_LLMS_Txt {
 	 * Mark both files out of date.
 	 *
 	 * @since    1.0.0
-	 * @since    1.4.0 Bumps the cache generation instead of deleting transients.
+	 * @since    2.0.0 Bumps the cache generation instead of deleting transients.
 	 * @param    int    $post_id    Unused; kept for backward compatibility.
 	 */
 	public function clear_llms_txt_cache( $post_id = 0 ) {
@@ -1148,7 +1146,7 @@ class TAVC_LLMS_Txt {
 	 * selected content type enters or leaves the published state, or a
 	 * published one is updated. Orders, menu items, revisions and drafts never do.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    string     $new_status    New post status.
 	 * @param    string     $old_status    Old post status.
 	 * @param    WP_Post    $post          Post.
@@ -1166,7 +1164,7 @@ class TAVC_LLMS_Txt {
 	/**
 	 * Clear the cache when a published post is deleted without going through the trash.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    int             $post_id    Post ID.
 	 * @param    WP_Post|null    $post       Post (WordPress 5.5+).
 	 */
@@ -1179,7 +1177,7 @@ class TAVC_LLMS_Txt {
 	/**
 	 * Whether a post belongs to a content type listed in the files.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    WP_Post    $post    Post.
 	 * @return   bool
 	 */
@@ -1194,7 +1192,7 @@ class TAVC_LLMS_Txt {
 	/**
 	 * Clear both caches after the llms.txt settings change.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 */
 	public function clear_cache_on_settings_change() {
 		$this->clear_llms_txt_cache();

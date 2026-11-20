@@ -3,7 +3,7 @@
  * WooCommerce AI attribution.
  *
  * @link       https://techbysh.com
- * @since      1.3.0
+ * @since      2.0.0
  *
  * @package    Tavc
  * @subpackage Tavc/includes
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * records at checkout, and flags orders whose source is an AI platform. Works
  * with both the classic and the block checkout, and with HPOS.
  *
- * @since      1.3.0
+ * @since      2.0.0
  * @package    Tavc
  * @subpackage Tavc/includes
  * @author     Techbysh
@@ -51,7 +51,7 @@ class TAVC_WooCommerce {
 	/**
 	 * Whether WooCommerce is active and new enough for order reports.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   bool
 	 */
 	public static function is_available() {
@@ -64,7 +64,7 @@ class TAVC_WooCommerce {
 	 * Hooked to woocommerce_order_save_attribution_data, which WooCommerce fires
 	 * from both checkouts with the unprefixed attribution fields.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    WC_Order    $order    Order.
 	 * @param    array       $data     Attribution data (source_type, referrer, utm_source, ...).
 	 */
@@ -87,7 +87,7 @@ class TAVC_WooCommerce {
 	/**
 	 * AI platform from attribution data.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    array    $data    Attribution data.
 	 * @return   string|false
 	 */
@@ -102,7 +102,7 @@ class TAVC_WooCommerce {
 		/**
 		 * Filters the AI platform detected for a WooCommerce order.
 		 *
-		 * @since 1.3.0
+		 * @since 2.0.0
 		 *
 		 * @param string|false $source AI platform name, or false.
 		 * @param array        $data   WooCommerce attribution data.
@@ -113,7 +113,7 @@ class TAVC_WooCommerce {
 	/**
 	 * Show the AI source on the order edit screen.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    WC_Order    $order    Order.
 	 */
 	public function render_order_ai_source( $order ) {
@@ -136,8 +136,7 @@ class TAVC_WooCommerce {
 	/**
 	 * Paid orders from AI platforms.
 	 *
-	 * @since    1.3.0
-	 * @since    1.4.0 Added average order value, top products and top landing pages.
+	 * @since    2.0.0
 	 * @param    int    $since_timestamp    Unix timestamp (0 = all time).
 	 * @return   array {
 	 *     @type array $rows          Per platform and currency: 'source', 'currency', 'orders',
@@ -163,7 +162,7 @@ class TAVC_WooCommerce {
 		$cache_key       = 'tavc_wc_report_' . ( $since_timestamp ? gmdate( 'Ymd', $since_timestamp ) : 'all' );
 		$cached          = get_transient( $cache_key );
 
-		// Reports cached by 1.3.0 lack the 1.4.0 keys: build them again.
+		// Reports cached in an older format lack these keys: build them again.
 		if ( is_array( $cached ) && isset( $cached['rows'], $cached['products'], $cached['landing_pages'] ) ) {
 			return $cached;
 		}
@@ -262,7 +261,7 @@ class TAVC_WooCommerce {
 	 * Count the products of one order. Variations are counted under their
 	 * parent product.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    WC_Order    $order       Order.
 	 * @param    array       $products    Product ID => totals, by reference.
 	 */
@@ -304,7 +303,7 @@ class TAVC_WooCommerce {
 	/**
 	 * Path of the first page of the visit, relative to the site, without query string.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    string    $url    Entry URL recorded by WooCommerce.
 	 * @return   string            For example "/blog/best-hoodies/", or '' when unknown.
 	 */
@@ -331,7 +330,7 @@ class TAVC_WooCommerce {
 	/**
 	 * Remove cached reports after a new AI order.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 */
 	public static function clear_report_cache() {
 		foreach ( self::get_report_cache_keys() as $key ) {
@@ -342,7 +341,7 @@ class TAVC_WooCommerce {
 	/**
 	 * Cache keys used by the referral report ranges.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   array
 	 */
 	public static function get_report_cache_keys() {
@@ -357,7 +356,7 @@ class TAVC_WooCommerce {
 	/**
 	 * Start of a report range: midnight (site time) N-1 days ago.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    int    $days    Range length in days.
 	 * @return   int             Unix timestamp.
 	 */

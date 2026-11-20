@@ -6,7 +6,7 @@
  * and detects which AI platform sent a visitor.
  *
  * @link       https://techbysh.com
- * @since      1.3.0
+ * @since      2.0.0
  *
  * @package    Tavc
  * @subpackage Tavc/includes
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * AI referral source registry.
  *
- * @since      1.3.0
+ * @since      2.0.0
  * @package    Tavc
  * @subpackage Tavc/includes
  * @author     Techbysh
@@ -45,7 +45,7 @@ class TAVC_AI_Sources {
 	/**
 	 * Referrer domains of AI platforms. Subdomains match too.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   array    Lower-case domain => display name.
 	 */
 	public static function get_referrer_domains() {
@@ -72,7 +72,7 @@ class TAVC_AI_Sources {
 		/**
 		 * Filters the AI referrer domains used to detect AI referral visits.
 		 *
-		 * @since 1.3.0
+		 * @since 2.0.0
 		 *
 		 * @param array $domains Domain => display name. Subdomains of each domain also match.
 		 */
@@ -84,7 +84,7 @@ class TAVC_AI_Sources {
 	/**
 	 * utm_source values that AI platforms add to the links they cite.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   array    Lower-case utm_source value => display name.
 	 */
 	public static function get_utm_sources() {
@@ -113,7 +113,7 @@ class TAVC_AI_Sources {
 		/**
 		 * Filters the utm_source values that identify an AI referral visit.
 		 *
-		 * @since 1.3.0
+		 * @since 2.0.0
 		 *
 		 * @param array $sources utm_source value (exact, case-insensitive) => display name.
 		 */
@@ -125,7 +125,7 @@ class TAVC_AI_Sources {
 	/**
 	 * Detect an AI platform from a referrer URL.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $referrer_url    Referrer URL.
 	 * @return   string|false               Display name, or false when not an AI platform.
 	 */
@@ -153,7 +153,7 @@ class TAVC_AI_Sources {
 	/**
 	 * Detect an AI platform from a utm_source value.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $utm_source    utm_source query value.
 	 * @return   string|false             Display name, or false when not an AI platform.
 	 */
@@ -175,7 +175,7 @@ class TAVC_AI_Sources {
 	/**
 	 * Human-readable label for a detection method.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $method    Stored method slug.
 	 * @return   string
 	 */
@@ -193,7 +193,7 @@ class TAVC_AI_Sources {
 	/**
 	 * Lower-case keys and keep only string => non-empty string pairs.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    array    $map    Raw map.
 	 * @return   array
 	 */

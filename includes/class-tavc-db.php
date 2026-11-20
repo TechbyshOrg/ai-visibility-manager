@@ -36,7 +36,7 @@ class TAVC_DB {
 	/**
 	 * Per-request cache of table existence checks.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @var      array
 	 */
 	private static $table_exists = array();
@@ -45,14 +45,14 @@ class TAVC_DB {
 	 * Version of the table layout created by TAVC_Activator. Stored in the
 	 * tavc_db_version option once dbDelta() has run; bump it whenever a table changes.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 */
-	const SCHEMA_VERSION = '1.4.0';
+	const SCHEMA_VERSION = '2.0.0';
 
 	/**
 	 * Object cache group for the request counters.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 */
 	const COUNTER_CACHE_GROUP = 'tavc_counters';
 
@@ -60,7 +60,7 @@ class TAVC_DB {
 	 * Whether the tables match SCHEMA_VERSION. Saves the SHOW TABLES / SHOW COLUMNS
 	 * checks on every logged request; tavc_db_version is autoloaded.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @return   bool
 	 */
 	public static function schema_is_current() {
@@ -70,7 +70,7 @@ class TAVC_DB {
 	/**
 	 * Name of the request counter table.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @return   string
 	 */
 	public static function get_counter_table_name() {
@@ -86,7 +86,7 @@ class TAVC_DB {
 	 * a single atomic upsert in the counter table, so concurrent requests are
 	 * never lost and no option row is rewritten per request.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    string    $key       Counter name (any length; it is hashed).
 	 * @param    int       $window    Window length in seconds.
 	 * @return   int                  Events in the current window, this one included.
@@ -132,7 +132,7 @@ class TAVC_DB {
 	/**
 	 * Delete expired counter rows.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @return   int    Rows deleted.
 	 */
 	public static function prune_counters() {
@@ -160,7 +160,7 @@ class TAVC_DB {
 	/**
 	 * Retrieve the crawler visits table name with proper prefix.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   string    Table name.
 	 */
 	public static function get_crawler_table_name() {
@@ -171,7 +171,7 @@ class TAVC_DB {
 	/**
 	 * Whether a plugin table exists (cached per request).
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $table_name    Full table name.
 	 * @return   bool
 	 */
@@ -191,12 +191,12 @@ class TAVC_DB {
 	}
 
 	/**
-	 * Whether the referrals table has the "method" column added in 1.3.0.
+	 * Whether the referrals table has the "method" column added in 2.0.0.
 	 *
 	 * Normally true once TAVC::maybe_upgrade() has run; the check keeps logging
 	 * and reports working if that migration could not alter the table.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   bool
 	 */
 	private static function referrals_has_method_column() {
@@ -221,7 +221,7 @@ class TAVC_DB {
 	 * Log a referral entry.
 	 *
 	 * @since    1.0.0
-	 * @since    1.3.0 Added the $method parameter.
+	 * @since    2.0.0 Added the $method parameter.
 	 * @param    string    $referrer     AI Referral Source.
 	 * @param    string    $target_url   Requested Destination URL.
 	 * @param    string    $method       How the visit was detected: referrer, utm or beacon.
@@ -273,7 +273,7 @@ class TAVC_DB {
 	/**
 	 * Count referrals logged in a time window.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $start    Inclusive start, site-local 'Y-m-d H:i:s'.
 	 * @param    string    $end      Exclusive end, site-local 'Y-m-d H:i:s'.
 	 * @return   int
@@ -295,7 +295,7 @@ class TAVC_DB {
 	/**
 	 * Referral counts per day.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $since    Inclusive start, site-local 'Y-m-d H:i:s'.
 	 * @return   array               'Y-m-d' => count, only for days that have visits.
 	 */
@@ -341,7 +341,7 @@ class TAVC_DB {
 	 * Get top AI referral sources.
 	 *
 	 * @since    1.0.0
-	 * @since    1.3.0 Added the $since and $until parameters.
+	 * @since    2.0.0 Added the $since and $until parameters.
 	 * @param    int            $limit    Max sources to fetch.
 	 * @param    string|null    $since    Optional inclusive start, site-local 'Y-m-d H:i:s'.
 	 * @param    string|null    $until    Optional exclusive end, site-local 'Y-m-d H:i:s'. Requires $since.
@@ -385,7 +385,7 @@ class TAVC_DB {
 	 * Get top visited pages from AI sources.
 	 *
 	 * @since    1.0.0
-	 * @since    1.3.0 Added the $since and $until parameters.
+	 * @since    2.0.0 Added the $since and $until parameters.
 	 * @param    int            $limit    Max pages to fetch.
 	 * @param    string|null    $since    Optional inclusive start, site-local 'Y-m-d H:i:s'.
 	 * @param    string|null    $until    Optional exclusive end, site-local 'Y-m-d H:i:s'. Requires $since.
@@ -480,7 +480,7 @@ class TAVC_DB {
 	/**
 	 * Delete referral rows older than a cutoff, in batches.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $before    Exclusive cutoff, site-local 'Y-m-d H:i:s'.
 	 * @return   int                  Rows deleted.
 	 */
@@ -501,7 +501,7 @@ class TAVC_DB {
 	 * Exports read the table in batches (keyset on id) so large logs never
 	 * have to fit in memory at once.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    int    $before_id    Only rows with a smaller id; 0 for the first batch.
 	 * @param    int    $limit        Rows per batch.
 	 * @return   array                Objects with id, timestamp, referrer, target_url, method.
@@ -528,12 +528,12 @@ class TAVC_DB {
 	*/
 
 	/**
-	 * Whether the crawler table has the "blocked" and "limited" columns added in 1.4.0.
+	 * Whether the crawler table has the "blocked" and "limited" columns added in 2.0.0.
 	 *
 	 * Normally true once TAVC::maybe_upgrade() has run; the check keeps logging
 	 * and reports working if that migration could not alter the table.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @return   bool
 	 */
 	private static function crawler_has_outcome_columns() {
@@ -557,21 +557,21 @@ class TAVC_DB {
 	/**
 	 * Path stored for crawler requests that ended in a 404 page.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 */
 	const NOT_FOUND_PATH = '(not found)';
 
 	/**
 	 * Path stored for requests beyond the daily number of distinct paths per crawler.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 */
 	const OTHER_PATHS = '(other paths)';
 
 	/**
 	 * Readable label for a stored crawler path (translates the placeholder rows).
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    string    $path    Stored path.
 	 * @return   string
 	 */
@@ -594,8 +594,7 @@ class TAVC_DB {
 	 * counted in one "(other paths)" row. Anyone can send a crawler user agent
 	 * with random addresses, so this keeps the table from growing without limit.
 	 *
-	 * @since    1.3.0
-	 * @since    1.4.0 Added the $outcome parameter and the daily path cap.
+	 * @since    2.0.0
 	 * @param    string    $bot        Crawler slug.
 	 * @param    string    $path       Requested URL path.
 	 * @param    string    $outcome    Empty for a served request, 'blocked' when it was refused with
@@ -617,7 +616,7 @@ class TAVC_DB {
 		/**
 		 * Filters how many distinct paths are logged per crawler and day.
 		 *
-		 * @since 1.4.0
+		 * @since 2.0.0
 		 *
 		 * @param int    $limit Paths per day. 0 for no limit.
 		 * @param string $bot   Crawler slug.
@@ -638,7 +637,7 @@ class TAVC_DB {
 	/**
 	 * Insert or increment one crawler row.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    string    $bot        Crawler slug.
 	 * @param    string    $path       Requested URL path.
 	 * @param    string    $outcome    '', 'blocked' or 'limited'.
@@ -693,7 +692,7 @@ class TAVC_DB {
 	/**
 	 * Requests and last visit per crawler.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string         $since    Inclusive start date, site-local 'Y-m-d'.
 	 * @param    string|null    $until    Optional exclusive end date, site-local 'Y-m-d'.
 	 * @return   array                    Crawler slug => object( hits, blocked, limited, last_seen ).
@@ -734,7 +733,7 @@ class TAVC_DB {
 	/**
 	 * Most requested paths across all AI crawlers.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $since    Inclusive start date, site-local 'Y-m-d'.
 	 * @param    int       $limit    Max rows.
 	 * @return   array               Objects with url_path and hits.
@@ -754,7 +753,7 @@ class TAVC_DB {
 	/**
 	 * Crawler requests for one path, per crawler.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $path     URL path, e.g. /llms.txt.
 	 * @param    string    $since    Inclusive start date, site-local 'Y-m-d'.
 	 * @return   array               Crawler slug => hits.
@@ -781,7 +780,7 @@ class TAVC_DB {
 	/**
 	 * Total crawler requests in a date window.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $start    Inclusive start date, site-local 'Y-m-d'.
 	 * @param    string    $end      Exclusive end date, site-local 'Y-m-d'.
 	 * @return   int
@@ -801,7 +800,7 @@ class TAVC_DB {
 	/**
 	 * One batch of crawler rows for CSV export, newest first.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    int    $before_id    Only rows with a smaller id; 0 for the first batch.
 	 * @param    int    $limit        Rows per batch.
 	 * @return   array                Objects with id, hit_date, bot, url_path, hits, blocked, limited, last_seen.
@@ -824,7 +823,7 @@ class TAVC_DB {
 	/**
 	 * Delete crawler rows older than a cutoff date, in batches.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $before    Exclusive cutoff date, site-local 'Y-m-d'.
 	 * @return   int                  Rows deleted.
 	 */
@@ -842,7 +841,7 @@ class TAVC_DB {
 	/**
 	 * Delete every crawler visit row.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   int|false
 	 */
 	public static function clear_crawler_logs() {
@@ -862,7 +861,7 @@ class TAVC_DB {
 	 *
 	 * Batching keeps each query short so large tables are not locked for long.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $prepared_sql    Prepared DELETE statement with a LIMIT clause.
 	 * @return   int                        Rows deleted.
 	 */

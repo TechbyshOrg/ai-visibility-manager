@@ -284,7 +284,7 @@ class TAVC {
 		// The llms.txt output format improved; rebuild it on the next request.
 		TAVC_LLMS_Txt::clear_cache();
 
-		// Storage used before 1.4.0, replaced by the tavc_counters table and the llms.txt store.
+		// Storage used before 2.0.0, replaced by the tavc_counters table and the llms.txt store.
 		foreach ( array( TAVC_LLMS_Txt::CACHE_KEY, TAVC_LLMS_Txt::FULL_CACHE_KEY, 'tavc_recent_referrals', 'tavc_beacon_rate', 'tavc_beacon_hourly' ) as $transient ) {
 			delete_transient( $transient );
 		}

@@ -50,7 +50,7 @@ class TAVC_Bot_Manager {
 	/**
 	 * Build every rule this plugin adds to robots.txt.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   string    Rules text, or an empty string when nothing is configured.
 	 */
 	public function build_rules() {
@@ -77,7 +77,7 @@ class TAVC_Bot_Manager {
 	/**
 	 * "Disallow: /" groups for the crawlers blocked on the AI Crawlers tab.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   string
 	 */
 	private function build_crawler_rules() {
@@ -102,7 +102,7 @@ class TAVC_Bot_Manager {
 	/**
 	 * Groups entered in the Custom robots.txt Rules editor.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   string
 	 */
 	private function build_custom_rules() {
@@ -127,7 +127,7 @@ class TAVC_Bot_Manager {
 	 * An empty "Disallow:" keeps the group valid without adding an Allow rule,
 	 * so it can never override WordPress's own rules, even on non-public sites.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   string
 	 */
 	private function build_content_signal_rules() {
@@ -157,7 +157,7 @@ class TAVC_Bot_Manager {
 	 * are robots.txt tokens only and are left out. robots.txt and llms.txt stay
 	 * readable so crawlers can still see the rules.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    string    $format    'apache' or 'nginx'.
 	 * @return   string               Rules, or '' when no blocked crawler has a user agent.
 	 */

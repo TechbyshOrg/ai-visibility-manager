@@ -19,7 +19,7 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 /**
  * Remove the plugin's data from the current site, if the site opted in.
  *
- * @since    1.4.0
+ * @since    2.0.0
  * @return   bool    Whether data was removed.
  */
 function tavc_uninstall_site() {
@@ -68,7 +68,7 @@ function tavc_uninstall_site() {
 	wp_clear_scheduled_hook( 'tavc_daily_maintenance' );
 	wp_clear_scheduled_hook( 'tavc_weekly_digest' );
 
-	// Cached WooCommerce reports (keys include a date) and pre-1.4.0 crawl rate limit counters (one per crawler).
+	// Cached WooCommerce reports (keys include a date) and crawl rate limit counters from development builds (one per crawler).
 	foreach ( array( 'tavc_wc_report_', 'tavc_rate_limit_' ) as $prefix ) {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s", $wpdb->esc_like( '_transient_' . $prefix ) . '%', $wpdb->esc_like( '_transient_timeout_' . $prefix ) . '%' ) );

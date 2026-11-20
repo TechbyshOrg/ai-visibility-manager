@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Detects and logs AI referrals.
  *
- * Checks the HTTP referrer header (and, since 1.3.0, the utm_source tag),
+ * Checks the HTTP referrer header (and, since 2.0.0, the utm_source tag),
  * matches it against a list of AI platforms, debounces duplicate entries from
  * the same IP/destination, and stores them. An optional browser beacon records
  * visits on pages served from a full-page cache.
@@ -104,7 +104,7 @@ class TAVC_Referral_Logger {
 	/**
 	 * Store a referral unless the same visit was logged in the last 5 minutes.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $matched_source    AI platform display name.
 	 * @param    string    $target_url        Visited URL.
 	 * @param    string    $method            Detection method.
@@ -132,7 +132,7 @@ class TAVC_Referral_Logger {
 	 * Removes the fragment and utm_* tracking parameters. URLs without tracking
 	 * parameters are stored exactly as before.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $url    Visited URL.
 	 * @return   string            Clean URL, or an empty string when invalid.
 	 */
@@ -162,7 +162,7 @@ class TAVC_Referral_Logger {
 		/**
 		 * Filters the query arguments kept in logged AI visit URLs.
 		 *
-		 * @since 1.4.0
+		 * @since 2.0.0
 		 *
 		 * @param string[] $allowed Argument names. Default: the plain-permalink content arguments.
 		 */
@@ -184,7 +184,7 @@ class TAVC_Referral_Logger {
 	 * cannot plant another domain in the reports, and percent-encoded (for
 	 * example Cyrillic or Arabic) paths are kept intact.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @return   string
 	 */
 	public static function get_current_url() {
@@ -202,7 +202,7 @@ class TAVC_Referral_Logger {
 	/**
 	 * Whether the current request comes from a known AI crawler or fetcher.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   bool
 	 */
 	public static function is_ai_crawler_request() {
@@ -220,7 +220,7 @@ class TAVC_Referral_Logger {
 	/**
 	 * Load the tracking script on public pages when cache-compatible tracking is on.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 */
 	public function enqueue_tracker() {
 		$settings = TAVC_Settings::get_tracking_settings();
@@ -251,7 +251,7 @@ class TAVC_Referral_Logger {
 	/**
 	 * Register the beacon endpoint when cache-compatible tracking is on.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 */
 	public function register_rest_routes() {
 		$settings = TAVC_Settings::get_tracking_settings();
@@ -285,7 +285,7 @@ class TAVC_Referral_Logger {
 	/**
 	 * Record a visit reported by the tracking script.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    WP_REST_Request    $request    Request.
 	 * @return   WP_REST_Response|WP_Error
 	 */
@@ -338,7 +338,7 @@ class TAVC_Referral_Logger {
 	/**
 	 * Whether a URL points to this site's front end.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $url    URL.
 	 * @return   bool
 	 */
@@ -365,8 +365,7 @@ class TAVC_Referral_Logger {
 	 * Uses the shared request counters (one small row per counter), so spoofed
 	 * traffic cannot grow an option or lose counts under concurrent requests.
 	 *
-	 * @since    1.3.0
-	 * @since    1.4.0 Returns 'ok', 'client' or 'site' instead of a boolean.
+	 * @since    2.0.0
 	 * @return   string    'ok', 'client' when this address sent too many requests,
 	 *                     or 'site' when the site-wide hourly budget is used up.
 	 */
@@ -380,8 +379,7 @@ class TAVC_Referral_Logger {
 		/**
 		 * Filters the maximum number of beacon visits processed per hour, site-wide.
 		 *
-		 * @since 1.3.0
-		 * @since 1.4.0 Default raised from 500 to 2000.
+		 * @since 2.0.0
 		 *
 		 * @param int $limit Requests per hour. 0 for no limit.
 		 */

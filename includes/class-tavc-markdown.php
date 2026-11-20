@@ -3,7 +3,7 @@
  * Minimal HTML to Markdown converter for llms-full.txt.
  *
  * @link       https://techbysh.com
- * @since      1.3.0
+ * @since      2.0.0
  *
  * @package    Tavc
  * @subpackage Tavc/includes
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * lists, links, emphasis, quotes, code, images and simple tables. Falls back
  * to plain text when the PHP DOM extension is unavailable.
  *
- * @since      1.3.0
+ * @since      2.0.0
  * @package    Tavc
  * @subpackage Tavc/includes
  * @author     Techbysh
@@ -31,7 +31,7 @@ class TAVC_Markdown {
 	/**
 	 * Elements whose content is never useful as text.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @var      array
 	 */
 	private static $skip_tags = array( 'script', 'style', 'noscript', 'iframe', 'form', 'button', 'input', 'select', 'textarea', 'svg', 'canvas', 'template' );
@@ -39,7 +39,7 @@ class TAVC_Markdown {
 	/**
 	 * Address relative links are resolved against during a conversion.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @var      string
 	 */
 	private static $base_url = '';
@@ -47,8 +47,7 @@ class TAVC_Markdown {
 	/**
 	 * Convert an HTML fragment to Markdown.
 	 *
-	 * @since    1.3.0
-	 * @since    1.4.0 Added $base_url.
+	 * @since    2.0.0
 	 * @param    string    $html        HTML fragment.
 	 * @param    string    $base_url    Address of the page the HTML comes from, for relative
 	 *                                  links such as "page-2". Defaults to the home URL.
@@ -94,7 +93,7 @@ class TAVC_Markdown {
 	/**
 	 * Render all child nodes.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    DOMNode    $node    Parent.
 	 * @return   string
 	 */
@@ -110,7 +109,7 @@ class TAVC_Markdown {
 	/**
 	 * Render one node.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    DOMNode    $node    Node.
 	 * @return   string
 	 */
@@ -210,7 +209,7 @@ class TAVC_Markdown {
 	/**
 	 * Render a list.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    DOMElement    $list       ul or ol element.
 	 * @param    bool          $ordered    Whether the list is ordered.
 	 * @param    int           $depth      Nesting depth.
@@ -251,7 +250,7 @@ class TAVC_Markdown {
 	/**
 	 * Render a table as a Markdown pipe table.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    DOMElement    $table    Table element.
 	 * @return   string
 	 */
@@ -289,7 +288,7 @@ class TAVC_Markdown {
 	/**
 	 * Text of a node with inline formatting removed.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    DOMNode    $node    Node.
 	 * @return   string
 	 */
@@ -300,7 +299,7 @@ class TAVC_Markdown {
 	/**
 	 * Prefix a line for a block quote.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $line    Line.
 	 * @return   string
 	 */
@@ -311,7 +310,7 @@ class TAVC_Markdown {
 	/**
 	 * Escape square brackets inside link text.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $text    Text.
 	 * @return   string
 	 */
@@ -322,7 +321,7 @@ class TAVC_Markdown {
 	/**
 	 * Make a link absolute and safe; returns '' for unsupported schemes.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $url    URL from an attribute.
 	 * @return   string
 	 */
@@ -360,7 +359,7 @@ class TAVC_Markdown {
 	/**
 	 * Collapse blank lines and trailing spaces.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $text    Text.
 	 * @return   string
 	 */
@@ -375,7 +374,7 @@ class TAVC_Markdown {
 	/**
 	 * Plain-text fallback.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $html    HTML.
 	 * @return   string
 	 */

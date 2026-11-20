@@ -2,11 +2,11 @@
 /**
  * Settings defaults, getters and sanitizers.
  *
- * Every option added in 1.3.0 is read through this class so callers always get
+ * Every option added in 2.0.0 is read through this class so callers always get
  * a complete, validated array even on installs that have never saved it.
  *
  * @link       https://techbysh.com
- * @since      1.3.0
+ * @since      2.0.0
  *
  * @package    Tavc
  * @subpackage Tavc/includes
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Settings defaults, getters and sanitizers.
  *
- * @since      1.3.0
+ * @since      2.0.0
  * @package    Tavc
  * @subpackage Tavc/includes
  * @author     Techbysh
@@ -46,7 +46,7 @@ class TAVC_Settings {
 	 * Settings errors already reported in this request, to avoid duplicates when
 	 * WordPress runs a sanitizer twice for a brand-new option.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @var      array
 	 */
 	private static $reported_errors = array();
@@ -63,8 +63,7 @@ class TAVC_Settings {
 	 * Sites upgrading from 1.2.0 or earlier get max_per_type 0 (no limit) so their
 	 * file keeps listing everything it listed before (see TAVC_Activator).
 	 *
-	 * @since    1.3.0
-	 * @since    1.4.0 Added "enabled"; max_per_type defaults to 1000.
+	 * @since    2.0.0
 	 * @return   array
 	 */
 	public static function get_llms_defaults() {
@@ -86,7 +85,7 @@ class TAVC_Settings {
 	/**
 	 * Saved llms.txt settings merged over the defaults.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   array
 	 */
 	public static function get_llms_settings() {
@@ -116,7 +115,7 @@ class TAVC_Settings {
 	/**
 	 * Public post types that can be listed in llms.txt.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   array    Post type slug => WP_Post_Type.
 	 */
 	public static function get_llms_post_type_choices() {
@@ -129,7 +128,7 @@ class TAVC_Settings {
 	/**
 	 * Sanitize the llms.txt settings form.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    mixed    $input    Submitted value.
 	 * @return   array
 	 */
@@ -188,7 +187,7 @@ class TAVC_Settings {
 	 * Referral logs are kept forever by default so upgrading never deletes data
 	 * that earlier versions kept.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   array
 	 */
 	public static function get_tracking_defaults() {
@@ -207,7 +206,7 @@ class TAVC_Settings {
 	/**
 	 * Saved tracking settings merged over the defaults.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   array
 	 */
 	public static function get_tracking_settings() {
@@ -239,7 +238,7 @@ class TAVC_Settings {
 	/**
 	 * Log retention choices.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   array    Days (0 = forever) => label.
 	 */
 	public static function get_retention_choices() {
@@ -255,7 +254,7 @@ class TAVC_Settings {
 	/**
 	 * Summary email frequencies.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @return   array    Frequency => label.
 	 */
 	public static function get_digest_frequency_choices() {
@@ -268,7 +267,7 @@ class TAVC_Settings {
 	/**
 	 * Address the weekly summary is sent to.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   string
 	 */
 	public static function get_digest_recipient() {
@@ -281,7 +280,7 @@ class TAVC_Settings {
 	/**
 	 * Sanitize the tracking settings form.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    mixed    $input    Submitted value.
 	 * @return   array
 	 */
@@ -330,9 +329,9 @@ class TAVC_Settings {
 
 	/**
 	 * Default enforcement settings. Everything is off: robots.txt rules alone
-	 * are the pre-1.4.0 behaviour.
+	 * are the pre-2.0.0 behaviour.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @return   array
 	 */
 	public static function get_enforcement_defaults() {
@@ -346,7 +345,7 @@ class TAVC_Settings {
 	/**
 	 * Requests-per-minute choices for the crawl rate limit.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @return   array    Requests per minute => label.
 	 */
 	public static function get_rate_limit_choices() {
@@ -367,7 +366,7 @@ class TAVC_Settings {
 	 *
 	 * Runs on every front-end request, so it only reads the autoloaded option.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @return   array
 	 */
 	public static function get_enforcement_settings() {
@@ -388,7 +387,7 @@ class TAVC_Settings {
 	 * Checked against a fixed list (not the translated labels) because the
 	 * getter runs on front-end requests.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    mixed    $value    Raw value.
 	 * @return   int
 	 */
@@ -401,7 +400,7 @@ class TAVC_Settings {
 	/**
 	 * Sanitize the enforcement settings form.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    mixed    $input    Submitted value.
 	 * @return   array
 	 */
@@ -426,7 +425,7 @@ class TAVC_Settings {
 	/**
 	 * Content signal definitions.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   array    Option key => array( 'token', 'label', 'desc' ).
 	 */
 	public static function get_content_signal_definitions() {
@@ -452,7 +451,7 @@ class TAVC_Settings {
 	/**
 	 * Saved content signals. An empty string means "no preference stated".
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   array    Key => '', 'yes' or 'no'.
 	 */
 	public static function get_content_signals() {
@@ -471,7 +470,7 @@ class TAVC_Settings {
 	/**
 	 * Sanitize the content signals form.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    mixed    $input    Submitted value.
 	 * @return   array
 	 */
@@ -498,7 +497,7 @@ class TAVC_Settings {
 	/**
 	 * Saved custom rule groups.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   array    List of array( 'agents' => string[], 'paths' => string[] ).
 	 */
 	public static function get_custom_robots_rules() {
@@ -515,7 +514,7 @@ class TAVC_Settings {
 	/**
 	 * Convert stored groups back to the robots.txt-style text shown in the editor.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    array    $groups    Rule groups.
 	 * @return   string
 	 */
@@ -542,7 +541,7 @@ class TAVC_Settings {
 	 * Accepts the raw textarea string from the form, or an already structured
 	 * array (WordPress may run the sanitizer a second time on its own output).
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    mixed    $input    Submitted value.
 	 * @return   array
 	 */
@@ -601,7 +600,7 @@ class TAVC_Settings {
 	/**
 	 * Parse robots.txt-style text into validated rule groups.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $text    Raw editor text.
 	 * @return   array              array( 'groups' => array, 'errors' => int[] line numbers ).
 	 */
@@ -695,7 +694,7 @@ class TAVC_Settings {
 	/**
 	 * Re-validate structured rule groups.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    array    $groups    Candidate groups.
 	 * @return   array               array( 'groups' => array ).
 	 */
@@ -729,7 +728,7 @@ class TAVC_Settings {
 	/**
 	 * Whether a User-agent token is safe to print in robots.txt.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $agent    Token.
 	 * @return   bool
 	 */
@@ -740,7 +739,7 @@ class TAVC_Settings {
 	/**
 	 * Whether a Disallow path is safe to print in robots.txt.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $path    Path starting with "/".
 	 * @return   bool
 	 */
@@ -757,7 +756,7 @@ class TAVC_Settings {
 	/**
 	 * Normalize a checkbox-like value to 0 or 1.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    mixed    $value    Raw value.
 	 * @return   int
 	 */
@@ -768,7 +767,7 @@ class TAVC_Settings {
 	/**
 	 * Add a settings error once per request.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $setting    Setting slug.
 	 * @param    string    $code       Error code.
 	 * @param    string    $message    Message.

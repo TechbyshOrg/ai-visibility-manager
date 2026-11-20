@@ -31,7 +31,7 @@ class TAVC_Deactivator {
 	 * Clean up on deactivation, on every site when network-deactivated.
 	 *
 	 * @since    1.0.0
-	 * @since    1.4.0 Added $network_wide.
+	 * @since    2.0.0 Added $network_wide.
 	 * @param    bool    $network_wide    Whether the plugin is deactivated for the whole network.
 	 */
 	public static function deactivate( $network_wide = false ) {
@@ -55,7 +55,7 @@ class TAVC_Deactivator {
 	/**
 	 * Clean up the current site.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 */
 	private static function deactivate_site() {
 		global $wpdb;
@@ -65,7 +65,7 @@ class TAVC_Deactivator {
 		// request, without this plugin's rules.
 		delete_option( 'rewrite_rules' );
 
-		// Caches and the transients used before 1.4.0.
+		// Caches and the transients used before 2.0.0.
 		foreach ( array( 'tavc_llms_txt_cache', 'tavc_llms_full_txt_cache', 'tavc_recent_referrals', 'tavc_beacon_rate', 'tavc_beacon_hourly', 'tavc_health_llms_txt', 'tavc_health_robots' ) as $transient ) {
 			delete_transient( $transient );
 		}
@@ -75,7 +75,7 @@ class TAVC_Deactivator {
 			delete_option( $option );
 		}
 
-		// WooCommerce reports (keys include a date) and the pre-1.4.0 rate limit counters.
+		// WooCommerce reports (keys include a date) and rate limit counters from development builds.
 		foreach ( array( 'tavc_wc_report_', 'tavc_rate_limit_' ) as $prefix ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s", $wpdb->esc_like( '_transient_' . $prefix ) . '%', $wpdb->esc_like( '_transient_timeout_' . $prefix ) . '%' ) );

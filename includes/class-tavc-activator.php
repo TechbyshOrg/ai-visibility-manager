@@ -60,7 +60,7 @@ class TAVC_Activator {
 
 		TAVC_Cron::schedule_events();
 
-		$plugin_version = defined( 'TAVC_VERSION' ) ? TAVC_VERSION : '1.4.0';
+		$plugin_version = defined( 'TAVC_VERSION' ) ? TAVC_VERSION : '2.0.0';
 		update_option( 'tavc_plugin_version', $plugin_version );
 	}
 
@@ -70,7 +70,7 @@ class TAVC_Activator {
 	 * dbDelta() adds missing columns and indexes to existing tables without
 	 * touching stored rows.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 */
 	private static function create_database_tables() {
 		global $wpdb;
@@ -140,7 +140,7 @@ class TAVC_Activator {
 	 * so a missing option never costs an extra query per page view.
 	 *
 	 * @since    1.0.0
-	 * @since    1.4.0 Also creates the llms.txt, tracking and enforcement options.
+	 * @since    2.0.0 Also creates the llms.txt, tracking and enforcement options.
 	 */
 	private static function set_default_options() {
 		// tavc_blocked_bots has existed since 1.0.0, so its absence means a new install.

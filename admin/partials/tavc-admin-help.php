@@ -3,7 +3,7 @@
  * Help and support card (shown on the Status tab).
  *
  * @link       https://techbysh.com
- * @since      1.3.0
+ * @since      2.0.0
  *
  * @package    Tavc
  * @subpackage Tavc/admin/partials

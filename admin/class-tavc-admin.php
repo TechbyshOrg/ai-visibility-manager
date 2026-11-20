@@ -39,14 +39,14 @@ class TAVC_Admin {
 	/**
 	 * Rows read per query when exporting a log to CSV.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 */
 	const CSV_BATCH_SIZE = 2000;
 
 	/**
 	 * Tabs that complete a "Get started" step when the user opens them.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 */
 	const GET_STARTED_TABS = array( 'bots', 'llmstxt', 'referrals' );
 
@@ -69,7 +69,7 @@ class TAVC_Admin {
 	/**
 	 * Health checks computed in this request.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @var      array|null
 	 */
 	private $health_status = null;
@@ -125,7 +125,7 @@ class TAVC_Admin {
 	 * Add the top-level "AI Visibility" admin menu.
 	 *
 	 * @since    1.0.0
-	 * @since    1.3.0 Moved from Settings to a top-level menu.
+	 * @since    2.0.0 Moved from Settings to a top-level menu.
 	 */
 	public function add_plugin_admin_menu() {
 		add_menu_page(
@@ -142,7 +142,7 @@ class TAVC_Admin {
 	/**
 	 * URL of the plugin admin page.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    array    $args    Extra query arguments, e.g. array( 'tab' => 'bots' ).
 	 * @return   string
 	 */
@@ -153,7 +153,7 @@ class TAVC_Admin {
 	/**
 	 * Link that runs one of the tools in handle_tool_actions(), with a nonce for that tool only.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    string    $tool    Tool key.
 	 * @return   string             Unescaped URL.
 	 */
@@ -166,7 +166,7 @@ class TAVC_Admin {
 	/**
 	 * Remove the one-time tool message from the address bar after it is shown.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    string[]    $args    Query arguments WordPress removes.
 	 * @return   string[]
 	 */
@@ -176,12 +176,12 @@ class TAVC_Admin {
 	}
 
 	/**
-	 * Send the pre-1.3.0 address (Settings > AI Visibility Control) to the new page.
+	 * Send the pre-2.0.0 address (Settings > AI Visibility Control) to the new page.
 	 *
 	 * Keeps bookmarks, documentation links and older summary emails working.
 	 * Hooked to admin_init, which runs before WordPress rejects unknown pages.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 */
 	public function redirect_legacy_page_url() {
 		global $pagenow;
@@ -228,7 +228,7 @@ class TAVC_Admin {
 	 * The current user's "Get started" progress, stored in user meta so it is
 	 * the same in every browser.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @return   array    Tab slug => 1 for opened tabs, plus 'hidden' => 1 when dismissed.
 	 */
 	public static function get_get_started_progress() {
@@ -311,7 +311,7 @@ class TAVC_Admin {
 	 * Sanitize blocked bots setting input array.
 	 *
 	 * @since    1.0.0
-	 * @since    1.3.0 Only known crawler slugs are stored.
+	 * @since    2.0.0 Only known crawler slugs are stored.
 	 * @param    array    $input    Incoming array of bots values.
 	 * @return   array              Sanitized options array.
 	 */
@@ -513,7 +513,7 @@ class TAVC_Admin {
 	/**
 	 * Export the AI crawler visit log to CSV: one row per crawler, day and path.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 */
 	private function export_crawler_csv() {
 		header( 'Content-Type: text/csv; charset=utf-8' );
@@ -801,7 +801,7 @@ class TAVC_Admin {
 	/**
 	 * Print the health check block: a one-line summary followed by the list.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 */
 	public function render_health_section() {
 		if ( ! $this->can_render_health_now() ) {
@@ -834,7 +834,7 @@ class TAVC_Admin {
 	 * True when the results are cached, already computed in this request, or
 	 * explicitly requested (no-JavaScript fallback link).
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   bool
 	 */
 	private function can_render_health_now() {
@@ -859,7 +859,7 @@ class TAVC_Admin {
 	/**
 	 * AJAX: run the health checks and return the rendered markup.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 */
 	public function ajax_health_check() {
 		check_ajax_referer( 'tavc_health_check', 'nonce' );
@@ -890,7 +890,7 @@ class TAVC_Admin {
 	/**
 	 * Print the llms.txt status shown on the Overview tile.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 */
 	public function render_llms_tile() {
 		if ( ! $this->can_render_health_now() ) {
@@ -925,7 +925,7 @@ class TAVC_Admin {
 	/**
 	 * Print "All checks passed" or "N checks need attention".
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    array    $status    Result of get_health_status().
 	 */
 	public function render_health_summary( $status ) {
@@ -959,7 +959,7 @@ class TAVC_Admin {
 	 * ("Passed", "Warning", "Problem") so the state never depends on color or
 	 * symbols alone.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    array    $status    Result of get_health_status().
 	 */
 	public function render_health_list( $status ) {
@@ -1016,7 +1016,7 @@ class TAVC_Admin {
 	/**
 	 * Button that fixes, or leads to the fix for, a failing health check.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $key      Health check key.
 	 * @param    string    $state    pass, warning or fail.
 	 * @return   array|null          array( 'url', 'label' ) or null.
@@ -1060,7 +1060,7 @@ class TAVC_Admin {
 	/**
 	 * Folder the site lives in, relative to the domain, without a trailing slash.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @return   string    For example "/blog", or '' when the site is at the domain root.
 	 */
 	public static function get_site_folder() {
@@ -1074,7 +1074,7 @@ class TAVC_Admin {
 	 * sub-sites of a sub-directory multisite network). Crawlers only read
 	 * robots.txt at the domain root, which WordPress cannot serve then.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @return   bool
 	 */
 	public static function is_subfolder_install() {
@@ -1084,7 +1084,7 @@ class TAVC_Admin {
 	/**
 	 * robots.txt address at the root of the site's domain.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @return   string
 	 */
 	public static function get_root_robots_url() {
@@ -1182,7 +1182,7 @@ class TAVC_Admin {
 	/**
 	 * Prevent spreadsheet formula injection in exported CSV cells.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $value    Cell value.
 	 * @return   string
 	 */
@@ -1198,7 +1198,7 @@ class TAVC_Admin {
 	/**
 	 * One-line summary of crawler fetches for a file, e.g. "12 (GPTBot 8, ClaudeBot 4)".
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    array    $fetches        Crawler slug => hits.
 	 * @param    array    $definitions    Crawler definitions.
 	 * @return   string
@@ -1235,7 +1235,7 @@ class TAVC_Admin {
 	/**
 	 * Referral report ranges.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   array    Range key => label.
 	 */
 	public function get_referral_ranges() {
@@ -1250,8 +1250,8 @@ class TAVC_Admin {
 	/**
 	 * Range selected on the AI Traffic tab.
 	 *
-	 * @since    1.3.0
-	 * @return   string    '7', '30' (default since 1.4.0), '90' or 'all'.
+	 * @since    2.0.0
+	 * @return   string    '7', '30' (default since 2.0.0), '90' or 'all'.
 	 */
 	public function get_active_referral_range() {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -1263,7 +1263,7 @@ class TAVC_Admin {
 	/**
 	 * Register the "Exclude from llms.txt" box for the content types listed in llms.txt.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 */
 	public function register_meta_boxes() {
 		$settings = TAVC_Settings::get_llms_settings();
@@ -1281,7 +1281,7 @@ class TAVC_Admin {
 	/**
 	 * Render the "Exclude from llms.txt" box.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    WP_Post    $post    Current post.
 	 */
 	public function render_llms_meta_box( $post ) {
@@ -1304,7 +1304,7 @@ class TAVC_Admin {
 	/**
 	 * Save the "Exclude from llms.txt" box.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    int        $post_id    Post ID.
 	 * @param    WP_Post    $post       Post object.
 	 */
@@ -1335,7 +1335,7 @@ class TAVC_Admin {
 	/**
 	 * Suggest privacy policy text under Settings > Privacy.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 */
 	public function add_privacy_policy_content() {
 		if ( ! function_exists( 'wp_add_privacy_policy_content' ) ) {

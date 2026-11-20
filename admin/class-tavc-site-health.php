@@ -3,7 +3,7 @@
  * Tools > Site Health integration.
  *
  * @link       https://techbysh.com
- * @since      1.3.0
+ * @since      2.0.0
  *
  * @package    Tavc
  * @subpackage Tavc/admin
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Adds the plugin's diagnostics to the Status tab and its configuration to
  * the Info tab, reusing TAVC_Admin::get_health_status().
  *
- * @since      1.3.0
+ * @since      2.0.0
  * @package    Tavc
  * @subpackage Tavc/admin
  * @author     Techbysh
@@ -30,7 +30,7 @@ class TAVC_Site_Health {
 	/**
 	 * Admin instance providing the health checks.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @var      TAVC_Admin
 	 */
 	private $admin;
@@ -38,7 +38,7 @@ class TAVC_Site_Health {
 	/**
 	 * Health checks computed once per request.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @var      array|null
 	 */
 	private $status = null;
@@ -46,7 +46,7 @@ class TAVC_Site_Health {
 	/**
 	 * Initialize the class.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    TAVC_Admin    $admin    Admin instance.
 	 */
 	public function __construct( $admin ) {
@@ -56,7 +56,7 @@ class TAVC_Site_Health {
 	/**
 	 * Register the Site Health tests.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    array    $tests    Registered tests.
 	 * @return   array
 	 */
@@ -88,7 +88,7 @@ class TAVC_Site_Health {
 	/**
 	 * AJAX callback of the async llms.txt test.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 */
 	public function ajax_test_llms_txt() {
 		$this->send_ajax_result( 'test_llms_txt' );
@@ -97,7 +97,7 @@ class TAVC_Site_Health {
 	/**
 	 * AJAX callback of the async robots.txt test.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 */
 	public function ajax_test_robots_txt() {
 		$this->send_ajax_result( 'test_robots_txt' );
@@ -107,7 +107,7 @@ class TAVC_Site_Health {
 	 * Run a test for the Site Health screen, with the same checks WordPress uses
 	 * for its own async tests.
 	 *
-	 * @since    1.4.0
+	 * @since    2.0.0
 	 * @param    string    $method    Test method name.
 	 */
 	private function send_ajax_result( $method ) {
@@ -123,7 +123,7 @@ class TAVC_Site_Health {
 	/**
 	 * Site Health test: /llms.txt responds.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   array
 	 */
 	public function test_llms_txt() {
@@ -136,7 +136,7 @@ class TAVC_Site_Health {
 	/**
 	 * Site Health test: robots.txt can carry the AI crawler rules.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   array
 	 */
 	public function test_robots_txt() {
@@ -149,7 +149,7 @@ class TAVC_Site_Health {
 	/**
 	 * Convert plugin health checks into a Site Health result.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    string    $test_id     Test ID.
 	 * @param    array     $checks      Keys from TAVC_Admin::get_health_status().
 	 * @param    array     $status      Health checks.
@@ -208,7 +208,7 @@ class TAVC_Site_Health {
 	/**
 	 * Health checks, computed once per request.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @return   array
 	 */
 	private function get_status() {
@@ -222,7 +222,7 @@ class TAVC_Site_Health {
 	/**
 	 * Add the plugin configuration to Tools > Site Health > Info.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 * @param    array    $info    Debug information sections.
 	 * @return   array
 	 */

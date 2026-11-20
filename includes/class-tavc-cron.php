@@ -5,7 +5,7 @@
  * Daily log retention clean-up and the optional weekly or monthly summary email.
  *
  * @link       https://techbysh.com
- * @since      1.3.0
+ * @since      2.0.0
  *
  * @package    Tavc
  * @subpackage Tavc/includes
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Scheduled tasks.
  *
- * @since      1.3.0
+ * @since      2.0.0
  * @package    Tavc
  * @subpackage Tavc/includes
  * @author     Techbysh
@@ -32,7 +32,7 @@ class TAVC_Cron {
 	const DAILY_HOOK = 'tavc_daily_maintenance';
 
 	/**
-	 * Summary email event hook. The name dates from 1.3.0, when the summary
+	 * Summary email event hook. The name dates from when the summary
 	 * was weekly only; it is kept so existing schedules keep working.
 	 */
 	const DIGEST_HOOK = 'tavc_weekly_digest';
@@ -40,7 +40,7 @@ class TAVC_Cron {
 	/**
 	 * Schedule every event the current settings need.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 */
 	public static function schedule_events() {
 		if ( ! wp_next_scheduled( self::DAILY_HOOK ) ) {
@@ -53,7 +53,7 @@ class TAVC_Cron {
 	/**
 	 * Remove every scheduled event of this plugin.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 */
 	public static function unschedule_events() {
 		wp_clear_scheduled_hook( self::DAILY_HOOK );
@@ -69,8 +69,7 @@ class TAVC_Cron {
 	 *
 	 * Hooked to updates of the tavc_tracking_settings option.
 	 *
-	 * @since    1.3.0
-	 * @since    1.4.0 Supports monthly summaries.
+	 * @since    2.0.0
 	 */
 	public static function sync_digest_schedule() {
 		$settings = TAVC_Settings::get_tracking_settings();
@@ -104,8 +103,7 @@ class TAVC_Cron {
 	 * Next send time in the site's timezone, as a Unix timestamp: next Monday
 	 * at 08:00 (weekly) or the 1st of next month at 08:00 (monthly).
 	 *
-	 * @since    1.3.0
-	 * @since    1.4.0 Added the $frequency parameter.
+	 * @since    2.0.0
 	 * @param    string    $frequency    'weekly' or 'monthly'.
 	 * @return   int
 	 */
@@ -121,7 +119,7 @@ class TAVC_Cron {
 	/**
 	 * Delete log rows older than the configured retention periods.
 	 *
-	 * @since    1.3.0
+	 * @since    2.0.0
 	 */
 	public static function run_daily_maintenance() {
 		$settings = TAVC_Settings::get_tracking_settings();
@@ -143,8 +141,7 @@ class TAVC_Cron {
 	/**
 	 * Send the summary email when it is enabled.
 	 *
-	 * @since    1.3.0
-	 * @since    1.4.0 Schedules the next monthly summary.
+	 * @since    2.0.0
 	 */
 	public static function run_weekly_digest() {
 		$settings = TAVC_Settings::get_tracking_settings();

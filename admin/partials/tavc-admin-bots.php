@@ -56,7 +56,7 @@ foreach ( $tavc_bot_presets as $tavc_preset_key => $tavc_preset ) {
 // Invalid custom rules from the last save, shown next to the editor.
 $tavc_rule_errors = get_settings_errors( 'tavc_custom_robots_rules' );
 
-// Server-side enforcement (1.4.0).
+// Server-side enforcement (2.0.0).
 $tavc_enforcement   = TAVC_Settings::get_enforcement_settings();
 $tavc_page_cache_on = defined( 'WP_CACHE' ) && WP_CACHE;
 $tavc_blocked_users = array();
